@@ -1,0 +1,1510 @@
+@import 'tailwindcss';
+
+/*
+ * SAEL design tokens — the single source of every colour, size and rhythm in
+ * the application. Values are transcribed from docs/design-guidelines.md, which
+ * records the prototype's measurements at its 1920px design width.
+ *
+ * Two blocks, and the split is deliberate:
+ *
+ *   @theme  values that should generate Tailwind utilities (colour, type,
+ *           spacing, radii, shadows, breakpoints, easing).
+ *   :root   values consumed by name in CSS but with no utility namespace in
+ *           Tailwind v4 (gradients, the measure cap, motion durations).
+ *
+ * Fluid values are generated from the two-point formula in ./README.md, not
+ * hand-tuned. `vw` inside a clamp() is confined to this file — the min and max
+ * bounds make it safe here. A bare `vw` anywhere else fails
+ * `pnpm verify:guardrails`. /CLAUDE.md §2.2, docs/responsive-strategy.md §3.
+ */
+
+@theme {
+  /* ---------------------------------------------------------------------
+   * Colour — docs/design-guidelines.md §1
+   * ------------------------------------------------------------------ */
+
+  /* Brand core */
+  --color-brand-red: #e40f14;
+  --color-brand-red-deep: #aa0505;
+
+  /* The brand red, lifted to carry on the two dark grounds. Hover state for
+   * the ledger's "Know More" and the footer's links, 2026-08-27.
+   *
+   * `--color-brand-red` itself sits at **3.16** against --color-footer-bg and
+   * 4.15 against --color-surface-black, where both of those are normal-size
+   * text and need 4.5. The news card can use the flat red because that card is
+   * on paper; these two are not. Hue is 359 either way — the same red, at the
+   * weight its ground needs, like every other `bright`/`deep` pair here. */
+  --color-brand-red-bright: #f4585c;
+  --color-brand-blue: #0d2fa2;
+  --color-brand-purple: #45258d;
+  --color-brand-yellow: #f9e800;
+  --color-brand-crimson: #e43026;
+  --color-brand-indigo: #4a3290;
+  --color-accent-hover: #e11d34;
+
+  /* Neutrals.
+   * `--color-body-base`, not `--color-body`: `--text-body` already claims the
+   * `text-body` utility for font-size, and a name in both namespaces makes the
+   * colour unreachable. Likewise `-on-dark`, not the doc's original `onDark` —
+   * it was the one camelCase token in the set. Both renames are recorded in
+   * docs/design-guidelines.md §1. */
+  --color-ink: #161616;
+  --color-body-base: #333333;
+  --color-body-soft: #4a4a4a;
+  --color-body-muted: #2b2b2b;
+  --color-body-on-dark: #e6e9ee;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f7f9;
+  --color-surface-dark: #0b0d10;
+  --color-surface-darker: #05070a;
+  --color-surface-deep: #111418;
+  /* The Pan India Footprint section. A touch warmer than --color-surface-dark,
+   * and specified separately by the client's design. */
+  --color-surface-map: #101819;
+
+  --color-border: #ececee;
+  --color-rule: #d9d9d9;
+  --color-inert: #c7c7c7;
+  /* `SAEL Home v2`'s footer, at the client's request on 2026-08-22 — a cool
+   * slate in place of the green-grey that was here. The icon is a shade
+   * deeper than the ground: it is painted on a white pill in the footer and
+   * on --color-surface-alt in the mobile drawer, so it has to be the dark end
+   * of the pair, not the light one. */
+  --color-footer-bg: #22262e;
+  --color-footer-icon: #1a1e25;
+
+  /* The flat purple the client's design uses for section eyebrows, in place of
+   * the prototype's red→blue gradient. Both exist: --gradient-eyebrow is still
+   * the default, and this is the `accent` tone on <Eyebrow>. */
+  --color-eyebrow-accent: #8a2380;
+
+  /* The chamfered tile shape's fill — docs/asset-inventory.md §4. The shape is
+   * drawn in CSS, so the fill has to be a token; in the prototype it was
+   * hardcoded inside rtile-*.svg. Consumed by components/ui/tile-shape.tsx.
+   * The business portfolio no longer uses it: v2 sets those rows straight on
+   * the section's own ground. */
+  --color-tile-surface: #e8e9eb;
+
+  /* The masthead's own accent — the mid-stop of the CTA gradient, used for a
+   * hovered or current nav link so the bar reads as one family. From the
+   * client's navbar design (`assets/navbar/index.html`). */
+  --color-nav-accent: #7a1f57;
+
+  /* The docked share-price ticker. Green is the design's "up" colour and is
+   * not a brand token — it means something, so it is named for what it means
+   * rather than for what it looks like. */
+  --color-quote-up: #0e9c6a;
+  --color-quote-up-ink: #0b7a4f;
+  --color-quote-down: #c22f3a;
+  --color-quote-label: #526b62;
+  --color-quote-value: #141a18;
+  --color-quote-muted: #8a9a92;
+
+  /* Header. The nav link colour, the two weights of hairline under the bar,
+   * the translucent veil the bar is painted with, and the solid background
+   * used where backdrop-filter is unsupported.
+   * docs/design-guidelines.md §4.
+   *
+   * The four alphas are `SAEL Home v2`'s, taken off its `#hdr` rule and turned
+   * over: the design paints a near-black bar at 0.70 that firms to 0.86 on
+   * scroll, over a white hairline that goes 0.09 → 0.13. This site's masthead
+   * is light and stays light (the client's 2026-08-25 note is explicit), so
+   * the hue is ours and only the *structure* is copied — one flat translucent
+   * fill rather than the vertical gradient this used to carry, at the design's
+   * two opacities, over an ink hairline at the design's two weights. */
+  --color-nav-link: rgb(28 32 40 / 0.82);
+  --color-header-hairline: rgb(20 24 32 / 0.09);
+  --color-header-hairline-scrolled: rgb(20 24 32 / 0.13);
+  --color-header-veil: rgb(255 255 255 / 0.7);
+  --color-header-veil-scrolled: rgb(255 255 255 / 0.86);
+  --color-header-solid: rgb(255 255 255 / 0.96);
+
+  /* The same four businesses, lifted for the dark ledger the client's
+   * `SAEL Home v2` design sets them on. The four above are the light-ground
+   * pair and stay where they are — a colour that clears 4.5:1 on
+   * --color-tile-surface is not the same colour that clears it on
+   * --color-surface-black, and one token cannot be both. */
+  --color-figure-solar-bright: #e8865c;
+  --color-figure-cell-bright: #cf74c4;
+  --color-figure-module-bright: #3fbf99;
+  --color-figure-agri-bright: #8fc44a;
+
+  /* The same four accents, darkened to carry on paper.
+   *
+   * The `-bright` four are tuned for --color-surface-black and sit at 1.88 to
+   * 2.74 against --color-paper-alt, where small text needs 4.5 — so the map's
+   * callouts, which are the one place these four appear on a light ground,
+   * cannot use them. Each is darkened in HSL with hue and saturation held
+   * until it clears 4.5. This is --gradient-eyebrow-deep's move against
+   * --gradient-eyebrow-bright, run the other way.
+   *
+   * A pair, like the eyebrow's: pick the one that matches the ground, and do
+   * not reach for `bright` on paper because it is the name you remember. */
+  --color-figure-solar-deep: #be4c1b;
+  --color-figure-cell-deep: #b53fa7;
+  --color-figure-module-deep: #297c63;
+  --color-figure-agri-deep: #567927;
+
+  /* ------------------------------------------------------------------
+   * The two grounds of `SAEL Home v2`.
+   *
+   * The design alternates a near-black and a warm paper, each carrying the
+   * same 13px dot grid. Both are a shade off the surfaces already in this
+   * file — --color-surface-dark is #0b0d10 and stays the *header's* ground —
+   * so they are their own tokens rather than a nudge to those.
+   * ---------------------------------------------------------------- */
+  --color-surface-black: #08090c;
+  --color-paper: #fbfbf9;
+  --color-paper-alt: #f4f4f2;
+
+  /* Hairlines. A rule on the black ground and a rule on paper are the same
+   * design element at two opacities, not two elements. */
+  --color-hairline-dark: rgb(255 255 255 / 0.16);
+  --color-hairline-grid: rgb(255 255 255 / 0.14);
+  --color-hairline-paper: rgb(20 24 32 / 0.18);
+  --color-hairline-paper-soft: rgb(20 24 32 / 0.2);
+
+  /* A rule drawn over a photograph rather than over a flat ground — the
+   * divider between a goal card's name and its description.
+   *
+   * More than twice --color-hairline-dark's 0.16, and it has to be: that
+   * one is tuned against #08090c, where 16% white is a clear line. Over a
+   * lit photograph behind a partial scrim there is no single value it is
+   * 16% *of*, and at 1px it disappeared into all three of the goal
+   * images. */
+  --color-hairline-on-media: rgb(255 255 255 / 0.38);
+
+  /* Body copy on the black ground, at the three weights the design uses:
+   * a card's running copy, a small-caps qualifier, and a section's own
+   * label. --color-body-on-dark is the full-strength value they step down
+   * from. */
+  --color-on-dark-soft: rgb(230 233 238 / 0.72);
+  --color-on-dark-faint: rgb(230 233 238 / 0.62);
+  --color-on-dark-muted: rgb(230 233 238 / 0.55);
+
+  /* The date over a news card. Paper's equivalent of --color-on-dark-muted. */
+  --color-meta-paper: #6b6b73;
+
+  /* The unfilled part of a hero progress segment. */
+  --color-hero-track: rgb(255 255 255 / 0.16);
+
+  /* The "upcoming" business card.
+   *
+   * Solar Cell Manufacturing is the one block in the ledger that is not yet
+   * operational, and the client asked for it to carry its own ground rather
+   * than the section's black — the frosted grey the masthead takes over a
+   * white page, moved onto a dark one. Same treatment, same vocabulary: a
+   * translucent white wash and a hairline, not a solid slab. */
+  --color-tile-upcoming: rgb(255 255 255 / 0.07);
+  --color-tile-upcoming-edge: rgb(255 255 255 / 0.13);
+
+  /* UN Sustainable Development Goal palette. Prescribed — do not adjust these
+   * for contrast. docs/design-guidelines.md §1. */
+  --color-sdg-3: #4c9f38;
+  --color-sdg-5: #ff3a21;
+  --color-sdg-7: #fcc30b;
+  --color-sdg-8: #a21942;
+  --color-sdg-9: #fd6925;
+  --color-sdg-10: #dd1367;
+  --color-sdg-11: #fd9d24;
+  --color-sdg-12: #bf8b2e;
+  --color-sdg-13: #3f7e44;
+  --color-sdg-15: #56c02b;
+
+  /* ---------------------------------------------------------------------
+   * Typography — docs/design-guidelines.md §2
+   *
+   * `--font-din` is set by next/font/local (src/lib/fonts.ts) on <html>.
+   * Two weights exist, 400 and 700. Nothing may ask for 500 or 600: the
+   * browser would synthesise it.
+   *
+   * Desktop sizes are the doc's table. Mobile minimums are doc-derived where
+   * the docs state one (hero 28, h2 24, h3 16, stat 28, sdg-num 34) and
+   * proposed where they do not — see ./README.md for the full derivation.
+   *
+   * Tracking is expressed in `em` so it scales with the fluid size rather
+   * than drifting loose at 360px and tight at 1920px.
+   * ------------------------------------------------------------------ */
+
+  --font-sans: var(--font-din), system-ui, sans-serif;
+
+  /* 28 → 58. Regular weight, not bold — the most-often-broken detail. */
+  --text-hero: clamp(1.75rem, 1.3173rem + 1.9231vw, 3.625rem);
+  --text-hero--line-height: 1.08;
+  --text-hero--letter-spacing: 0.0034em;
+  --text-hero--font-weight: 400;
+
+  /* 24 → 36 */
+  --text-h2: clamp(1.5rem, 1.3269rem + 0.7692vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--font-weight: 700;
+
+  /* 30 → 64. The gradient heading `SAEL Home v2` sets on About SAEL, Solutions
+   * and the Power Portfolio — a display size, well above --text-h2 (24 → 36),
+   * which in v2 is left to headings that sit inside a card or a rail. Regular
+   * weight and tight: DIN at this size does not need the extra. */
+  --text-display: clamp(1.875rem, 1.4423rem + 1.9231vw, 4rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.028em;
+  --text-display--font-weight: 400;
+
+  /* 36 → 76. The two footprint figures beside the map, which in v2 are the
+   * section's subject rather than a caption on it. --text-stat (28 → 40) is
+   * still what a stat inside a card takes. */
+  --text-stat-large: clamp(2.25rem, 1.6923rem + 2.5641vw, 4.75rem);
+  --text-stat-large--line-height: 0.9;
+  --text-stat-large--letter-spacing: -0.04em;
+  --text-stat-large--font-weight: 700;
+
+  /* 16 → 22 */
+  --text-h3: clamp(1rem, 0.9135rem + 0.3846vw, 1.375rem);
+  --text-h3--line-height: 1.3;
+  --text-h3--font-weight: 700;
+
+  /* 28 → 40 */
+  --text-stat: clamp(1.75rem, 1.5769rem + 0.7692vw, 2.5rem);
+  --text-stat--line-height: 1;
+  --text-stat--font-weight: 700;
+
+  /* 28 → 36 */
+  --text-milestone: clamp(1.75rem, 1.6346rem + 0.5128vw, 2.25rem);
+  --text-milestone--line-height: 1;
+  --text-milestone--font-weight: 400;
+
+  /* 34 → 56 */
+  --text-sdg-num: clamp(2.125rem, 1.8077rem + 1.4103vw, 3.5rem);
+  --text-sdg-num--line-height: 1;
+  --text-sdg-num--font-weight: 700;
+
+  /* 20 → 26, uppercase */
+  --text-goal-title: clamp(1.25rem, 1.1635rem + 0.3846vw, 1.625rem);
+  --text-goal-title--line-height: 1.2;
+  --text-goal-title--letter-spacing: 0.0385em;
+  --text-goal-title--font-weight: 700;
+
+  /* 16 → 20 */
+  --text-body: clamp(1rem, 0.9423rem + 0.2564vw, 1.25rem);
+  --text-body--line-height: 1.55;
+  --text-body--font-weight: 400;
+
+  /* 15 → 17 */
+  --text-body-sm: clamp(0.9375rem, 0.9087rem + 0.1282vw, 1.0625rem);
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+
+  /* 14 → 16 */
+  --text-label: clamp(0.875rem, 0.8462rem + 0.1282vw, 1rem);
+  --text-label--line-height: 1.35;
+  --text-label--letter-spacing: 0.0625em;
+  --text-label--font-weight: 400;
+
+  /* The mega menu's column headings — the six section names above the rule.
+   *
+   * --text-label's metrics at 700. Its own token rather than a weight override
+   * at the call site, and rather than a change to --text-label, which the
+   * footer's headings also take at 400: a column head is a different role that
+   * happens to share a size, and that is what a token is for. Named for the
+   * role, beside --color-mega-head-rule. Minted 2026-08-26 (C-3). */
+  --text-mega-head: clamp(0.875rem, 0.8462rem + 0.1282vw, 1rem);
+  --text-mega-head--line-height: 1.35;
+  --text-mega-head--letter-spacing: 0.0625em;
+  --text-mega-head--font-weight: 700;
+
+  /* Fixed 16. Below lg the nav is a drawer rendered at --text-h3, so this
+   * token only ever applies at one size. docs/responsive-strategy.md §4.
+   *
+   * 700, corrected 2026-08-26 (C-3). It had declared 400 while its only
+   * consumer — the masthead CTA — overrode it to 700 at the call site, which
+   * design-guidelines.md §4 has documented as "--text-nav at 700" throughout.
+   * The token was simply wrong. The bar's six links are --text-nav-item and
+   * were never affected. */
+  --text-nav: 1rem;
+  --text-nav--line-height: 1;
+  --text-nav--letter-spacing: 0.0125em;
+  --text-nav--font-weight: 700;
+
+  /* The six links in the middle of the masthead, and only those.
+   *
+   * `SAEL Home v2`'s own values, read off its deployed build rather than
+   * guessed: 11px, 700, 0.18em of tracking, uppercase. Small, bold and widely
+   * tracked is one type idea, not four — shrinking the size without opening
+   * the tracking would just make it cramped.
+   *
+   * Its own token rather than a change to --text-nav, which the CTA also takes.
+   * The design sets both at these values, but this build keeps the CTA as a
+   * filled pill (the client's 2026-08-25 call that the rest of the bar's inner
+   * styling stands), and 11px inside a pill is a different question from 11px
+   * on bare ground. One of them changed; one token changed. */
+  --text-nav-item: 0.6875rem; /* 11 */
+  --text-nav-item--line-height: 1.18;
+  --text-nav-item--letter-spacing: 0.18em;
+  --text-nav-item--font-weight: 700;
+
+  /* 15 → 18, uppercase.
+   *
+   * Raised ~15% from the 13 → 16 it was, at the client's request on
+   * 2026-08-20: every section on the homepage is labelled with this and the
+   * labels were reading as captions rather than as titles.
+   *
+   * Note this is the one place the client's instruction and the design file
+   * disagree — `SAEL Home v2` sets these at 10px. The instruction wins; see
+   * the note on --text-meta, which is the same argument. */
+  --text-eyebrow: clamp(0.9375rem, 0.8942rem + 0.1923vw, 1.125rem);
+  --text-eyebrow--line-height: 1;
+  --text-eyebrow--letter-spacing: 0.1563em;
+  --text-eyebrow--font-weight: 700;
+
+  /* 15 → 17, uppercase */
+  --text-cta: clamp(0.9375rem, 0.9087rem + 0.1282vw, 1.0625rem);
+  --text-cta--line-height: 1;
+  --text-cta--letter-spacing: 0.0588em;
+  --text-cta--font-weight: 700;
+
+  /* 12 → 14 */
+  --text-badge: clamp(0.75rem, 0.7212rem + 0.1282vw, 0.875rem);
+  --text-badge--line-height: 1;
+  --text-badge--letter-spacing: 0.0214em;
+  --text-badge--font-weight: 700;
+
+  /* 21 → 26, uppercase. "SAEL Pan India / Green Footprint", which the design
+   * sets deliberately smaller than the "11 States" figure beneath it — using
+   * --text-h2 here makes the two compete. */
+  --text-footprint-title: clamp(1.3125rem, 1.2452rem + 0.2991vw, 1.625rem);
+  --text-footprint-title--line-height: 1.2;
+  --text-footprint-title--letter-spacing: 0.02em;
+  --text-footprint-title--font-weight: 700;
+
+  /* 11 → 12. A qualifier set under a figure. The business ledger has its own
+   * --text-meta now; this is still what the map's callouts take. */
+  --text-tile-note: clamp(0.6875rem, 0.6731rem + 0.0641vw, 0.75rem);
+  --text-tile-note--line-height: 1.35;
+  --text-tile-note--font-weight: 400;
+
+  /* The asterisk marking an upcoming facility. */
+  --text-tile-marker: clamp(0.75rem, 0.7212rem + 0.1282vw, 0.875rem);
+  --text-tile-marker--font-weight: 700;
+
+  /* 11 → 12.5, uppercase, widely tracked. The small caps that label a thing
+   * rather than say anything: a business name over its capacity figure, the
+   * date on a news card, the descriptor under a plant's name.
+   *
+   * The design sets these at a flat 10px. They are set larger here — 10px of
+   * tracked uppercase is under the floor this project holds itself to, and
+   * the design was drawn at 1920 where it is proportionally larger than it
+   * reads on a laptop. /CLAUDE.md §5, accessibility floor. */
+  --text-meta: clamp(0.6875rem, 0.6587rem + 0.1282vw, 0.78125rem);
+  --text-meta--line-height: 1.5;
+  --text-meta--letter-spacing: 0.2em;
+  --text-meta--font-weight: 700;
+
+  /* 12 → 13, uppercase. "Know More", "Read More" — an action set inside a
+   * card, where --text-cta (15 → 17) out-weighs the headline above it. */
+  --text-action: clamp(0.75rem, 0.7212rem + 0.1282vw, 0.8125rem);
+  --text-action--line-height: 1;
+  --text-action--letter-spacing: 0.18em;
+  --text-action--font-weight: 700;
+
+  /* 20 → 24. The business name on a ledger row — near enough twice --text-meta
+   * (11 → 12.5), which is what it was set at until 2026-08-27 when the client
+   * asked for the name to carry more of the row.
+   *
+   * **Sentence case, not uppercase, and that is what the size decided.** §2's
+   * uppercase list is closed at five roles; a sixth would have been this one.
+   * At label size the name was a label and --text-meta's 0.2em tracking was
+   * right for it. At twice that it is a heading, and it takes a heading's
+   * metrics — tight tracking, a line-height that closes up when the name wraps
+   * on a narrow screen. Uppercase at this size with 0.2em would also have run
+   * "Solar Module Manufacturing" past the width of its own column.
+   *
+   * Weight stays 700: prominence is the whole point of the change. */
+  --text-ledger-title: clamp(1.25rem, 1.1923rem + 0.2564vw, 1.5rem);
+  --text-ledger-title--line-height: 1.15;
+  --text-ledger-title--letter-spacing: -0.01em;
+  --text-ledger-title--font-weight: 700;
+
+  /* 36 → 72. The capacity figure on a ledger row, which in the dark design is
+   * the largest thing on the page after the hero headline — it is why the row
+   * exists. --text-tile-figure (20 → 26) was sized for a figure sat beside a
+   * title on a small card; this one owns its line. */
+  --text-ledger-figure: clamp(2.25rem, 1.7308rem + 2.3077vw, 4.5rem);
+  --text-ledger-figure--line-height: 0.9;
+  --text-ledger-figure--letter-spacing: -0.04em;
+  --text-ledger-figure--font-weight: 700;
+
+  /* 28 → 58 for the same slot, where the figure runs long enough that the
+   * size above would break the row. "3625 MW + 5 GW" is the case. */
+  --text-ledger-figure-long: clamp(1.75rem, 1.3462rem + 1.7949vw, 3.625rem);
+  --text-ledger-figure-long--line-height: 0.9;
+  --text-ledger-figure-long--letter-spacing: -0.04em;
+  --text-ledger-figure-long--font-weight: 700;
+
+  /* 22 → 34. The name on an "Our Goals" card. Regular weight and tight, where
+   * --text-goal-title was bold and tracked — the design resets it. */
+  --text-goal-name: clamp(1.375rem, 1.2019rem + 0.7692vw, 2.125rem);
+  --text-goal-name--line-height: 1.15;
+  --text-goal-name--letter-spacing: -0.02em;
+  --text-goal-name--font-weight: 400;
+
+  /* 16 → 20. The place name on a solutions card, set under the photograph
+   * rather than on a plaque over it. */
+  --text-plate-title: clamp(1rem, 0.9423rem + 0.2564vw, 1.25rem);
+  --text-plate-title--line-height: 1.25;
+  --text-plate-title--letter-spacing: -0.01em;
+  --text-plate-title--font-weight: 400;
+
+  /* 15 → 17. A news headline, and a ledger row's running copy. */
+  --text-card-title: clamp(0.9375rem, 0.9087rem + 0.1282vw, 1.0625rem);
+  --text-card-title--line-height: 1.42;
+  --text-card-title--letter-spacing: -0.01em;
+  --text-card-title--font-weight: 400;
+
+  /* Tracking, where a role needs a value its size token does not carry.
+   *
+   * The mega menu's strapline is the one such role: it takes --text-badge's
+   * size but is set far wider than that token's own 0.0214em. Kept as an
+   * exact-equivalent token rather than folded into --text-meta, because
+   * --text-meta is a different size, tracking and line height — that swap is a
+   * visual change and is not this fix's to make. See C-4 / D-2 in
+   * docs/design-reconciliation.md. */
+  --tracking-strapline: 0.25em;
+
+  /* ---------------------------------------------------------------------
+   * Spacing — docs/design-guidelines.md §3
+   * ------------------------------------------------------------------ */
+
+  /* Page gutter: 20 / 40 / 64 / 104 / 156px at 360 / 768 / 1024 / 1440 / 1920.
+   *
+   * That table is not linear, so one clamp() cannot express it — a straight
+   * 360→1920 fit lands on 56px at 768 where the table says 40. The table is
+   * however strictly convex (segment slopes 4.90 → 9.38 → 9.62 → 10.83 vw),
+   * and a convex piecewise-linear function is exactly the max() of its own
+   * segment lines. So this reproduces all five anchors to the pixel while
+   * staying continuous — the value never jumps at a breakpoint, it only
+   * changes gradient. See ./README.md.
+   *
+   * Consumed in exactly one place: components/ui/container.tsx. */
+  --spacing-gutter: clamp(
+    1.25rem,
+    max(0.1471rem + 4.902vw, 9.375vw - 2rem, 9.6154vw - 2.1538rem, 10.8333vw - 3.25rem),
+    9.75rem
+  );
+
+  --spacing-section-y: clamp(3rem, 2.3077rem + 3.0769vw, 6rem); /* 48 → 96 */
+  --spacing-section-y-tight: clamp(2.5rem, 2.1394rem + 1.6026vw, 4.0625rem); /* 40 → 65 */
+  /* Heading → content gap. docs/design-guidelines.md §3 calls this
+   * `--space-block`; it is `--spacing-flow` here, and the name is load-bearing.
+   *
+   * Tailwind mints a utility per `--spacing-*` token across every namespace
+   * that takes a length, and one of those namespaces is `inline-size`. So
+   * `--spacing-block` generated `.inline-block { inline-size: … }`, which
+   * collides head-on with the core `.inline-block { display: inline-block }`.
+   * Same specificity, so both applied: every inline-block in the codebase kept
+   * its display and was silently pinned to a width of 24–50px. It shipped in
+   * FE-02 and surfaced in FE-04 as a hero headline whose words overlapped each
+   * other, because each word box was 40px wide and its text was not.
+   *
+   * Renaming is the fix — the utility is `inline-flow`, which collides with
+   * nothing. Do not rename it back, and when adding a spacing token check the
+   * name against Tailwind's `inline-*` display utilities (`inline-block`,
+   * `inline-flex`, `inline-grid`, `inline-table`). */
+  --spacing-flow: clamp(1.5rem, 1.125rem + 1.6667vw, 3.125rem); /* 24 → 50 */
+  --spacing-stack: clamp(0.75rem, 0.5769rem + 0.7692vw, 1.5rem); /* 12 → 24 */
+  --spacing-gap-grid: clamp(1rem, 0.7837rem + 0.9615vw, 1.9375rem); /* 16 → 31 */
+
+  /* The two steps below --spacing-stack, added 2026-08-26 (C-11).
+   *
+   * Before these, anything tighter than 12px had nowhere to go and fell back to
+   * Tailwind's generic 4px scale — which is how a card ended up padded `p-4` in
+   * one section and `p-5 lg:p-6` in another, with nothing to arbitrate between
+   * them. `--spacing-inset` is the padding inside a card or panel;
+   * `--spacing-tight` is an icon or inline gap. docs/design-guidelines.md §3.
+   *
+   * Neither name collides with Tailwind's `inline-*` display utilities — see
+   * the note on --spacing-flow for why that check is not optional. */
+  --spacing-inset: clamp(1rem, 0.8846rem + 0.5128vw, 1.5rem); /* 16 → 24 */
+  --spacing-tight: clamp(0.5rem, 0.4423rem + 0.2564vw, 0.75rem); /* 8 → 12 */
+
+  /* The gap between a card's body and its footer — the rule above a "Know More",
+   * not padding inside the card's edge. Same curve as --spacing-inset, and that
+   * is deliberate: the two read as one rhythm rather than two. It is named apart
+   * because it is flow, so a future card asks for the gap it means rather than
+   * borrowing the inset. docs/design-guidelines.md §3. */
+  --spacing-card-flow: clamp(1rem, 0.8846rem + 0.5128vw, 1.5rem); /* 16 → 24 */
+
+  /* The WCAG floor for a touch target. docs/responsive-strategy.md §5. */
+  --spacing-touch: 2.75rem; /* 44 */
+
+  /* A stacked link's row height where the pointer is fine — the footer's link
+   * columns and nothing else so far. **Not a relaxation of --spacing-touch.**
+   *
+   * 44px is WCAG 2.5.5 (AAA) and this project's own floor for anything a
+   * finger has to hit; it stays exactly that everywhere a finger might. This
+   * applies only behind `hover-hover:` — `(hover: hover) and (pointer: fine)`,
+   * a mouse or trackpad — where 2.5.8 (AA) asks 24px and a five-link column at
+   * 44 was costing 60px of a footer the client had twice called too tall.
+   * 32 clears 2.5.8 with room. docs/responsive-strategy.md §5. */
+  --spacing-touch-fine: 2rem; /* 32 */
+
+  /* Between two links in the middle of the masthead. The design's own
+   * `clamp(4px, 1vw, 18px)` — it closes right up on a narrow laptop, where
+   * six tracked labels and a logo and a CTA are competing for one bar. A
+   * bare `vw` is only safe inside a clamp, and only in this file.
+   * docs/responsive-strategy.md §3. */
+  --spacing-nav-gap: clamp(0.25rem, 1vw, 1.125rem); /* 4 → 18 */
+  /* The masthead logo above lg. Below it the mark drops to `h-8` (32px), which
+   * is the design's mobile height and already a step on the spacing scale.
+   * docs/design-guidelines.md §4. Named `logo` and not `logo-height`: Tailwind
+   * mints an `inline-logo` utility from this, which collides with nothing —
+   * check any new spacing token the same way. See the note on --spacing-flow. */
+  --spacing-logo: 2.625rem; /* 42 */
+
+  /* The footer wordmark's box, beside the corporate address. 60 → 88.
+   *
+   * **Larger than it looks, because 38% of `sael-logo-dark.svg`'s height is
+   * empty.** The artwork's ink is 1293 × 329 inside a 1521.67 × 530.77
+   * viewBox — roughly symmetric padding the client's export bakes in. So the
+   * *drawn* wordmark here is 37 → 54px tall, which is what to compare against
+   * the masthead's 42px and against the 36 → 44px this logo had on its white
+   * plate until 2026-08-27. Set the box from the ink, not the other way round:
+   * `--spacing-logo`'s 42 applied here would draw a 26px wordmark.
+   *
+   * Re-measure if the client re-exports the file. */
+  --spacing-footer-logo: clamp(3.75rem, 3.3462rem + 1.7949vw, 5.5rem); /* 60 → 88 */
+
+  /* The narrow axis of a hero dot's hit area. WCAG 2.5.8's 24px minimum,
+   * used where a 44px square would space a row of controls apart rather than
+   * hold them together. See components/sections/hero-carousel/hero-dots.tsx. */
+  --spacing-dot-target: 1.5rem; /* 24 */
+
+  /* The dotted India map, capped so the section still fits one screen: its
+   * 311.33 × 337.45 viewBox is 0.923 wide for every 1 tall, so the height left over
+   * after the header and the section's own padding decides the width.
+   * Consumed by sections/presence-map/. */
+  --spacing-map: min(38rem, calc((100dvh - var(--spacing-header) - 12rem) * 0.9226));
+
+  /* The solid square at the centre of a map pin. The 44px touch target around
+   * it is --spacing-touch. */
+  --spacing-map-pin: 0.4375rem; /* 7 */
+
+  /* The gap between two cards on a horizontal rail. Deliberately tighter than
+   * --spacing-gap-grid (16 → 31): the rail's cards are read as one continuous
+   * strip, and the grid gap opens them into separate objects. Measured from
+   * the client's design, where the gap is ~2.3% of a card's width. */
+  --spacing-rail-gap: clamp(0.75rem, 0.6346rem + 0.5128vw, 1.125rem); /* 12 → 18 */
+
+  /* No height cap on a solutions card, deliberately.
+   *
+   * One was tried — `min(ratio, screen minus the heading block)` — so that the
+   * section always fit a single screenful like the four above it. It does fit,
+   * but the card's proportions then change with the browser's height, so the
+   * same photograph is a 19:10 landscape on one machine and a 3.6:1 letterbox
+   * on another. The client rejected that outright: the image is to be shown at
+   * its full height, and this one section may exceed the viewport.
+   *
+   * So the ratio is the whole story, and `<SolutionsCarousel>` is the one
+   * snapping section allowed to be taller than a screen. Snapping already
+   * handles that: a snap area larger than the snapport is scrolled through
+   * freely and only snaps at its own edges. See globals.css. */
+
+  /* A prominent rail arrow. Larger than the 44px touch floor because on a rail
+   * of small cards the control has to out-weigh them. */
+  --spacing-rail-arrow: 3.5rem; /* 56 */
+
+  /* The pixel strip: its overall height, and the solid bar at its base.
+   *
+   * 182 = 26 rows of 7px. Twenty are the dissolve, which is the pattern as it
+   * was first drawn; the six beneath it are the solid band added on
+   * 2026-08-05. The 18px gradient bar that used to sit under them was removed
+   * at the client's request, and this lost its height with it. Change only in
+   * whole cells, and keep `SOLID_ROWS` in
+   * sections/footer-pixel-strip/scatter.tsx in step.
+   *
+   * Still live after the page strip was retired on 2026-08-27: the footer
+   * strip is the consumer now. sections/_retired/pixel-strip/ also reads it,
+   * and is not what keeps it here. */
+  --spacing-pixel-strip: 11.375rem; /* 182 = 26 rows of 7px */
+
+  /* A news card on the homepage rail. Narrow enough that six sit across a
+   * wide screen, as the design has them. */
+  --spacing-news-card: clamp(14.875rem, 13.5481rem + 5.8974vw, 20.625rem); /* 238 → 330 */
+
+  /* ------------------------------------------------------------------
+   * `SAEL Home v2` measurements.
+   * ---------------------------------------------------------------- */
+
+  /* The hero's per-slide mark, stacked above the headline rather than set
+   * loose in the frame as a watermark. */
+  --spacing-hero-icon: clamp(4.625rem, 3.1538rem + 6.5385vw, 11rem); /* 74 → 176 */
+
+  /* The hero's block padding. The top clears the fixed masthead with room to
+   * spare; the bottom keeps the content column clear of the progress bar
+   * pinned to the section's base, which is --spacing-hero-progress tall. */
+  --spacing-hero-pad-top: clamp(4.5rem, 9vh, 6.75rem); /* 72 → 108 */
+  --spacing-hero-pad-bottom: clamp(3.75rem, 8vh, 6rem); /* 60 → 96 */
+
+  /* The short red rule between the mark and the headline. */
+  --spacing-hero-rule-w: 3.25rem; /* 52 */
+  --spacing-hero-rule-h: 0.125rem; /* 2 */
+
+  /* The hero's progress bar: the row's own height, which is also its touch
+   * target, and the 3px track drawn along its base. The row is pinned to the
+   * bottom of the section, so the hero's content column reserves this much
+   * clearance plus its own padding and the two never meet. */
+  --spacing-hero-progress: 2.75rem; /* 44 */
+  --spacing-hero-track: 0.1875rem; /* 3 */
+
+  /* A business ledger row: the mark set at the row's right edge, the padding
+   * that keeps the copy clear of it, and the gutter between the two columns. */
+  /* A business mark on a ledger row.
+   *
+   * Three quarters of the size `SAEL Home v2` draws it at, at the client's
+   * request on 2026-08-22 — the design's own `clamp(92px, 10vw, 176px)` reads
+   * too heavy beside the capacity figure at the sizes this site is reviewed
+   * at. The shape of the curve is the design's; only the scale is ours.
+   *
+   * The design's matching `padding-right` on the row is not here, and does not
+   * need to be: the mark is a real column beside the copy rather than an
+   * absolutely-positioned overlay, so it takes its own space and the copy
+   * wraps against it without any reserve being declared. */
+  --spacing-ledger-icon: clamp(4.3125rem, 7.5vw, 8.25rem); /* 69 → 132 */
+  --spacing-ledger-col-gap: clamp(1.5rem, 0.8077rem + 3.0769vw, 4.5rem); /* 24 → 72 */
+
+  /* A solutions card, which in v2 is one of four on a rail rather than a
+   * single card spanning the content width, which is what the removed
+   * --solution-card-w used to size. */
+  --spacing-solution-card: clamp(15.625rem, 12.8846rem + 12.1795vw, 27.5rem); /* 250 → 440 */
+
+  /* The wide rail gap, for cards that read as separate objects. The news rail
+   * takes this; the solutions rail takes a hairline instead, so its four
+   * photographs read as one strip. */
+  --spacing-rail-gap-wide: clamp(1rem, 0.7115rem + 1.2821vw, 2.25rem); /* 16 → 36 */
+  --spacing-rail-gap-hair: 1px;
+
+  /* A square outline rail arrow, set in the section's heading row rather than
+   * floated over the artwork. */
+  --spacing-rail-arrow-sq: 3.25rem; /* 52 */
+
+  /* The dot grid laid over every ground but the hero's. */
+  --spacing-dot-grid: 0.8125rem; /* 13 */
+
+  /* The radius of one dot, shared by both grounds so the two cannot drift
+   * apart — the grid is one texture that happens to be drawn in two colours,
+   * and a dot that is 1px on paper and 1.5px on black reads as two textures.
+   *
+   * In px and not rem deliberately. The grid's *pitch* scales with the root
+   * font size; a dot is a mark on the screen and wants to stay the same mark.
+   *
+   * The radius and the alpha have to be read together, and getting that wrong
+   * is what the client saw on 2026-08-26. Going from a 1px dot to 1.5px to
+   * survive a zoom-out multiplied each dot's area by 2.25, and the alphas were
+   * raised at the same time — so the grid arrived roughly three times heavier
+   * than the one it replaced and read as a solid texture rather than a hint of
+   * one. The radius is what the zoom fix needs and it stays; the alphas came
+   * back down past where they started, to about 0.4x the original, which is
+   * what puts the *painted weight* back under the original's.
+   */
+  --spacing-dot-radius: 1.5px;
+
+  /* The mark on an "Our Goals" card.
+   *
+   * It was 40 → 56px, went to 120 → 252 on 2026-08-22 when the client asked
+   * for it four to five times larger, and is halved again here on 2026-08-24
+   * against their revised artwork — which carries less of its own padding, so
+   * it reads bigger at the same box size.
+   *
+   * The card's min-height is a floor, not a fixed height, so a mark that
+   * outgrows a card simply makes it taller rather than overflowing. */
+  --spacing-goal-icon: clamp(3.75rem, 2.7981rem + 4.2308vw, 7.875rem); /* 60 → 126 */
+
+  /* The business icon's rendered height, and the short gradient rules that
+   * flank a centred section eyebrow. */
+  --spacing-icon-mark: clamp(2.5rem, 2.3558rem + 0.641vw, 3rem); /* 40 → 48 */
+  --spacing-rule-w: 2.75rem; /* 44 */
+  /* The accent rule that fills across the top of a ledger row or a news card
+   * on hover. Thinner than --spacing-rule-h, which is a static label rule. */
+  --spacing-rule-accent: 0.125rem; /* 2 */
+  --spacing-rule-h: 0.1875rem; /* 3 */
+
+  /* The height of a snapping section on the homepage, in its two forms.
+   * `dvh`, never `vh`: mobile browser chrome collapses as you scroll, and
+   * `100vh` overflows by the height of the address bar for the whole first
+   * screen. docs/responsive-strategy.md §3.
+   *
+   * **Which of the two applies is a question about the header, not about the
+   * section.** From `lg` up the bar *offsets* the page — <main> is padded by
+   * its height and a section gets what is left. Below `lg` the bar *overlays*
+   * the page and slides away as you scroll down, so a section gets the whole
+   * screen. globals.css does the swap; see the block comment there.
+   *
+   * The offset form is derived from --spacing-header rather than restating
+   * 68px, so the two cannot drift. Consumed as `min-h-viewport`. */
+  --spacing-viewport-offset: calc(100dvh - var(--spacing-header));
+  --spacing-viewport-full: 100dvh;
+  --spacing-viewport: var(--spacing-viewport-offset);
+
+  /* Header height: a flat 68px, the `SAEL Home v2` bar's own height.
+   *
+   * It was 64px rising to 84px at lg, and the lg step is gone rather than
+   * retuned — the design draws one height at every width, and the step existed
+   * to make room for a taller logo lockup the bar no longer sets. Everything
+   * that has to clear the bar reads this one token: `h-header` on the row,
+   * `pt-header` on <main>, `scroll-padding-top` in globals.css, and
+   * --spacing-viewport. That is why there is no `lg:h-*` at any call site — the
+   * classic way an anchor lands under a fixed header is those drifting apart.
+   * docs/design-guidelines.md §4, features/03 §2. */
+  --spacing-header: 4.25rem; /* 68 */
+
+  /* ---------------------------------------------------------------------
+   * Radius and elevation — docs/design-guidelines.md §3
+   * ------------------------------------------------------------------ */
+
+  /* The dotted India map's own viewBox — `src/assets/images/dotted-map.svg`,
+   * supplied by the client on 2026-08-21. Kept beside the site coordinates it
+   * describes, in sections/presence-map/dots.ts. */
+  --aspect-map-india: 311.33 / 337.45;
+
+  /* The floor an "Our Goals" card cannot fall below. The tallest card's copy
+   * sets the real height and the grid matches the other two to it.
+   *
+   * Two values, because below `md` the three cards stack: at the wide floor
+   * they would be 1500px of section on a phone, and the section is meant to
+   * be a screenful. The design makes the same reduction at its own
+   * single-column breakpoint. */
+  --spacing-goal-card: clamp(20rem, 17.4038rem + 11.5385vw, 31.25rem); /* 320 → 500 */
+  --spacing-goal-card-sm: clamp(13.125rem, 30vh, 18.125rem); /* 210 → 290 */
+
+  /* A news card's thumbnail. */
+  /* 5:4 in `SAEL Home v2`, where the card is narrower and taller than the
+   * 16:10 the earlier design drew. */
+  --aspect-news-thumb: 5 / 4;
+
+  /* "Our Endeavour" — the artwork box, and the frame the three layers below
+   * are measured in. Still `girl.png`'s ratio: that file was the assembled
+   * composite until 2026-09-02, and stays the reference for the arrangement
+   * now that the layers arrive separately. */
+  --aspect-endeavour: 511 / 488;
+
+  /* ---------------------------------------------------------------------
+   * …and its three layers, re-assembled in the browser (2026-09-02).
+   *
+   * The same move About SAEL made a day earlier, and deliberately the same
+   * shape of solution: proportions only, no lengths, no breakpoints. Read
+   * --about-shape-inset-x and --about-cutout-w alongside these; each figure
+   * here answers the one with the matching name there.
+   * ------------------------------------------------------------------ */
+
+  /* The panel's own ratio — `endeavour/mask.svg`'s viewBox, which its path
+   * fills exactly. See --mask-endeavour-panel. */
+  --endeavour-panel-aspect: 498 / 491;
+
+  /* The panel's inset from the left and right of the artwork box. It sits
+   * flush with the foot, so this is also what fixes how far down its top edge
+   * falls — and therefore the room the girl has to stand above it. */
+  --endeavour-panel-inset-x: 4.15%;
+
+  /* The girl, measured **against the panel**. Her foot is the panel's foot, so
+   * `bottom: 0` in the component is the third figure and needs no token. She
+   * is 3% taller than the panel, which is what puts her head over its top
+   * edge, exactly as the boy stands over the About shape's. */
+  --endeavour-figure-x: -0.07%;
+  --endeavour-figure-w: 71%;
+
+  /* Her *content* box — the girl's own ratio, not the file's.
+   *
+   * `endeavour-girl.png` is 1437 x 1150 with the artwork occupying only
+   * x 577–1332, y 48–1149 of it: the export carries ~40% dead transparent
+   * canvas down its left side. The two figures under this one are that
+   * padding, expressed against the content box, and they are the *only*
+   * numbers here that describe the file rather than the design — which is why
+   * they are named for it. Re-export the asset trimmed and these three become
+   * `1437 / 1150`, `0` and `100%`; nothing else moves. */
+  --endeavour-figure-aspect: 756 / 1102;
+  --endeavour-figure-bleed-x: -76.32%;
+  --endeavour-figure-bleed-w: 190.08%;
+
+  /* A solutions card's photograph. 4:3 in `SAEL Home v2`, one ratio at every
+   * size — the card is now one of four on a rail rather than a single card
+   * spanning the content width, so it never gets wide enough to need the
+   * 19:10 landscape crop the earlier design used. */
+  --aspect-plate: 4 / 3;
+
+  /* The masthead's rounded shapes: a nav link's hover pill, the Contact Us
+   * button, and the ticker docked under the bar. */
+  --radius-nav-cta: 1rem; /* 16 */
+  --radius-quote: 1.125rem; /* 18 */
+
+  --radius-card: 0.875rem; /* 14 — news cards */
+  --radius-sdg: 1rem; /* 16 — SDG cards */
+  --radius-pill: 62.4375rem; /* 999 — dots, social buttons */
+  --radius-none: 0; /* goals cards, CTA buttons — square by design */
+
+  --shadow-card-hover: 0 22px 44px rgb(20 24 32 / 0.14);
+  /* A map tooltip, which floats over a dark section and needs to lift off it. */
+  --shadow-tooltip: 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-nav-cta: 0 10px 24px -8px rgb(216 31 53 / 0.5);
+  --shadow-nav-cta-hover: 0 16px 30px -8px rgb(216 31 53 / 0.6);
+  --shadow-quote: 0 16px 34px -18px rgb(6 40 30 / 0.45);
+  --shadow-quote-hover: 0 16px 44px -16px rgb(6 40 30 / 0.5);
+
+  /* The business tile's elevation has to be a `drop-shadow` filter rather than
+   * a `box-shadow`: the tile is a chamfered shape cut with `clip-path`, and a
+   * box-shadow is drawn on the element's box and then clipped away with the
+   * corner. A drop-shadow follows the rendered silhouette instead — applied to
+   * the *parent* of the clipped element, since clipping happens after
+   * filtering. See components/ui/card.tsx. */
+  --drop-shadow-tile: 0 12px 22px rgb(20 24 32 / 0.1);
+  --drop-shadow-tile-hover: 0 26px 40px rgb(20 24 32 / 0.16);
+
+  /* ---------------------------------------------------------------------
+   * Backdrop blur — docs/design-guidelines.md §4
+   *
+   * Two surfaces are painted on glass and they are not the same glass: the
+   * masthead sits over whatever the page is scrolled to and needs only enough
+   * blur to keep a nav label legible, while the mega menu covers the viewport
+   * and has to render the page behind it as texture rather than content.
+   * `--blur-*` is a Tailwind namespace, so these also drive `backdrop-blur-*`.
+   * ------------------------------------------------------------------ */
+  --blur-header: 22px;
+  --blur-mega: 30px;
+
+  /* ---------------------------------------------------------------------
+   * Breakpoints — docs/responsive-strategy.md §2
+   *
+   * `sm` is 480, not Tailwind's default 640. lg (1024) is the hinge: the nav,
+   * the vision timeline and the hero text placement all switch there.
+   * ------------------------------------------------------------------ */
+  --breakpoint-sm: 30rem; /* 480 — large phones */
+  --breakpoint-md: 48rem; /* 768 — tablet portrait */
+  --breakpoint-lg: 64rem; /* 1024 — the mobile/desktop divide */
+  --breakpoint-xl: 80rem; /* 1280 — laptop */
+  --breakpoint-2xl: 96rem; /* 1536 — desktop */
+  --breakpoint-3xl: 120rem; /* 1920 — the prototype's design width */
+
+  /* ---------------------------------------------------------------------
+   * Easing — docs/design-guidelines.md §5
+   * ------------------------------------------------------------------ */
+  --ease-entrance: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-letterbox: cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+/*
+ * Everything below is referenced by name. Tailwind v4 has no utility namespace
+ * for gradients or durations, so these stay out of @theme rather than generate
+ * nothing. Consume a gradient with `bg-(image:--gradient-cta)`.
+ */
+:root {
+  /* Gradients — docs/design-guidelines.md §1 */
+  --gradient-eyebrow: linear-gradient(90deg, #aa0505 0%, #0d2fa2 100%);
+  --gradient-cta: linear-gradient(105deg, #f9e800 -24%, #e40f14 6%, #45258d 95%);
+  --gradient-stats: linear-gradient(90deg, #e43026 0%, #4a3290 100%);
+  --gradient-caption: linear-gradient(
+    94.6deg,
+    rgb(249 232 0 / 0.82) -23%,
+    rgb(228 15 20 / 0.82) 6%,
+    rgb(69 37 141 / 0.82) 94%
+  );
+
+  /* The About SAEL shape's grade. **Back, on 2026-09-01**: the note that stood
+   * here said the token had no consumer because the client supplied the
+   * composite assembled, and that if the 14 shapes were ever drawn as visible
+   * artwork it should return. That is exactly what happened — the client now
+   * supplies the three layers separately (shape, photograph, cut-out) and the
+   * grade is ours to apply again.
+   *
+   * **This is `aboutSael/mask.svg`'s own ramp, transcribed** — not a ramp
+   * chosen here. The client supplied that file on 2026-09-02 to replace the
+   * derivation from `14.svg`, and its gradient is the design's answer to what
+   * this shape is coloured. `14.svg`'s flatter `#2b1b54 → #8a1e42 → #e01f2b`
+   * stood here for a day and is gone with it.
+   *
+   * **The angle and the stop positions are computed, not eyeballed.** The SVG
+   * declares `gradientUnits="userSpaceOnUse"` from `(973, 309.025)` to
+   * `(172.895, -61.934)` — a line 882 units long, at an angle, inside a
+   * 973 x 620 box. CSS sizes its gradient line to span the box instead, which
+   * for this angle is 1143.5 units, so the SVG's `0 / 0.327 / 1` land at
+   * `88.6% / 63.3% / 11.4%` of it. Reversed, because CSS runs blue-to-red where
+   * the SVG runs red-to-blue. The figures hold because the shape's box is
+   * always --about-shape-aspect; they would need recomputing if it were not. */
+  --gradient-shape: linear-gradient(114.87deg, #3035aa 11.4%, #8a1e42 63.3%, #fb3633 88.6%);
+
+  /* "Our Endeavour"'s panel, and the same transcription job --gradient-shape
+   * describes: `endeavour/mask.svg` declares `gradientUnits="userSpaceOnUse"`
+   * from `(360.159, 0)` to `(130.936, 487.755)` inside a 498 x 491 box — 538.9
+   * units of gradient line where CSS gives itself 656.2 — so the file's
+   * `0.195 / 0.560 / 0.886` land at `24.9% / 55.0% / 81.7%`. Valid only while
+   * the box holds --endeavour-panel-aspect.
+   *
+   * **`ab` on every stop is the file's `fill-opacity="0.67"`**, carried in the
+   * colour rather than as an `opacity` on the element. That 0.67 is the whole
+   * grade: unlike About's, which multiplies, this ramp simply sits over the
+   * photograph and lets a third of the solar grid read through it. Baking it
+   * into the stops is safe because they all carry the same alpha, so the
+   * interpolation is unchanged. */
+  --gradient-endeavour-panel: linear-gradient(
+    205.18deg,
+    #2c1b63ab 24.9%,
+    #8a1e42ab 55%,
+    #f20f18ab 81.7%
+  );
+
+  /* `aboutSael/mask.svg`'s silhouette as an alpha mask. The path verbatim; the
+   * only change is `fill`, from the file's gradient reference to opaque white,
+   * because a mask reads alpha and the ramp is --gradient-shape's job.
+   *
+   * **Supplied 2026-09-02, replacing a derivation from `14.svg`.** It is the
+   * same silhouette to the decimal — band at 63.7% across, 32.8% to 80.8%
+   * down, 7.9% corner radius — but drawn the way the design draws it, with the
+   * tall block on the left, and with the path tight to its viewBox. `14.svg`
+   * had it mirrored and padded ~21 units a side, so it needed a `rotate(180)`
+   * and a retightened viewBox to be usable. Both are gone, and so is the class
+   * of bug they invite.
+   *
+   * Inline rather than `url(../assets/…)`: a `url()` inside a custom property
+   * is an unparsed token stream, so whether the bundler rewrites the path to
+   * the emitted asset is not something to bet a silently-empty mask on. */
+  /* Stretch a mask image to its box on both axes.
+   *
+   * `mask-contain` would be equivalent — every box that carries one of these
+   * masks is given the mask's own aspect ratio — but only to within a
+   * rounding error, and `contain` centres what it cannot fill, so the error
+   * shows up as a hairline of unmasked pixels along an edge. Stretching has
+   * nothing to round. A token rather than `mask-size-[100%_100%]`, which is a
+   * magic number by /CLAUDE.md §2.2's third clause and is caught as one. */
+  --mask-fill: 100% 100%;
+
+  --mask-about-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 973 620'%3E%3Cpath fill='%23fff' d='M923.89 203.228H651.11C639.251 203.228 627.886 198.426 619.624 189.921L446.957 12.045C439.49 4.33514 429.196 0 418.463 0H49.1099C21.9883 0 0 21.9773 0 49.0853V570.915C0 598.023 21.9883 620 49.1099 620H280.659C291.145 620 301.192 615.857 308.631 608.476L405.122 512.775C412.561 505.395 422.608 501.252 433.094 501.252H923.89C951.012 501.252 973 479.274 973 452.166V252.313C973 225.205 951.012 203.228 923.89 203.228Z'/%3E%3C/svg%3E");
+
+  /* `endeavour/mask.svg`'s silhouette as an alpha mask — the path verbatim,
+   * `fill` changed to opaque white and `fill-opacity` dropped, both of which
+   * belong to --gradient-endeavour-panel rather than to the mask. Supplied
+   * 2026-09-02. `5.svg`, the same shape from the original handover, is still
+   * in that folder and is no longer the source for this section. */
+  --mask-endeavour-panel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 498 491'%3E%3Cpath fill='%23fff' d='M9.34357 304.203L113.81 405.095C119.812 410.87 123.186 418.818 123.186 427.123V460.343C123.186 477.277 136.909 491 153.845 491H384.093C401.028 491 414.751 477.277 414.751 460.343V217.033C414.751 209.214 417.736 201.688 423.122 195.978L489.63 133.821C495.015 128.111 498 120.585 498 112.766V30.6571C498 13.7227 484.277 0 467.341 0H30.6586C13.7234 0 0 13.7227 0 30.6571V282.143C0 290.48 3.37406 298.428 9.34357 304.203Z'/%3E%3C/svg%3E");
+
+  /* "Our Endeavour" — how wide the artwork sits beside the copy. The panel
+   * gradient and the shape mask that used to live here left when the client
+   * supplied the composite assembled, and are **back as of 2026-09-02** under
+   * --gradient-endeavour-panel and --mask-endeavour-panel, the layers having
+   * arrived separately again. The same round trip the About composite made. */
+  --endeavour-max-w: 75rem;
+  --endeavour-media-w: 31rem;
+
+  /* The business portfolio grid's cap. The prototype's 1160px: without it the
+   * four cards stretch to the full gutter width and read as slabs rather than
+   * as cards. `SAEL Homepage v3.dc.html`. */
+  --business-max-w: 72.5rem; /* 1160 */
+
+  /* ---------------------------------------------------------------------
+   * The inner-page templates — <ProseSplit> and <ValueGrid>, introduced by
+   * About Us (FE-06) and inherited by FE-07 → FE-15.
+   *
+   * Every figure here is read off `About Us.dc.html`. They are column
+   * *floors* rather than breakpoints: each grid is one
+   * `repeat(auto-fit, minmax(min(100%, <floor>), 1fr))` track and reflows on
+   * its own content width, so a section that gains a card later needs no new
+   * media query. `min(100%, …)` is what stops the floor from overflowing a
+   * 360px viewport — without it a 380px column is wider than the screen.
+   * --------------------------------------------------------------------- */
+
+  /* A prose split — heading and running copy beside one photograph. */
+  --prose-split-col-min: 23.75rem; /* 380 */
+  --prose-media-landscape-w: 35rem; /* 560 — "Our Endeavours" */
+  --prose-media-portrait-w: 26.25rem; /* 420 — "Our Ambition" */
+  --aspect-prose-landscape: 4/3;
+  --aspect-prose-portrait: 4/5;
+
+  /* A grid of value cards. Two floors, because the two surfaces on About Us
+   * carry different amounts of copy: three short pillars tile happily at 260,
+   * where the eight guiding principles need 340 to keep a card from becoming
+   * a column of single words. */
+  --value-grid-col-min: 16.25rem; /* 260 — "Our Strategic Pillars" */
+  --value-grid-col-min-wide: 21.25rem; /* 340 — "Our Guiding Principles" */
+  --value-mark-size: 3.5rem; /* 56 — the mark at the head of a value card */
+
+  /* The pixel strip's six ramp stops, left to right. Separate values rather
+   * than one gradient because the scattered squares are painted to a canvas,
+   * which takes a colour and not a CSS gradient.
+   *
+   * **Here and not in `@theme`, and that is load-bearing.** Tailwind emits a
+   * theme value only when something generates a utility from it, and these are
+   * read at runtime with `getComputedStyle` — by a name the component builds
+   * from a loop counter, so the string `--color-pixel-1` never appears in any
+   * source file for the scanner to find. In `@theme` all six were tree-shaken
+   * out of the stylesheet and the canvas painted nothing. `:root` is emitted
+   * verbatim, which is exactly what this block is for.
+   *
+   * `--color-map-dot-*` survives in `@theme` only because presence-map writes
+   * `var(--color-map-dot-1)` out longhand. Do not take that as the pattern. */
+  --color-pixel-1: #f5c000;
+  --color-pixel-2: #f28c00;
+  --color-pixel-3: #e8262a;
+  --color-pixel-4: #b81f6a;
+  --color-pixel-5: #7b2382;
+  --color-pixel-6: #4632a0;
+
+  /* The rounded date chip on a news card. Navy to green, left to right —
+   * a pairing that appears nowhere else in the system and is taken from the
+   * client's design rather than derived from the brand ramp. */
+  --gradient-date-chip: linear-gradient(90deg, #16357e, #2f8f3f);
+
+  /* The masthead's Contact Us button, and the underline under a current nav
+   * link. The same three stops, so the bar reads as one object. */
+  --gradient-nav-cta: linear-gradient(100deg, #2b1a6b 0%, #7a1f57 48%, #d81f35 100%);
+
+  /* The full-screen menu. The light theme from the client's navbar design —
+   * a wash that is brightest where the panel meets the bar and settles into
+   * the page's own grey at the foot. */
+  --gradient-mega: radial-gradient(
+    130% 120% at 50% 0%,
+    rgb(255 255 255 / 0.74),
+    rgb(232 236 240 / 0.92)
+  );
+
+  /* The wash on the column under the pointer. Fades out well before the
+   * column's right edge so it reads as a highlight rather than a block. */
+  --gradient-mega-hot: linear-gradient(
+    90deg,
+    rgb(122 31 87 / 0.12),
+    rgb(216 31 53 / 0.05),
+    transparent 74%
+  );
+
+  --color-mega-rule: rgb(20 40 32 / 0.12);
+  --color-mega-head-rule: rgb(160 160 160 / 0.28);
+
+  /* The Pan India Footprint heading, clipped to its letterforms. */
+  --gradient-footprint: linear-gradient(90deg, #c3277a, #7b3fbf);
+
+  /* The two short rules flanking a centred section eyebrow. Mirrored, so the
+   * pair reads as one gradient running outward from the label. */
+  --gradient-rule-left: linear-gradient(90deg, #582070, #a51e6e, #e0242c);
+  --gradient-rule-right: linear-gradient(270deg, #582070, #a51e6e, #e0242c);
+
+  /* Hero scrims. The headline sits on one side of the frame and the scrim
+   * darkens that side, so the angle is per-slide data rather than a second
+   * token — `--slide-scrim-angle` is set by the slide from its own text
+   * placement, and defaults to darkening the left. The vignette is applied
+   * over the top of it and is the same on every slide. */
+  --gradient-hero-scrim: linear-gradient(
+    var(--slide-scrim-angle, 90deg),
+    rgb(8 10 14 / 0.72) 0%,
+    rgb(8 10 14 / 0.28) 40%,
+    rgb(8 10 14 / 0) 66%
+  );
+  --gradient-hero-vignette: radial-gradient(
+    120% 130% at 50% 42%,
+    rgb(0 0 0 / 0) 52%,
+    rgb(0 0 0 / 0.42) 100%
+  );
+
+  /* Below lg the headline is bottom-anchored, so the scrim runs bottom-up
+   * instead of sideways. docs/responsive-strategy.md §4. */
+  --gradient-hero-scrim-mobile: linear-gradient(0deg, rgb(8 10 14 / 0.85) 0%, rgb(8 10 14 / 0) 60%);
+
+  /* The wash gradients sit *over* a base colour; the section variant that uses
+   * one sets that colour alongside. --gradient-wash-strength has a stacked
+   * variant because below lg the section reflows to one column and the tint
+   * has to read top-to-bottom. docs/responsive-strategy.md §4. */
+  --gradient-wash-strength: linear-gradient(
+    270deg,
+    rgb(254 0 0 / 0.31) 0%,
+    rgb(0 31 134 / 0.31) 76.53%
+  );
+  --gradient-wash-strength-stacked: linear-gradient(
+    180deg,
+    rgb(254 0 0 / 0.31) 0%,
+    rgb(0 31 134 / 0.31) 76.53%
+  );
+  --gradient-wash-goals: linear-gradient(
+    120deg,
+    rgb(170 5 5 / 0.05) 0%,
+    rgb(13 47 162 / 0.05) 100%
+  );
+  --gradient-goal-hover: linear-gradient(140deg, #e07a7a 0%, #b57fb0 55%, #8a86cf 100%);
+  --gradient-timeline: linear-gradient(90deg, #e40f14 0%, #7a2a9c 50%, #5aa2ff 100%);
+
+  /* Body-copy measure cap. The layout is fluid to the viewport with no max
+   * width, so without this, running text reaches 1600px on an ultrawide.
+   * docs/responsive-strategy.md §2. */
+  --measure: 68ch;
+
+  /* The hero headline's own measure. Far tighter than --measure: this is
+   * display type at 28 → 58px, and a line of it is spent long before running
+   * copy would be. The design's own value. */
+  --hero-measure: 15ch;
+
+  /* The Power Portfolio's right-hand column, and the short rule inside it.
+   *
+   * The column is capped rather than left to fill its share of the grid: the
+   * map is capped too, so without this the two drift apart as the viewport
+   * widens and the section reads as two objects with a hole between them. The
+   * rule is capped harder still — a divider that runs the full column reads
+   * as a border on the section rather than as a break between two blocks.
+   * Both are the client's calls on 2026-08-22. */
+  --map-copy-w: 40rem; /* 640 */
+
+  /* The copy column's left inset — breathing space between the map and the
+   * text, on top of the row's own --spacing-flow. The client asked for 5rem
+   * on 2026-09-03, having seen it at the 1920 design width, where both blocks
+   * are capped well inside the row and that slack is there to spend.
+   *
+   * It cannot be a flat 5rem, because the slack is not there at every width.
+   * Between `lg` and `xl` the row is tight enough that both blocks are already
+   * under their caps (38rem of map + 40rem of copy + --spacing-flow does not
+   * fit 1280 minus two gutters), so 5rem there comes straight out of the
+   * copy's measure rather than out of the gap. Hence 0 up to 1280, ramping to
+   * the asked-for 5rem at 1920 and holding flat above it:
+   *
+   *   1280 → 0    1440 → 20px    1600 → 40px    1760 → 60px    1920 → 80px
+   *
+   * The stacked case is not this token's job — it is the `lg:` on the utility
+   * at the call site, so "only when side by side" stays visible as its own
+   * condition rather than being implied by an arithmetic coincidence.
+   * Consumed by sections/presence-map/. */
+  --map-copy-pad: clamp(0rem, 12.5vw - 10rem, 5rem); /* 0 → 80, over 1280 → 1920 */
+
+  /* A map callout's cap. It is `w-max` first, so a one-figure state stays as
+   * narrow as its content; this only bites on the long legend names — "In-house
+   * Module Assembly Capacity" would otherwise set a 300px-wide tooltip on a
+   * 500px map. Past this it wraps. */
+  --map-tip-w: 15.5rem; /* 248 */
+  --map-rule-w: 9rem; /* 144 */
+
+  /* A ledger row's running copy. Narrower than --measure by a long way, and
+   * the design's own value: the mark beside it is a real column now, so the
+   * copy cannot run under it, but 68ch would still set a line far wider than
+   * the design does. */
+  --ledger-measure: 46ch;
+
+  /* The horizontal card rail's `--rail-per-view` and the width derived from it
+   * are deliberately *not* here — see the `rail-card` utility in globals.css
+   * for why a token cannot express that one. */
+
+  /* Shapes rebuilt in CSS from prototype SVGs that could not survive being
+   * stretched. Both are consumed by exactly one primitive.
+   * docs/asset-inventory.md §4. */
+  --tile-chamfer: 2.75rem; /* 44 — the business tile's cut bottom-right corner */
+  --badge-notch: 1rem; /* 16 — the date badge's angled right edge */
+
+  /* -------------------------------------------------------------------------
+   * Hero carousel — consumed only by components/sections/hero-carousel/.
+   *
+   * The desktop values are the prototype's, transcribed rather than
+   * reinterpreted. The mobile ones have no prototype equivalent — the
+   * prototype has no mobile hero at all — and come from
+   * docs/responsive-strategy.md §4.
+   * ---------------------------------------------------------------------- */
+
+  /* The image sits slightly oversized so that parallax translation never
+   * exposes an edge. Prototype: `scale(1.06)` on the image wrapper. */
+  --hero-image-scale: 1.06;
+
+  /* The anchor point of *both* hero transforms — the Ken Burns pan on the
+   * `<img>` and the `scale(1.06) translate(…)` on the wrapper above it. They
+   * have to share it: if only one moves, the other still expands about the
+   * centre and the clearance below stops holding.
+   *
+   * Not `50% 50%`, which is what it was until 2026-09-03. `object-cover` is
+   * height-bound at every breakpoint (docs/hero-image-spec.md §3), so at
+   * scale 1 the source height exactly fills the box and everything above the
+   * midline is pushed up and out as it scales. The desktop stack opens at
+   * 1.1024 before the animation runs at all, and the highest crown in the set
+   * survived only to a total scale of 1.041 — so no zoom setting could have
+   * saved it and the origin was the only lever.
+   *
+   * 30% is the balance point between the two failure modes. Higher and hair
+   * clips at the top of the frame; lower and `--parallax-y` can drag the
+   * image far enough down to expose a bare strip along the hero's top edge.
+   * At 30% the worst case across every breakpoint, both ends of the zoom and
+   * worst-direction parallax keeps ~16px of hair clearance and ~11px of
+   * top-edge coverage. The safe window is 8.1% → 42.6%, so this survives
+   * small future changes to the scale range without re-deriving it.
+   *
+   * Origin-x stays at 50%. Vertically an origin percentage tracks a source
+   * percentage exactly, because the cover crop is height-bound; horizontally
+   * the image overflows the box, so it does not, and there is nothing to be
+   * gained by moving it. */
+  --hero-origin: 50% 30%;
+
+  /* Mouse-parallax travel, per layer. The text moves *against* the pointer,
+   * hence the negative. docs/design-guidelines.md §5. */
+  --hero-parallax-image: 10px;
+  --hero-parallax-symbol: 24px;
+  --hero-parallax-text: -14px;
+
+  /* The hero headline sits on photography, so it carries its own shadow
+   * rather than relying on the scrim alone. */
+  --shadow-hero-text: 0 2px 26px rgb(0 0 0 / 0.5);
+
+  /* The About SAEL artwork's own ratio — 605 x 412, which is the box the
+   * client's approved composite is drawn in and the frame every figure below
+   * is measured against.
+   *
+   * All that is left of what was a whole stage: `--about-stage-*`,
+   * `--about-media-*`, `--about-heading-*` and `--about-body-*` placed four
+   * elements inside a fixed 1280:528 box as percentages, which is how
+   * `SAEL - New Website.pdf` draws the section. `SAEL Home v2` draws it as a
+   * plain twelve-column grid instead, so the coordinates have nothing left to
+   * position and are gone. */
+  --about-aspect: 605 / 412;
+
+  /* ---------------------------------------------------------------------
+   * The artwork's three layers, re-assembled in the browser (2026-09-01).
+   *
+   * The client supplies the shape, the photograph and the cut-out separately
+   * now, so the four figures below are the whole composition. They are all
+   * **proportions, not lengths** — nothing here is a pixel — which is what
+   * makes the arrangement identical at 360px and at 1920px.
+   *
+   * They are measured off `aboutSael/sardar-kid-cutout.png`, the composite
+   * the client approved, at its native 605 x 412. That file is now the
+   * *reference* rather than the artwork: if the assembly drifts, it is the
+   * thing to diff against.
+   * ------------------------------------------------------------------ */
+
+  /* The masked shape's own ratio — `aboutSael/mask.svg`'s viewBox, which its
+   * path fills exactly. The ratio the derivation from `14.svg` produced,
+   * 354.45 : 225.97, was the same picture to four decimal places (1.5686
+   * against 1.5694), so this swap moved nothing measurable in the layout.
+   * --gradient-shape's stop positions do assume it. */
+  --about-shape-aspect: 973 / 620;
+
+  /* How far the shape is held off the left and right edges of the artwork box.
+   *
+   * It is not decoration. Insetting the shape is what buys the vertical room
+   * for the cut-out to break the shape's top edge: the shape sits flush with
+   * the bottom of the artwork box, so narrowing it lowers its top edge, and
+   * 2.5% a side puts that edge at 11% down — which is where the composite
+   * puts it, with the boy's turban clearing it by a hair. Widen the shape and
+   * the head is clipped by the box. */
+  --about-shape-inset-x: 2.5%;
+
+  /* The cut-out, measured **against the shape**, not against the artwork box —
+   * it is positioned inside the shape's element, so one figure changing does
+   * not drag the other out of place.
+   *
+   * Width only: the figure's own aspect ratio supplies the height, so there is
+   * no second number here to fall out of step with the asset. It is taller
+   * than the shape (37% of 354.45:225.97 works out at 109% of the shape's
+   * height), which is the point — the boy stands in front of the shape and
+   * over its top edge. Its foot is the shape's foot, so `bottom: 0` in the
+   * component is the fourth figure and does not need a token. */
+  --about-cutout-x: -3.72%;
+  --about-cutout-w: 37.5%;
+
+  /* How wide the composite is allowed to get, expressed as the width at which
+   * it would be as tall as the design lets it be: `min(58vh, 520px)`, times
+   * its own 605:412. Capping the width rather than the height keeps the box
+   * on its ratio — a max-height on an aspect-ratio box whose width is already
+   * definite just squashes it and lets `object-contain` letterbox the result.
+   *
+   * The height cap is what keeps the section inside one screenful on a short
+   * laptop display, which is what it has to do to snap. */
+  --about-media-max-w: min(100%, calc(min(58vh, 32.5rem) * 605 / 412));
+
+  /* -------------------------------------------------------------------------
+   * `SAEL Home v2` — the grounds, the labels and the hero's progress bar.
+   * ---------------------------------------------------------------------- */
+
+  /* The dot grid over each ground. One dot per --spacing-dot-grid cell; the
+   * size is applied alongside in components/ui/section.tsx.
+   *
+   * Three things about the shape, all of them about surviving a zoom:
+   *
+   *  - `circle`, not the implicit `ellipse`. An ellipse sized `farthest-corner`
+   *    against a 13x13 cell is not round, and it stops being round *differently*
+   *    as the cell is scaled.
+   *  - The radius is a token, so paper and black are the same dot. See
+   *    --spacing-dot-radius.
+   *  - The outer stop is half a pixel past the solid one rather than on top of
+   *    it. A gradient whose two stops coincide has no ramp to rasterise, so at
+   *    a zoom level that lands the dot on a fraction of a device pixel the
+   *    whole grid can round away to nothing — which is exactly the dropout the
+   *    client reported on 2026-08-25. Half a pixel of feather always leaves
+   *    something to paint, at any zoom and any DPR, and is invisible at 100%.
+   */
+  --gradient-dot-dark: radial-gradient(
+    circle at center,
+    rgb(255 255 255 / 0.028) 0,
+    rgb(255 255 255 / 0.028) var(--spacing-dot-radius),
+    transparent calc(var(--spacing-dot-radius) + 0.5px)
+  );
+  --gradient-dot-paper: radial-gradient(
+    circle at center,
+    rgb(20 24 32 / 0.04) 0,
+    rgb(20 24 32 / 0.04) var(--spacing-dot-radius),
+    transparent calc(var(--spacing-dot-radius) + 0.5px)
+  );
+
+  /* The Power Portfolio heading, clipped to its letterforms. Brighter than
+   * --gradient-eyebrow-bright at both ends: this is display type on the black
+   * ground and it carries the section. */
+  --gradient-heading-bright: linear-gradient(90deg, #7d6fd4 0%, #cf3f7f 52%, #ff4a4f 100%);
+
+  /* The four business marks' own ramps, for the ledger title's `gradient`
+   * variant — each row's name in the gradient its mark carries, so the name,
+   * the figure's accent and the artwork beside them are one object.
+   *
+   * **Sampled from the artwork, then lifted.** The marks are PNGs with the
+   * gradient baked in, so there was no CSS ramp to reuse: each one's stops
+   * were taken from `src/assets/images/business/*.png` by projecting its
+   * opaque pixels onto the principal axis of their colour cloud, which is the
+   * ramp the artwork actually runs along. The hues below are the artwork's.
+   *
+   * The **lightness is not**. Every mark ramps into a dark end — #47154c,
+   * #2f2b75, #184877, #174825 — which is artwork on a black ground, not text
+   * on one: those four sit at 1.4–2.1 against --color-surface-black, where
+   * large text needs 3. Each stop is raised in HSL, hue and saturation held,
+   * until it clears **3.5**. This is the same move --gradient-eyebrow-bright
+   * makes against --gradient-eyebrow-deep, for the same reason.
+   *
+   * **All four run dark end → bright end, left to right**, though the marks
+   * themselves do not agree on direction (solar and agri read brightest at
+   * their top-left). Four names in a 2×2 grid are a set in a way four separate
+   * marks are not, and a set that ramps two ways reads as a mistake. The hue
+   * path of each is untouched — only the order. */
+  --gradient-ledger-solar: linear-gradient(90deg, #a631b2 0%, #e0272c 52%, #f9e217 100%);
+  --gradient-ledger-cell: linear-gradient(90deg, #605ac3 0%, #a23f9c 52%, #df4196 100%);
+  --gradient-ledger-module: linear-gradient(90deg, #2369ae 0%, #0f8578 52%, #30be35 100%);
+  --gradient-ledger-agri: linear-gradient(90deg, #26763d 0%, #4c883e 52%, #f3eb31 100%);
+
+  /* Section labels, clipped to their letterforms. `bright` is the on-dark
+   * ramp; `deep` is the same travel darkened to carry on paper. Both are the
+   * design's, and both are consumed through <Eyebrow tone>. */
+  --gradient-eyebrow-bright: linear-gradient(90deg, #8f83e0 0%, #d95a95 52%, #ff6a6e 100%);
+  --gradient-eyebrow-deep: linear-gradient(90deg, #2b215f 0%, #8a1f43 55%, #c91d2f 100%);
+
+  /* The hero's four progress segments, and the four headline highlights.
+   *
+   * The segments walk the pixel-strip ramp end to end, one hop per slide, so
+   * the bar reads as a single gradient split into four rather than as four
+   * unrelated fills. The highlights are the design's own per-slide pairs and
+   * are not on that ramp — they sit on photography and have to stay light. */
+  /* The hero's progress bar. One ramp across the whole bar, walking the
+   * pixel-strip colours end to end — the bar fills once over the full cycle
+   * rather than four times over four slides, at the client's request on
+   * 2026-08-21, so it is one gradient and not four. */
+  --gradient-hero-fill: linear-gradient(
+    90deg,
+    #f5c000 0%,
+    #e8262a 33%,
+    #b81f6a 55%,
+    #7b2382 78%,
+    #4632a0 100%
+  );
+
+  --gradient-hero-word-1: linear-gradient(92deg, #ffd23d 0%, #ff7a3d 55%, #ff5470 100%);
+  --gradient-hero-word-2: linear-gradient(92deg, #8ce6a6 0%, #3fd2c4 55%, #4fa9e2 100%);
+  --gradient-hero-word-3: linear-gradient(92deg, #ff7ac0 0%, #d07ae8 100%);
+  --gradient-hero-word-4: linear-gradient(92deg, #ecf25c 0%, #7ad657 100%);
+
+  /* The v2 hero scrim. The headline sits in the right-hand half at every size
+   * above lg, so unlike --gradient-hero-scrim this one does not take an angle
+   * from the slide — there is one composition now, not four. */
+  --gradient-hero-scrim-side: linear-gradient(
+    90deg,
+    rgb(6 7 10 / 0) 0%,
+    rgb(6 7 10 / 0.06) 32%,
+    rgb(6 7 10 / 0.5) 52%,
+    rgb(6 7 10 / 0.78) 72%,
+    rgb(6 7 10 / 0.88) 100%
+  );
+  --gradient-hero-scrim-stacked: linear-gradient(
+    0deg,
+    rgb(6 7 10 / 0.92) 0%,
+    rgb(6 7 10 / 0.6) 42%,
+    rgb(6 7 10 / 0.3) 100%
+  );
+  /* Sat under the progress bar on every slide, so the track never lands on a
+   * bright patch of photograph. */
+  --gradient-hero-foot: linear-gradient(0deg, rgb(6 7 10 / 0.55) 0%, transparent 30%);
+
+  /* "Our Goals". The scrim is no longer always on — at rest the photograph is
+   * shown as it is, and this arrives with the pointer. See the note in
+   * sections/goals-grid. */
+  --gradient-goal-reveal: linear-gradient(
+    180deg,
+    rgb(8 9 12 / 0.28) 0%,
+    rgb(8 9 12 / 0.62) 46%,
+    rgb(8 9 12 / 0.9) 100%
+  );
+
+  /* A goal's name and mark sit on an untreated photograph at rest, so they
+   * carry their own separation rather than leaning on a scrim that is not
+   * there. Same argument as --shadow-hero-text. */
+  --shadow-goal-title: 0 2px 18px rgb(0 0 0 / 0.55);
+
+  /* Motion — docs/design-guidelines.md §5 */
+  --duration-micro: 180ms; /* micro-interactions: hover, focus */
+
+  /* The masthead firming up as the page leaves the top. `SAEL Home v2`'s
+   * own .3s, and slower than --duration-card on purpose: the bar is not
+   * responding to the pointer, it is following the scroll, and a quick
+   * step reads as a flicker when the reader is hovering the boundary. */
+  --duration-header: 300ms;
+  --duration-card: 280ms; /* card hovers */
+  --duration-reveal: 550ms; /* scroll reveals */
+
+  /* The rule under a section label drawing itself in. Longer than the
+   * reveal it rides on, deliberately: the label lands and the rule is
+   * still travelling under it, which is what makes it read as being drawn
+   * rather than as another thing that faded in. */
+  --duration-underline: 720ms;
+  /* Gap between one revealed element and the next in the same group. Small —
+   * a stagger you can count is a stagger that has become a wait. */
+  --duration-reveal-step: 90ms;
+  /* The full-screen menu: the panel's own fade, and the gap between one
+   * column arriving and the next. */
+  --duration-mega: 450ms;
+  --duration-mega-step: 60ms;
+  /* How far a revealed element travels. Enough to read as "up", not so far
+   * that the layout visibly reflows as it lands. */
+  --reveal-shift: 1.75rem; /* 28 */
+  --duration-cross-fade: 1100ms; /* hero slide cross-fade */
+  --duration-parallax: 500ms; /* hero parallax follow, ease-out */
+
+  /* ---------------------------------------------------------------------
+   * Stacking order — docs/design-guidelines.md §4
+   *
+   * Three fixed layers, and the order between them is the whole point: the
+   * drawer covers the bar it was opened from, and the skip link clears both
+   * because a keyboard user who cannot see where focus went has no way back.
+   * Written as a scale rather than three numbers at three call sites, which
+   * is how the third one ends up underneath the first.
+   *
+   * Consumed with `z-(--z-header)` — Tailwind v4 has no z-index namespace, so
+   * these cannot be @theme tokens.
+   * ------------------------------------------------------------------ */
+  --z-header: 100;
+  --z-drawer: 110;
+  --z-skip-link: 120;
+
+  /* ---------------------------------------------------------------------
+   * Filter and transform amounts
+   *
+   * Tailwind has no theme namespace for saturate, brightness or scale, and
+   * `translate-*` reads the spacing scale, which these distances are not on.
+   * All are consumed functionally — `brightness-(--brightness-cta-hover)`.
+   * ------------------------------------------------------------------ */
+
+  /* Paired with --blur-header / --blur-mega; the design saturates both panes
+   * by the same amount, so one token serves both. */
+  --saturate-glass: 1.4;
+
+  /* The primary CTA's hover. A filter rather than a second gradient, so the
+   * button lifts without the stops having to be restated. */
+  --brightness-cta-hover: 1.08;
+
+  /* Hover lifts. Small enough that the layout is unchanged — the design is the
+   * design — but enough to answer the pointer. Both are `translate`, so they
+   * composite without touching layout. */
+  --lift-card: 5px; /* news card */
+  --lift-social: 3px; /* footer social button */
+
+  /* A goal card's photograph is held slightly over-size at rest so it has room
+   * to move on hover without an edge coming into frame. Under reduced motion
+   * it simply stays at the resting value. */
+  --scale-goal-rest: 1.02;
+  --scale-goal-hover: 1.06;
+}

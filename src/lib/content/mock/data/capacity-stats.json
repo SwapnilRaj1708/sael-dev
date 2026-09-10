@@ -1,0 +1,30 @@
+[
+  {
+    "id": "solar-generation",
+    "label": "Solar Energy Generation",
+    "value": "8299 MWp",
+    "footnote": "Solar IPP & BESS (Contracted & Awarded)",
+    "order": 1
+  },
+  {
+    "id": "cell-manufacturing",
+    "label": "Solar Cell Manufacturing",
+    "value": "5 GW",
+    "footnote": "Greater Noida — *Upcoming",
+    "order": 2
+  },
+  {
+    "id": "module-manufacturing",
+    "label": "Solar Module Manufacturing",
+    "value": "3625 MW + 5 GW",
+    "footnote": "Operational · Upcoming",
+    "order": 3
+  },
+  {
+    "id": "agri-waste",
+    "label": "Agri Waste to Energy",
+    "value": "164.9 MW",
+    "footnote": "Operational",
+    "order": 4
+  }
+]

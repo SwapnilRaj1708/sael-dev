@@ -1,0 +1,530 @@
+/*
+ * Bespoke keyframes, ported from docs/design-guidelines.md §5.
+ *
+ * The contract, and it is the important part of this file:
+ *
+ *   Every class below defines its **still state** unconditionally, and adds
+ *   the animation only inside `@media (prefers-reduced-motion: no-preference)`.
+ *
+ * So a user who asks for reduced motion gets the resting design — not a
+ * half-applied one, and not an element stuck at `opacity: 0` because the
+ * animation that was going to reveal it never ran. That failure mode is the
+ * reason the default is the still state rather than the other way round.
+ * /CLAUDE.md §5, docs/design-guidelines.md §5.
+ *
+ * Components apply these classes. No component writes an `animation:`
+ * shorthand inline.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Keyframes
+ * ------------------------------------------------------------------------ */
+
+/* Hero image Ken Burns. */
+@keyframes saelKen {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+/* A masked photograph, breathing. About SAEL's, and — since 2026-09-02 — Our
+ * Endeavour's: the two sections are the same construction, so they share the
+ * one animation rather than each carrying a copy of it.
+ *
+ * One leg of the cycle: pushed in at `1.16` and easing out to its natural
+ * framing. The rule below runs it `alternate`, so the return leg — the push
+ * back in — is this same travel played backwards rather than a second pair of
+ * keyframes to keep in sync. */
+@keyframes saelKenMedia {
+  from {
+    transform: scale(1.16);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+/* The About SAEL photograph, settling inside its shape as the section arrives.
+ * The hero's Ken Burns run the other way round: it starts wide and pushes in
+ * over the life of a slide, this one starts pushed in and off to one side and
+ * eases back to rest, because it is a reveal rather than an ambient drift. */
+@keyframes saelSettle {
+  from {
+    transform: scale(1.16) translate3d(2.5%, -1.5%, 0);
+  }
+  to {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+}
+
+/* Hero headline, one word at a time. */
+@keyframes fxWord {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+    filter: blur(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Letterbox panels wiping off the hero on load. */
+@keyframes fxLetter {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+
+/* Active carousel dot filling over the slide interval. The one place a width
+ * is animated instead of a transform — the element is 34px wide, so the layout
+ * cost is bounded. docs/design-guidelines.md §5. */
+@keyframes fxFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* The hero's progress bar, filling left to right over one slide's dwell.
+ *
+ * One full sweep per slide: the bar runs the whole width for the first image,
+ * resets, and runs it again for the second. It was a quarter-width run per
+ * slide for a day — continuous across the cycle — and the client asked on
+ * 2026-08-22 for the simpler reading.
+ *
+ * `clip-path` rather than `scaleX`, and rather than the `width` that fxFill
+ * animates. A `scaleX` would squash the gradient along with the box, so the
+ * ramp would compress and expand as the bar filled instead of staying put; a
+ * width would relayout a full-bleed element every frame. Clipping reveals a
+ * bar that is already the right size in the right colours. */
+@keyframes fxTrack {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* SDG strip. Travels exactly half its length, because the component renders
+ * the card set twice; at -50% the second set sits where the first began and
+ * the loop is seamless. */
+@keyframes sdgMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* The mobile nav drawer, entering from the right. */
+@keyframes drawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Vision timeline milestone dots. */
+@keyframes dotPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-brand-red) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 0.75rem transparent;
+  }
+}
+
+/* The halo expanding out of a map pin. */
+@keyframes saelPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* The spark travelling along the timeline path. */
+@keyframes sparkFlick {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* The three "Our Strategic Pillars" marks, from `About Us.dc.html` §05. Each
+ * animates one idea and nothing else: the bars grow, the gear turns, the leaf
+ * sways. All three are ambient loops on a `<g>` inside the SVG, so they
+ * composite on the GPU and never touch layout.
+ *
+ * `transform-origin` is in the SVG's own user space — the marks are drawn on a
+ * 56x56 viewBox — which is why the origins below are unitless pairs and not
+ * percentages. */
+@keyframes saelPillarGrow {
+  from {
+    transform: scaleY(0.45);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes saelPillarSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes saelPillarSway {
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(5deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Everything below is inside `@layer components`, and must stay there.
+ *
+ * Unlayered author styles outrank every Tailwind layer regardless of
+ * specificity, so an unlayered `.anim-marquee { transform: translateX(0) }`
+ * would quietly beat a `translate-x-*` utility on the same element. Sitting in
+ * `components` puts these above `base` and below `utilities`: they are
+ * defaults a component can still override. See the warning in globals.css.
+ * ------------------------------------------------------------------------ */
+
+@layer components {
+  /* ---------------------------------------------------------------------------
+   * Still states — unconditional
+   * ------------------------------------------------------------------------ */
+
+  .anim-ken-burns {
+    transform: scale(1);
+  }
+
+  /* A loop has no end state to rest at, so the still state is the cycle's open
+     framing rather than either extreme — the photograph simply sits at its
+     natural size. Without this the class was silently unstyled under reduced
+     motion; it landed on the same value, but by accident. */
+  .anim-ken-burns-media {
+    transform: scale(1);
+  }
+
+  /* The rest state is the animation's *end* state, not `scale(1)`: the 2%
+     overscale is what keeps the photograph's edges outside the shape while it
+     moves, and a reduced-motion viewer should see the framing the section
+     settles into rather than a slightly different one. */
+  .anim-about-settle {
+    transform: scale(1.02);
+  }
+
+  .anim-word-in {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* The letterbox panels are pure decoration for the reveal. With reduced motion
+   * they are not stuck open, they are absent. */
+  .anim-letterbox {
+    display: none;
+  }
+
+  /* No countdown to show, so the dot reads as plainly active. */
+  .anim-dot-fill {
+    width: 100%;
+  }
+
+  /* Likewise: with no countdown to show, the bar reads as simply filled. */
+  .anim-track-fill {
+    clip-path: inset(0 0 0 0);
+  }
+
+  .anim-marquee {
+    transform: translateX(0);
+  }
+
+  .anim-dot-pulse {
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  .anim-spark-flick {
+    opacity: 1;
+  }
+
+  /* The pin's halo is decoration on top of a solid dot that is always there,
+     so its still state is simply absent rather than frozen mid-pulse. */
+  .anim-map-ping {
+    opacity: 0;
+  }
+
+  /* The drawer is already open by the time it renders; the slide is decoration
+   * on top of that, so its absence costs nothing. */
+  .anim-drawer-in {
+    transform: none;
+  }
+
+  /* The pillar marks at rest. Each is the artwork as drawn — the bars at full
+   * height, the gear and the leaf unrotated — so a reduced-motion viewer sees
+   * the mark the designer drew rather than one frozen mid-cycle. */
+  .anim-pillar-bar,
+  .anim-pillar-gear,
+  .anim-pillar-leaf {
+    transform: none;
+  }
+
+  /* ---------------------------------------------------------------------------
+   * Motion — only when the user has not asked for less
+   * ------------------------------------------------------------------------ */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The pillar marks. `alternate` on two of the three, so they breathe
+     * rather than snapping back to the start of the cycle; the gear is the
+     * exception because a gear that reversed would read as broken.
+     *
+     * The three bars share one class and are staggered by a second class each,
+     * which is cheaper than three near-identical animations and keeps the
+     * timing in one place. */
+    .anim-pillar-bar {
+      transform-origin: 50% 44px;
+      animation: saelPillarGrow 2.2s ease-in-out infinite alternate;
+    }
+
+    .anim-pillar-bar-2 {
+      animation-delay: 0.3s;
+    }
+
+    .anim-pillar-bar-3 {
+      animation-delay: 0.6s;
+    }
+
+    .anim-pillar-gear {
+      transform-origin: 28px 28px;
+      animation: saelPillarSpin 14s linear infinite;
+    }
+
+    .anim-pillar-leaf {
+      transform-origin: 28px 44px;
+      animation: saelPillarSway 3.4s ease-in-out infinite alternate;
+    }
+
+    /* `transform-origin` rather than the default centre — see the note on
+       `--hero-origin`. It belongs here and not in the still-state block above
+       because the still state is `scale(1)`, which has no origin to speak of.
+       The wrapper in hero-backdrop.tsx carries the same token; the two are one
+       decision and must not drift. */
+    .anim-ken-burns {
+      transform-origin: var(--hero-origin);
+      animation: saelKen 9s ease forwards;
+    }
+
+    /* Ambient and endless, unlike the hero's one-shot pan: this photograph is
+       not tied to a slide that expires, so it breathes for as long as the
+       section is on screen. `alternate` is what makes it out-then-back-in off
+       a single pair of keyframes — 6s per leg, so a full round trip is 12s.
+       `ease` at both ends of each leg puts a natural pause at the extremes,
+       which is what stops the turnaround reading as a bounce. */
+    .anim-ken-burns-media {
+      animation: saelKenMedia 6s ease-in-out infinite alternate;
+    }
+
+    /* Gated on the `Reveal` ancestor rather than running at mount. About SAEL
+       is the second section of the page, so an unconditional animation would
+       have finished long before anyone scrolled to it. `data-reveal` is set by
+       components/ui/reveal.tsx and re-armed every time the section leaves the
+       viewport, so the settle replays on each pass — which is the behaviour
+       the client asked of `Reveal` itself on 2026-08-06. */
+    [data-reveal='shown'] .anim-about-settle {
+      animation: saelSettle 8s var(--ease-entrance) both;
+    }
+
+    /* `--anim-index` is set per word by the component; `backwards` holds the
+     * from-state through the delay so nothing flashes in before its turn. */
+    .anim-word-in {
+      animation: fxWord 700ms var(--ease-entrance) backwards;
+      animation-delay: calc(var(--anim-index, 0) * 55ms);
+    }
+
+    .anim-letterbox {
+      display: block;
+      transform-origin: top;
+      animation: fxLetter 1s var(--ease-letterbox) forwards;
+      animation-delay: calc(var(--anim-index, 0) * 55ms);
+    }
+
+    /* `--slide-duration` comes from the carousel, so the fill and the slide
+     * interval cannot drift apart. */
+    .anim-dot-fill {
+      width: 0;
+      animation: fxFill var(--slide-duration, 6s) linear forwards;
+    }
+
+    .anim-track-fill {
+      clip-path: inset(0 100% 0 0);
+      animation: fxTrack var(--slide-duration, 6s) linear forwards;
+    }
+
+    .anim-marquee {
+      animation: sdgMarquee 44s linear infinite;
+    }
+
+    /* Pause on hover, but only where there is a real pointer to hover with —
+     * on touch the marquee is replaced by native scroll anyway.
+     * docs/responsive-strategy.md §4. */
+    @media (hover: hover) and (pointer: fine) {
+      .anim-marquee:hover,
+      .anim-marquee:focus-within {
+        animation-play-state: paused;
+      }
+    }
+
+    .anim-dot-pulse {
+      animation: dotPulse 2.4s ease-out infinite;
+    }
+
+    .anim-spark-flick {
+      animation: sparkFlick 900ms ease-in-out infinite;
+    }
+
+    /* `--anim-index` is set per pin so the halos do not pulse in lockstep. */
+    .anim-map-ping {
+      animation: saelPing 2.6s ease-out infinite;
+      animation-delay: calc(var(--anim-index, 0) * 420ms);
+    }
+
+    .anim-drawer-in {
+      animation: drawerIn 280ms var(--ease-entrance);
+    }
+  }
+}
+
+/*
+ * Scroll reveal — components/ui/reveal.tsx.
+ *
+ * Two rules, and the split between them is the whole design:
+ *
+ *  - the **transition** is unconditional, so an element that is revealed
+ *    before the stylesheet has any reason to hide it simply sits at its
+ *    resting values;
+ *  - the **hidden** state is scoped to `html.reveal-ready`, a class only the
+ *    component adds once it is running. Without script the element is never
+ *    hidden, so a page whose bundle fails still reads.
+ *
+ * Both live inside `prefers-reduced-motion: no-preference`: for anyone who has
+ * asked for less motion there is no transition and no offset, and the content
+ * is simply there. /CLAUDE.md §5.
+ */
+@layer utilities {
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-reveal {
+      transition:
+        opacity var(--duration-reveal) var(--ease-entrance),
+        transform var(--duration-reveal) var(--ease-entrance);
+      transition-delay: calc(var(--reveal-order, 0) * var(--duration-reveal-step));
+      will-change: opacity, transform;
+    }
+
+    html.reveal-ready .anim-reveal[data-reveal='pending'] {
+      opacity: 0;
+      transform: translateY(var(--reveal-shift));
+    }
+  }
+}
+
+/*
+ * The rule under a section label drawing itself in — components/ui/eyebrow.tsx.
+ *
+ * It rides on `<Reveal>` rather than observing anything of its own. `Reveal`
+ * already writes `data-reveal` on the box around the label, so the rule can
+ * simply read it: collapsed while that box is `pending`, full width once it is
+ * `shown`. No second observer, no second definition of "in view", and no way
+ * for the two to disagree about when the section arrived.
+ *
+ * It also inherits the good parts of that mechanism for free. It replays on
+ * every pass, because `Reveal` re-arms. And the collapsed state is scoped to
+ * `html.reveal-ready` for the same reason the reveal's is: without script the
+ * attribute never changes, so a rule that started at zero width would stay
+ * there for ever. Unscoped, the rule is simply drawn.
+ *
+ * `scaleX` from a left origin rather than an animated `width`: a width
+ * animation lays the element out again on every frame, and this one sits under
+ * text whose own box would be re-measured with it.
+ *
+ * An eyebrow outside any `<Reveal>` — the design-system page has several — is
+ * never `pending`, so it is never collapsed. That falls out of the selector
+ * rather than needing a case of its own.
+ */
+@layer utilities {
+  .anim-underline {
+    transform-origin: left center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-underline {
+      transition: transform var(--duration-underline) var(--ease-entrance);
+      transition-delay: calc(var(--reveal-order, 0) * var(--duration-reveal-step));
+    }
+
+    html.reveal-ready [data-reveal='pending'] .anim-underline {
+      transform: scaleX(0);
+    }
+  }
+}
+
+/*
+ * The masthead's full-screen menu — components/layout/header/mega-menu.tsx.
+ *
+ * The columns rise and fade in one after another, `--mm-index` apart. Written
+ * here rather than as a utility because the delay is arithmetic on a custom
+ * property, and because the closed state has to be expressible without the
+ * panel being unmounted: it stays in the DOM so the transition has something
+ * to run on, and `inert` keeps it out of the tab order meanwhile.
+ */
+@layer utilities {
+  /* The still state is the unconditional one, per this file's contract: a
+   * column is simply there. Both the hidden state and the transition that
+   * leaves it live inside the media query, so a reduced-motion user opening
+   * the panel sees the columns at once rather than watching them rise.
+   *
+   * Nothing is exposed while the panel is closed, because the panel carries
+   * its own `opacity-0 pointer-events-none` and `inert={!open}` — the column's
+   * own `opacity: 0` was only ever the animation's starting point, never what
+   * hid it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-mega-col {
+      opacity: 0;
+      transform: translateY(var(--reveal-shift));
+      transition:
+        opacity var(--duration-mega) var(--ease-entrance),
+        transform var(--duration-mega) var(--ease-entrance);
+      transition-delay: calc(var(--mm-index, 0) * var(--duration-mega-step));
+    }
+
+    [data-mega='open'] .anim-mega-col {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

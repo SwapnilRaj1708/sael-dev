@@ -76,14 +76,40 @@ export interface InvestorDocument {
 
 /* ---------- Company ---------- */
 
+export type TeamGroup = 'leadership' | 'management';
+
 export interface TeamMember {
   id: string;
   name: string;
   designation: string;
-  photo: ImageAsset | null;
+  group: TeamGroup;         // which tab on /our-team/ this person appears under
+  photoUrl: string | null;
   bio: string | null;       // may contain sanitised HTML
+  linkedinUrl: string | null;
   order: number;
 }
+
+**Two fields changed in FE-07**, which built `/our-team/` and is the only
+consumer of this type.
+
+`group` is new. `Our Team.dc.html` splits the roster into Leadership and
+Management tabs, and a tab is a partition of the data, so the grouping has to
+travel with the person rather than live as a hardcoded list of names in a
+component. `GET /api/v1/team` gains a matching `group` string — see
+`api-contracts.md` §4.
+
+`photoUrl: string | null` replaces `photo: ImageAsset | null`. These portraits
+are CMS assets the frontend cannot know at build time, so what a component
+needs is a URL that `next/image` can optimise — which is exactly the shape
+`NewsItem.imageUrl` already took in FE-04, for the same reason. There is no
+`photoAlt`: the contract offers one and it is `null` in every row, and the
+right alternative text for a portrait is the name of the person in it, which
+`name` already carries.
+
+`linkedinUrl` was added on 2026-09-10, from the live site's own popups: seven of
+the seventeen publish a profile and ten do not. It is genuinely sparse rather
+than merely unfilled — whether someone publishes a profile is their decision —
+so a consumer omits the link entirely rather than rendering a disabled one.
 
 export interface CapacityStat {
   id: string;

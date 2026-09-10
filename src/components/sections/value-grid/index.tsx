@@ -36,7 +36,6 @@ export interface ValueGridProps {
    * and neither of these two surfaces links anywhere.
    */
   accent?: boolean;
-  snap?: boolean;
 }
 
 const COLUMNS_CLASS: Record<'default' | 'wide', string> = {
@@ -115,15 +114,9 @@ export function ValueGrid({
   columns = 'default',
   spacing = 'default',
   accent = false,
-  snap = false,
 }: ValueGridProps) {
   return (
-    <Section
-      data-snap-section
-      background="black-dots"
-      spacing={spacing === 'tight' ? 'tight' : 'default'}
-      className={cn('flex items-center', snap && 'min-h-viewport snap-start')}
-    >
+    <Section background="black-dots" spacing={spacing === 'tight' ? 'tight' : 'default'}>
       <div className="flex w-full flex-col gap-flow">
         <div className="flex flex-col gap-stack">
           {eyebrow !== undefined && (

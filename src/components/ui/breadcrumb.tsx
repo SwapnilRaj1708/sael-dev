@@ -56,7 +56,14 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                 // worse than rendering it as text.
                 <span>{item.name}</span>
               ) : (
-                <Link href={item.href} className="transition-colors hover:text-white">
+                // `focus-visible:outline-white`: this component is dark-ground
+                // only (see above), and the global --color-brand-blue ring is
+                // 1.84:1 there — below WCAG 1.4.11's 3.0 floor. Found while
+                // building FE-07, and it applies equally to the About Us hero.
+                <Link
+                  href={item.href}
+                  className="transition-colors hover:text-white focus-visible:outline-white"
+                >
                   {item.name}
                 </Link>
               )}

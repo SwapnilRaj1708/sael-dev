@@ -66,29 +66,34 @@ const principleItems: ValueGridItem[] = guidingPrinciples.items.map((principle) 
  * the design and omit them; the deviation is recorded in the tracker so it can
  * be reversed with two lines if that ruling changes.
  *
- * `data-snap-sections` and `-mt-header lg:mt-0` are the same three-part opt-in
- * the homepage uses: globals.css matches the attribute with `html:has(…)`, and
- * the negative margin gives back the `pt-header` the root layout puts on
- * `<main>` so the full-bleed hero starts at the viewport top. Below `lg` the
- * masthead overlays the page; from `lg` the offset is real again.
- * docs/design-guidelines.md §8.7.
+ * **The page does not snap.** It did until 2026-09-10, when the design removed
+ * section snapping outright — no `data-snap-sections`, no per-section opt-in,
+ * and the hero sized as a band rather than a screen. Sections are their own
+ * height again and the browser scrolls them normally. The homepage still
+ * snaps; this template no longer does, and FE-07 → FE-15 inherit that.
+ *
+ * `-mt-header lg:mt-0` stays, and is **not** part of what went. It is a
+ * statement about the masthead, not about snapping: below `lg` the bar overlays
+ * the page and slides away as you scroll, so a full-bleed hero has to start at
+ * the viewport top, which means giving back the `pt-header` the root layout
+ * puts on `<main>`. From `lg` the bar offsets instead and the padding is
+ * correct as it stands. See the note on --spacing-viewport in theme.css.
  *
  * A Server Component, and so is every section under it — nothing on this page
  * is interactive beyond links and CSS hover states.
  */
 export default function AboutUsPage() {
   return (
-    <div data-snap-sections className="-mt-header lg:mt-0">
-      <PageHero {...aboutHero} snap />
-      <ProseSplit {...ourEndeavours} snap />
-      <ProseSplit {...ourAmbition} snap />
-      <ValueGrid title={strategicPillars.title} items={pillarItems} spacing="tight" accent snap />
+    <div className="-mt-header lg:mt-0">
+      <PageHero {...aboutHero} />
+      <ProseSplit {...ourEndeavours} />
+      <ProseSplit {...ourAmbition} />
+      <ValueGrid title={strategicPillars.title} items={pillarItems} spacing="tight" accent />
       <ValueGrid
         eyebrow={guidingPrinciples.eyebrow}
         title={guidingPrinciples.title}
         items={principleItems}
         columns="wide"
-        snap
       />
     </div>
   );

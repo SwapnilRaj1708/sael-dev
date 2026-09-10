@@ -162,6 +162,12 @@
    * design element at two opacities, not two elements. */
   --color-hairline-dark: rgb(255 255 255 / 0.16);
   --color-hairline-grid: rgb(255 255 255 / 0.14);
+
+  /* The modal scrim behind a biography dialog. --color-surface-black at 0.72,
+   * which is the design file's own `dialog::backdrop`. Its own token rather
+   * than an opacity utility on the black, because `::backdrop` is not a child
+   * of anything and cannot inherit one. */
+  --color-scrim-dialog: rgb(8 9 12 / 0.72);
   --color-hairline-paper: rgb(20 24 32 / 0.18);
   --color-hairline-paper-soft: rgb(20 24 32 / 0.2);
 
@@ -1007,6 +1013,27 @@
    * 360px viewport — without it a 380px column is wider than the screen.
    * --------------------------------------------------------------------- */
 
+  /* The inner-page hero's height: a full screen, with a floor under it.
+   *
+   * `--spacing-viewport` is the screen minus whatever the masthead is taking —
+   * the whole screen below `lg` where the bar overlays, the screen less 68px
+   * from `lg` where it offsets. globals.css does that swap off
+   * `[data-viewport-hero]`, which <PageHero> sets itself.
+   *
+   * **The floor is a `max()` and not a media query, because the problem is the
+   * viewport's height and a breakpoint can only ask about its width.** A phone
+   * held landscape is around 390px tall: a full-viewport hero there is shorter
+   * than the copy standing in it, and no width breakpoint distinguishes that
+   * phone from the same phone held upright. `max()` asks the only question that
+   * matters — is a screen's worth actually enough room — and answers it at every
+   * width and orientation at once.
+   *
+   * 576px is what the content stack needs before it starts to feel cramped:
+   * ~100px of top padding clearing the bar, the breadcrumb, the `--text-hero`
+   * headline, a two-line standfirst, and --spacing-hero-pad-bottom under it. */
+  --page-hero-min-h: 36rem; /* 576 */
+  --page-hero-h: max(var(--page-hero-min-h), var(--spacing-viewport));
+
   /* A prose split — heading and running copy beside one photograph. */
   --prose-split-col-min: 23.75rem; /* 380 */
   --prose-media-landscape-w: 35rem; /* 560 — "Our Endeavours" */
@@ -1021,6 +1048,32 @@
   --value-grid-col-min: 16.25rem; /* 260 — "Our Strategic Pillars" */
   --value-grid-col-min-wide: 21.25rem; /* 340 — "Our Guiding Principles" */
   --value-mark-size: 3.5rem; /* 56 — the mark at the head of a value card */
+
+  /* The team directory — a tabbed grid of portrait cards, each opening a
+   * biography in a modal dialog. `Our Team.dc.html`, docs/features/07.
+   *
+   * 250 is a lower floor than either value-grid column, and deliberately: a
+   * team card carries a name and one line of designation under a portrait, so
+   * it tiles four-up on a desktop where a card carrying a paragraph tiles
+   * three. The grid is `auto-fill` rather than `auto-fit` — Management has
+   * seven cards to Leadership's ten, and `auto-fit` would collapse the empty
+   * tracks and draw the same person wider on one tab than on the other. */
+  --team-grid-col-min: 15.625rem; /* 250 */
+
+  /* 3:4 against portraits that are supplied at 4:5. `object-cover` takes the
+   * difference off the top and bottom, which on a head-and-shoulders portrait
+   * is the crop that costs nothing. The design's ratio wins over the assets'
+   * because the card grid, not the photographer, sets the rhythm here. */
+  --aspect-team-photo: 3 / 4;
+
+  /* The biography dialog. Width and height are expressed against the viewport
+   * — a modal dialog's containing block is the viewport itself, which is what
+   * lets `100%` stand in for the `100vw` that is banned everywhere under
+   * `src/` (/CLAUDE.md §2.2). The inset comes off --spacing-flow rather than a
+   * fixed 32/64, so the dialog breathes on a large screen and hugs a phone. */
+  --team-dialog-w: min(45rem, calc(100% - var(--spacing-flow))); /* 720 cap */
+  --team-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
+  --team-dialog-portrait-w: 6rem; /* 96 */
 
   /* The pixel strip's six ramp stops, left to right. Separate values rather
    * than one gradient because the scattered squares are painted to a canvas,
@@ -1416,6 +1469,34 @@
     rgb(6 7 10 / 0.6) 42%,
     rgb(6 7 10 / 0.3) 100%
   );
+  /* The inner-page hero's scrim. **Not --gradient-hero-scrim-stacked**, which
+   * this used until 2026-09-10 and which belongs to the homepage carousel.
+   *
+   * That one never lets the photograph go: it is 0.92 at the foot, still 0.6
+   * at 42%, and 0.3 even at the very top, so the whole image sits under a grey
+   * film. It is tuned for the homepage's stacked composition, where a large
+   * headline and a four-segment progress bar cross the full frame and every
+   * part of the picture is behind something.
+   *
+   * An inner page's hero carries far less: a breadcrumb, one heading and a line
+   * of standfirst, all bottom-anchored. So the protection is concentrated where
+   * that block actually sits and released everywhere else — still 0.88 at the
+   * foot, but fully clear by 82%, which lets the top two-thirds of the
+   * photograph read at its own brightness.
+   *
+   * The stops are close together through the bottom fifth on purpose. A scrim
+   * that reaches full strength gradually shows a visible band where it crosses
+   * a flat area of photograph; one that arrives quickly under the text does
+   * not, because the eye reads the edge as the text's own ground. */
+  --gradient-page-hero-scrim: linear-gradient(
+    0deg,
+    rgb(6 7 10 / 0.88) 0%,
+    rgb(6 7 10 / 0.72) 16%,
+    rgb(6 7 10 / 0.4) 38%,
+    rgb(6 7 10 / 0.14) 62%,
+    rgb(6 7 10 / 0) 82%
+  );
+
   /* Sat under the progress bar on every slide, so the track never lands on a
    * bright patch of photograph. */
   --gradient-hero-foot: linear-gradient(0deg, rgb(6 7 10 / 0.55) 0%, transparent 30%);

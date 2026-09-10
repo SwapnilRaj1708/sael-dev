@@ -1,4 +1,4 @@
-import type { CapacityStat, NewsItem } from './types';
+import type { CapacityStat, NewsItem, TeamMember } from './types';
 
 /**
  * The entire boundary between the application and its content. **Adding a
@@ -6,10 +6,11 @@ import type { CapacityStat, NewsItem } from './types';
  * *both* the mock and the API adapter, and only then building the UI.
  * docs/content-model.md §3.
  *
- * Two methods so far, because the homepage consumes two. FE-05 fills in the
- * remaining five from docs/content-model.md §3 — the interface is deliberately
- * ordered after the homepage so that its shape is proven by a real consumer
- * before the whole thing is built out (docs/features/05 §preamble).
+ * Three methods so far. Two came from the homepage; `getTeamMembers` was
+ * carved out of FE-05 by FE-07, which is the page that consumes it — the same
+ * trade FE-04 made for stats and news, and the reason the interface is
+ * deliberately ordered after its consumers (docs/features/05 §preamble). FE-05
+ * fills in the remaining four from docs/content-model.md §3.
  *
  * Contract:
  *
@@ -28,6 +29,15 @@ export interface ContentRepository {
    * backend for a page, so callers must not rely on getting exactly that many.
    */
   getNewsItems(options?: { limit?: number }): Promise<NewsItem[]>;
+  /**
+   * The whole roster, both groups, ascending by `order`.
+   *
+   * Not split per group and not filtered here: `/our-team/` renders both tabs
+   * in one response and switches between them on the client, so two calls
+   * would be two round trips for one screen. A caller that wants one group
+   * partitions the result.
+   */
+  getTeamMembers(): Promise<TeamMember[]>;
 }
 
 /**

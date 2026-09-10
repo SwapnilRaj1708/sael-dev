@@ -31,7 +31,6 @@ export interface ProseSplitProps {
    * not run out into a long thin line beside a portrait.
    */
   measure?: 'default' | 'narrow';
-  snap?: boolean;
 }
 
 const MEASURE_CLASS: Record<'default' | 'narrow', string> = {
@@ -66,7 +65,7 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  * **The grid is one `auto-fit` track, not a breakpoint.** Both columns have a
  * `--prose-split-col-min` floor, so the section reflows on the space it
  * actually has rather than on an arbitrary viewport width — which is what
- * keeps it correct inside a snap area on a short laptop screen as well as on a
+ * keeps it correct in a narrow column beside a photograph as well as on a
  * phone. `min(100%, …)` inside the `minmax` is what stops a 380px floor from
  * overflowing a 360px viewport. docs/responsive-strategy.md §4.
  *
@@ -75,19 +74,9 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  *
  * A Server Component. Nothing here is interactive.
  */
-export function ProseSplit({
-  title,
-  body,
-  media,
-  measure = 'default',
-  snap = false,
-}: ProseSplitProps) {
+export function ProseSplit({ title, body, media, measure = 'default' }: ProseSplitProps) {
   return (
-    <Section
-      data-snap-section
-      background="black-dots"
-      className={cn('flex items-center', snap && 'min-h-viewport snap-start')}
-    >
+    <Section background="black-dots">
       <div
         className={cn(
           'grid w-full items-center gap-x-ledger-col-gap gap-y-flow',

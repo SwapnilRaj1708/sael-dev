@@ -63,3 +63,53 @@ export interface NewsItem {
   /** `null` when the item has no artwork; the card then shows its placeholder. */
   imageUrl: string | null;
 }
+
+/**
+ * A director or a member of the leadership team, on `/our-team/`.
+ *
+ * **`group` is not in `docs/content-model.md` §2 or `api-contracts.md` §4.**
+ * It was added for FE-07: `Our Team.dc.html` splits the page into Leadership
+ * and Management tabs, and a tab is a partition of the roster, so it has to
+ * come from the data rather than from a hardcoded list of names in a
+ * component. Both docs are updated to match; the proposal for the backend is
+ * a `group` string on `GET /api/v1/team` with exactly these two values.
+ *
+ * `photoUrl` rather than the `photo: ImageAsset` that `content-model.md` §2
+ * describes, because the portraits are CMS assets that the frontend cannot
+ * know at build time — the same reason and the same shape as
+ * {@link NewsItem.imageUrl}, which set the precedent in FE-04. The mock serves
+ * them from `public/team/`; the API will return absolute Azure Blob URLs, and
+ * `next/image` optimises both identically.
+ *
+ * There is no `photoAlt`. The contract offers one and it is `null` in every
+ * row: the correct alternative text for a portrait is the name of the person
+ * in it, which this type already carries. A second field that would always
+ * fall back to `name` is a field with no consumer.
+ *
+ * `bio` may contain HTML — `p, br, strong, em, ul, ol, li, a`, per
+ * `api-contracts.md` §4. It is sanitised again on this side before it is
+ * rendered; see `lib/utils/sanitize-bio.ts` for why that is not redundant.
+ */
+export type TeamGroup = 'leadership' | 'management';
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  /** "Managing Director and Chairperson". Plain text, never HTML. */
+  designation: string;
+  group: TeamGroup;
+  /** `null` when no portrait exists; the card then shows an initials avatar. */
+  photoUrl: string | null;
+  /** Sanitised HTML, or `null` when the person has no published biography. */
+  bio: string | null;
+  /**
+   * Absolute URL to this person's LinkedIn profile, or `null`.
+   *
+   * `null` for most of the board and set for most of the leadership team —
+   * whether someone publishes a profile is their own decision, so this is
+   * genuinely sparse rather than merely unfilled, and the dialog omits the
+   * link entirely rather than showing a disabled one.
+   */
+  linkedinUrl: string | null;
+  order: number;
+}

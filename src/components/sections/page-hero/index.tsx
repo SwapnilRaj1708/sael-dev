@@ -5,7 +5,6 @@ import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Section } from '@/components/ui/section';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
-import { cn } from '@/lib/utils/cn';
 import { SIZES_FULL_BLEED } from '@/lib/utils/image-sizes';
 
 export interface PageHeroProps {
@@ -23,7 +22,6 @@ export interface PageHeroProps {
   imageAlt: string;
   /** The asset's name in docs/asset-inventory.md, for the pending placeholder. */
   pending?: string;
-  snap?: boolean;
 }
 
 /**
@@ -37,18 +35,27 @@ export interface PageHeroProps {
  * Built to `About Us.dc.html` §01. Two things in that file are worth naming
  * because they differ from `docs/features/06-about-us.md`:
  *
- *  - **The box is `min-h-viewport`, not an aspect ratio.** The feature doc
- *    specifies `3/1` on desktop falling to `4/3` on mobile. The design draws a
- *    full-viewport hero on a page that snaps, and an aspect-ratio hero inside
- *    a snap area would either overflow it or leave a band of ground under it.
- *    The design wins here and the deviation is recorded in the tracker.
+ *  - **The box is a full screen with a floor under it, not an aspect ratio.**
+ *    The feature doc specifies `3/1` on desktop falling to `4/3` on mobile.
+ *    `--page-hero-h` is `max(36rem, --spacing-viewport)`: a screen's worth
+ *    wherever a screen is enough, and 576px wherever it is not. The floor is a
+ *    `max()` rather than a breakpoint because the failure is a *short* viewport,
+ *    not a narrow one — a phone held landscape needs it and the same phone held
+ *    upright does not, and no width query tells those apart.
+ *    `data-viewport-hero` below is what makes `--spacing-viewport` mean the
+ *    whole screen below `lg`, where the masthead overlays rather than offsets;
+ *    globals.css carries that swap.
  *  - **No `<Reveal>`.** The hero is above the fold on arrival, so there is
  *    nothing to reveal — content that animates in when it was already on
  *    screen reads as a glitch. Every section *below* this one cascades.
  *
- * The scrim is `--gradient-hero-scrim-stacked`, the same ramp the homepage
- * hero uses, so a light photograph cannot take the headline's contrast below
- * the floor whatever the client eventually supplies.
+ * The scrim is `--gradient-page-hero-scrim` and is deliberately **not** the
+ * homepage's `--gradient-hero-scrim-stacked`, which this used until 2026-09-10.
+ * That ramp is 0.3 opaque even at the top of the frame, so it laid a grey film
+ * over the whole photograph; it is tuned for a composition where a headline and
+ * a progress bar cross the entire image. This one concentrates the same
+ * protection under the bottom-anchored copy and is fully clear by 82%, so the
+ * picture reads at its own brightness.
  *
  * `priority` is set on the banner: it is the page's largest contentful paint,
  * and it is the one image per page that should carry it.
@@ -63,11 +70,9 @@ export function PageHero({
   image,
   imageAlt,
   pending,
-  snap = false,
 }: PageHeroProps) {
   return (
     <Section
-      data-snap-section
       background="black"
       // The section owns its vertical space through the inner box's padding,
       // so the standard rhythm would only add a band of black under the
@@ -75,10 +80,14 @@ export function PageHero({
       spacing="none"
       // The photograph reaches the viewport edge, so the Section renders no
       // Container and the copy below carries its own. docs/design-guidelines.md §8.2.
+      // Makes --spacing-viewport the whole screen below `lg`, where the
+      // masthead overlays the page instead of offsetting it. globals.css does
+      // the swap; the attribute is here so an inner page inherits it without
+      // having to plumb anything through its own layout.
+      data-viewport-hero
       fullBleed
-      className={cn(snap && 'snap-start')}
     >
-      <div className="relative flex min-h-viewport w-full max-w-full items-end overflow-hidden">
+      <div className="relative flex min-h-(--page-hero-h) w-full max-w-full items-end overflow-hidden">
         <MediaFrame
           image={image}
           alt={imageAlt}
@@ -92,7 +101,7 @@ export function PageHero({
             the text over it. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-(image:--gradient-hero-scrim-stacked)"
+          className="pointer-events-none absolute inset-0 bg-(image:--gradient-page-hero-scrim)"
         />
 
         <Container className="relative z-10">

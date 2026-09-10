@@ -221,19 +221,27 @@
    *     `@layer base` cannot outrank a utility whatever its specificity — see
    *     the warning at the top of this file.
    *
-   * All of it is scoped to a page that opts into snapping. Everywhere else the
+   * **A second opt-in shares this geometry.** `[data-viewport-hero]` is set by
+   * <PageHero> on any inner page whose banner fills the screen. It is the same
+   * problem in a smaller frame — that hero also starts at the viewport top below
+   * `lg` and also has to be a whole screen tall — so it takes the same swap
+   * rather than a parallel one. It does not snap; nothing here makes it.
+   *
+   * All of it is scoped to a page that opts in. Everywhere else the
    * bar still offsets, so an anchor landing on a non-snapping page keeps its
    * `scroll-padding-top` — which is what stops the SDG deep links putting
    * their target underneath the bar.
    */
-  html:has([data-snap-sections]) {
+  html:has([data-snap-sections]),
+  html:has([data-viewport-hero]) {
     scroll-padding-top: 0;
     --spacing-viewport: var(--spacing-viewport-full);
   }
 
   /* From `lg` the bar never hides, so it goes back to offsetting the page. */
   @media (width >= theme(--breakpoint-lg)) {
-    html:has([data-snap-sections]) {
+    html:has([data-snap-sections]),
+    html:has([data-viewport-hero]) {
       scroll-padding-top: var(--spacing-header);
       --spacing-viewport: var(--spacing-viewport-offset);
     }
@@ -392,3 +400,52 @@
  * whatever the resting styles say, which is where the content should live.
  */
 @custom-variant hover-hover (@media (hover: hover) and (pointer: fine));
+
+/*
+ * Rhythm for a block of backend-supplied HTML.
+ *
+ * One consumer today: a team member's biography in its dialog, which arrives
+ * from the repository as markup rather than as text. The preflight reset
+ * strips margins and list markers from everything, which is right for a page
+ * built out of components and wrong for a paragraph the frontend did not
+ * author — so the handful of tags docs/api-contracts.md §4 permits get their
+ * spacing back here, and only inside this class.
+ *
+ * Type, colour and measure stay on the element that carries this utility, so
+ * the same markup can be set at --text-body-sm in a dialog and at --text-body
+ * somewhere else without this file knowing about either.
+ *
+ * Not a general-purpose prose class. If a second surface needs richer markup —
+ * headings, tables, figures — widen the sanitiser's allowlist and this
+ * together, or the tag will render unstyled.
+ */
+@utility rich-text {
+  p + p,
+  ul,
+  ol {
+    margin-top: var(--spacing-stack);
+  }
+
+  ul,
+  ol {
+    padding-left: var(--spacing-inset);
+    list-style: revert;
+  }
+
+  li + li {
+    margin-top: var(--spacing-tight);
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}

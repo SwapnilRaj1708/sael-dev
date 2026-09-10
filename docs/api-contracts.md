@@ -120,15 +120,40 @@ Same item shape with `category: "notifications"`, but **paginated** (envelope fr
     "id": "tm-01",
     "name": "…",
     "designation": "…",
+    "group": "leadership",
     "photoUrl": "https://…",
     "photoAlt": null,
     "bio": "<p>…</p>",
+    "linkedinUrl": "https://www.linkedin.com/in/…",
     "displayOrder": 1
   }
 ]
 ```
 
 `bio` may contain HTML. **The backend must sanitise it** — the frontend will additionally sanitise before rendering, but server-side sanitisation is the primary control. Permitted tags: `p, br, strong, em, ul, ol, li, a`.
+
+`group` is `"leadership" | "management"` — the two tabs on `/our-team/`. **Added
+by FE-07**, which needed it: the page is one request rendering both tabs, and
+the split has to come from the data rather than from a list of names in a
+component. Any other value should be treated as a mapping failure for that row,
+not silently bucketed.
+
+`photoAlt` is accepted and **ignored**. The frontend uses `name` as the
+portrait's alternative text, which is the correct description of a photograph
+of a person; a nullable second field that always falls back to `name` has no
+consumer. Nothing needs to change server-side — it is simply not mapped.
+
+The frontend's second sanitiser is `src/lib/utils/sanitize-bio.ts`, and its
+allowlist is exactly the eight tags above. A tag added here without being added
+there will be stripped before it renders.
+
+`linkedinUrl` is an absolute profile URL or `null`, and **added by FE-07** from
+the live site, where seven of the seventeen people carry one in their popup. It
+is `null` far more often than not; the frontend omits the link rather than
+rendering a disabled affordance, so the backend should send `null` and never an
+empty string. It is rendered as an outbound link with
+`rel="noopener noreferrer"`, so nothing is required of the value beyond it being
+a URL the client is happy to send visitors to.
 
 ### `GET /api/v1/capacity-stats`
 

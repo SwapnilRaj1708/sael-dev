@@ -109,9 +109,7 @@ export function SolutionsCarousel({
                   full content width, uncapped means a single sentence stretched
                   over 1600px. */}
               <Reveal order={3}>
-                <p className="max-w-(--measure) text-body text-pretty text-on-dark-soft">
-                  {lead}
-                </p>
+                <p className="max-w-(--measure) text-body text-pretty text-on-dark-soft">{lead}</p>
               </Reveal>
 
               {/* Stacked, the pair stays at the right-hand edge rather than

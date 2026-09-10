@@ -111,3 +111,15 @@ export const SIZES_BUSINESS_ICON = '132px';
  */
 export const SIZES_PROSE_MEDIA_LANDSCAPE = '(min-width: 50rem) 560px, 88vw';
 export const SIZES_PROSE_MEDIA_PORTRAIT = '(min-width: 50rem) 420px, 88vw';
+
+/**
+ * A portrait on a team card. The grid's floor is `--team-grid-col-min` (250px)
+ * and it is `auto-fill`, so a column never grows much past that on a wide
+ * screen — 340px is the widest it is drawn before another track fits. Below
+ * the first wrap it is two columns inside the gutter, and below the second it
+ * is one.
+ */
+export const SIZES_TEAM_CARD = '(min-width: 64rem) 340px, (min-width: 35rem) 46vw, 92vw';
+
+/** The small portrait in a biography dialog — `--team-dialog-portrait-w`, 96px. */
+export const SIZES_TEAM_DIALOG_PORTRAIT = '96px';

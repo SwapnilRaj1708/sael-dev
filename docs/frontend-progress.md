@@ -17,11 +17,168 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 
 | ID | Item | Feature doc | Owner | Completed |
 |---|---|---|---|---|
+| FE-06 | About Us | `features/06-about-us.md` | Swapnil Raj | 2026-09-10 |
 | FE-04 | Homepage | `features/04-homepage.md` | Swapnil Raj | 2026-09-10 |
 | FE-25 | Design-system reconciliation — guidelines vs. the as-built homepage | `design-reconciliation.md` | Swapnil Raj | 2026-09-10 |
 | FE-03 | App shell — header, mobile nav, footer, layout | `features/03-app-shell-header-footer.md` | Swapnil Raj | 2026-08-04 |
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
+
+### FE-06 — as built
+
+Built to **`About Us.dc.html`**, the client's Claude Design project
+(`f05dd0a1-42c8-4f44-b688-f8dceb7f677b`), read through the design MCP. It is the first
+content page, so the shared pieces are the deliverable as much as the page is.
+
+**Revised on 2026-09-10 against a second read of `About Us.dc.html`.** The design file
+changed in exactly two ways and nothing else — the whole diff is ten hunks, eight of
+which are one attribute:
+
+- **Section snapping is gone.** The `scroll-snap-type: y mandatory` block, the
+  `section[data-snap-section]` rule, the `footer[data-snap-section]` rule and the
+  `prefers-reduced-motion` override that switched snapping off all went, along with
+  `data-snap-section` on all seven sections and the footer. The page scrolls normally
+  now: `page.tsx` renders no `data-snap-sections`, and `<PageHero>`, `<ProseSplit>` and
+  `<ValueGrid>` each lost their `snap` prop entirely rather than keeping a prop with no
+  consumer. **FE-07 → FE-15 inherit a template that does not snap**; the homepage still
+  does, and `globals.css`, `--spacing-viewport` and the footer's own opt-in are all
+  untouched because they still serve it.
+- **The hero was resized twice on 2026-09-10.** The design file replaced
+  `min-height: 100dvh` with `clamp(420px, 72svh, 760px)`, and that was built; the client
+  then asked for a full-viewport hero back, with a floor so it does not collapse on a
+  short screen. It is now `--page-hero-h`, `max(36rem, var(--spacing-viewport))`.
+  **The floor is a `max()` and not a breakpoint, because the failure is a short viewport
+  rather than a narrow one** — a phone held landscape is ~390px tall and needs the floor,
+  the same phone upright does not, and no width query separates them. `--spacing-viewport`
+  is the screen less whatever the masthead takes, so at `lg` the hero ends exactly at the
+  viewport foot rather than 68px past it.
+
+**The hero scrim was lightened in the same pass**, at the client's report that the
+photograph looked dull. It was using `--gradient-hero-scrim-stacked`, the homepage
+carousel's ramp, which is 0.3 opaque even at the top of the frame and so lays a grey
+film over the whole picture — right for a composition where a headline and a progress bar
+cross the entire image, wrong for one carrying a breadcrumb and two lines at the foot.
+`--gradient-page-hero-scrim` keeps 0.88 under the copy and is fully clear by 82%. The
+homepage token is untouched. **No live reference existed to match**: the boardroom
+photograph is a new CDN asset and https://www.sael.co/about-us/ has no image hero at all,
+only a contact banner, so it was tuned against the source file.
+
+Two things that look like they should have gone with it and did not:
+
+- **`-mt-header lg:mt-0` stays.** It reads as part of the snap opt-in — the homepage's
+  own comment introduces it that way — but it is a statement about the masthead: below
+  `lg` the bar overlays the page and slides away on scroll, so a full-bleed hero starts
+  at the viewport top and has to give back `<main>`'s `pt-header`. Nothing about that
+  depends on snapping.
+- **The footer keeps its `data-snap-section`.** It is inert here, because both snap
+  rules are scoped to `html:has([data-snap-sections])` and this page no longer sets it,
+  and it is still load-bearing on the homepage.
+
+Also dropped in the same pass: the `flex items-center` that `<ProseSplit>` and
+`<ValueGrid>` put on their `<Section>`. It existed to centre content inside a
+viewport-tall snap area, and with the height gone it was making the `<Container>` a
+flex item — which sizes to content rather than filling its parent. Removing it restores
+ordinary block layout and the section's own `py-section-y` rhythm.
+
+| # | Section | Component | State |
+|---|---|---|---|
+| 1 | Page hero | `sections/page-hero/` | **New, and the inner-page template.** Full-bleed banner, `--gradient-hero-scrim-stacked`, breadcrumb, the page's single `<h1>`, a standfirst. Takes its own breadcrumb as data — the trail differs per page and a component deriving it from the route would have to know the site's IA |
+| 2 | Our Endeavours | `sections/prose-split/` | **New.** Display heading and three paragraphs beside a 4:3 photograph |
+| 3 | Our Ambition | `sections/prose-split/` | The same component, one paragraph at `--ledger-measure` beside a 4:5 portrait. The two differ only in props, which is why there is one component and not two |
+| 4 | Our Strategic Pillars | `sections/value-grid/` | **New.** Three `<Card>`s a `--spacing-gap-grid` apart, each with a line-art mark that animates one idea — the bars grow, the gear turns, the leaf sways. Drawn in `pillar-marks.tsx` rather than imported, because an exported PNG cannot animate its parts |
+| 5 | Our Guiding Principles | `sections/value-grid/` | The same component: eight cards, the 340px column floor, no accent |
+| — | Stats band (design §03) | — | **Not built** — see below |
+| — | Our Goals triad (design §06) | — | **Not built** — see below |
+
+**Two sections were deliberately omitted, and this is the one place the design and
+`features/06` disagree.** The design wraps both in `sc-if` flags whose placeholder value
+is `false` — it draws the page with both off — where `features/06` §3–4 asks for both to
+be reused from FE-04. The client's ruling on **2026-09-10** was to follow the design.
+Both already exist on the homepage, so the cost of reversing this is two lines in
+`page.tsx` plus the props; the copy for both is in the design file if it is wanted.
+
+**Three smaller departures from `features/06`, all following the design:**
+
+- **The hero is `min-h-viewport`, not `aspect-ratio`.** §1 of the feature doc specifies
+  `3/1` on desktop falling to `4/3` on mobile. The design draws a full-viewport hero on a
+  page that snaps, and an aspect-ratio hero inside a snap area either overflows it or
+  leaves a band of ground beneath it.
+- **No `<FeatureBanner>` and no CTA button** (§5, §6). The design has neither.
+- **`<ProseBlock>` is `<ProseSplit>` with `media` omitted.** The feature doc names a
+  heading-over-copy component; the design has no such section, only the split twice. With
+  `media` undefined the grid has one column and the split *is* that component, so a
+  separate primitive would have been the same file with a branch removed.
+
+Landed alongside it:
+
+- **`ui/breadcrumb.tsx`** — Home › Company › About Us, emitting its own `BreadcrumbList`
+  from the same array that renders the links, so the markup and the structured data
+  cannot drift. `breadcrumbJsonLd()` is in `lib/seo/json-ld.ts` beside the two the root
+  layout emits. A rung with no `href` ("Company", which groups pages but is not one)
+  emits `name` and `position` and no `item`. **One `<li>` per rung** — the separators are
+  `aria-hidden` spans inside the item they follow, not list items, because a screen
+  reader announcing "list, five items" for a three-step trail is wrong.
+- **Eight tokens**, all in `:root` beside the other component geometry: the two prose
+  media caps and their aspects, the split's column floor, the value grid's two floors and
+  its mark size. Every token the design itself referenced already existed — it was
+  authored against our real theme, so nothing had to be invented to match it.
+- **Three animations** in `animations.css`, still state first and motion only inside
+  `prefers-reduced-motion: no-preference`.
+
+**The grids are `auto-fit` tracks, not breakpoints.** Each is one
+`repeat(auto-fit, minmax(min(100%, <floor>), 1fr))`, so a section reflows on the space it
+has rather than on a viewport width — which is what keeps it correct inside a snap area
+on a short laptop as well as on a phone. The `min(100%, …)` is what stops a 380px floor
+from overflowing a 360px viewport.
+
+**The artwork landed on 2026-09-10** — all eleven assets, supplied as CDN URLs under
+`<container>/web-assets/images/about-us/`. Nothing on the page is a placeholder any more.
+
+They are **committed at `src/assets/images/about-us/` and imported**, not referenced by
+URL, and that is the deliberate part. `src/lib/assets/cdn.ts` — on
+`sachin/refactoring-design-guideline`, **not yet on `main`** — keeps the bundled import as
+the source of truth and swaps only `src`, because a `StaticImageData` carries the
+intrinsic width, height and `blurDataURL` that `next/image` needs to reserve the box and
+avoid a layout shift, and a bare URL string throws all three away. The CDN's `images/`
+directory is an exact mirror of `src/assets/images/`, so the eleven sit at the path that
+already names their CDN path. When that branch merges, pointing them at it is one
+`cdnImage(asset, 'about-us/…')` per import and nothing downstream changes. Wiring them as
+URLs now would have had to be undone.
+
+Three notes on the assets themselves:
+
+- **`about-us-hero.JPG` breaks the mirror, and the CDN is the side to fix.** Turbopack
+  refuses an uppercase extension outright (*Unknown module type*) and Azure Blob names
+  are case-sensitive, so `.jpg` 404s and `.JPG` will not bundle. The repository holds
+  `.jpg`; the blob wants renaming to match, and it is the only file in that folder that
+  is not already lowercase. Raised in `asset-inventory.md` §9.
+- **The eight principle icons are inverted at the call site.** They are monochrome line
+  art in near-black on transparent and would be invisible on the black card as supplied.
+  `<ValueMark>` applies `brightness-0 invert` — the homepage goal marks' treatment, and
+  the right one here because the design file's `invert(1) hue-rotate(180deg)` exists to
+  preserve colour through an inversion and there is none to preserve.
+- **The icon-to-principle pairing was checked, not assumed.** The filenames are bare
+  ordinals. The artwork settles it: a lightbulb for Entrepreneurial, stacked hands for
+  Teamwork, a handshake under a tick for Trust and Respect, a brain for Owner Mind-Set
+  and a wired brain for Continuous Learning all land on the design's own order.
+
+Both `alt` strings the design was missing are now written from the photographs
+themselves — the banner is a boardroom group shot, which the design's slot did not
+describe at all.
+
+Still open:
+
+- **The Our Ambition sitter's name and role.** The `alt` describes what is visible and
+  asserts no identity, which is as far as it can honestly go without them.
+- **`solar-field.webp` is square (1024×1024) in a 4:3 box.** The design drew that slot at
+  4:3 against a different asset, so `object-cover` centre-crops roughly an eighth off the
+  top and bottom. The horizon and the panel rows both survive it and it reads correctly,
+  but it is a deliberate crop rather than a fit and wants an eye on it.
+- The responsive checklist at all seven widths, and the breadcrumb JSON-LD through a
+  validator. Both need a browser, which this project has no tooling for — the same gap
+  that sent three of FE-04's criteria to FE-24.
+
+---
 
 ### FE-04 — as built
 
@@ -251,127 +408,161 @@ guardrail and the toolchain.
 
 | ID | Item | Feature doc | Reads | Owner | Started |
 |---|---|---|---|---|---|
-| FE-06 | About Us | `features/06-about-us.md` | `design-guidelines.md`, `responsive-strategy.md`, `design-reconciliation.md` §9 | Swapnil Raj | 2026-09-10 |
+| FE-07 | Our Team | `features/07-our-team.md` | `content-model.md`, `api-contracts.md` | Swapnil Raj | 2026-09-10 |
 
-Built to **`About Us.dc.html`**, the client's Claude Design project
-(`f05dd0a1-42c8-4f44-b688-f8dceb7f677b`), read through the design MCP. It is the first
-content page, so the shared pieces are the deliverable as much as the page is.
+**FE-05 was skipped to get here, on the client's instruction of 2026-09-10.** It is still
+the top of Pending and still has to be done. What FE-07 needed from it — `TeamMember`,
+`getTeamMembers()` on the interface, and the method in both implementations — was carved
+out and landed here, which is exactly the trade FE-04 made for `CapacityStat` and
+`NewsItem`. FE-05 is correspondingly smaller now; nothing in it was dropped.
+
+Built to **`Our Team.dc.html`**, the client's Claude Design project
+(`a6a044b5-3829-44df-baae-d700f52344ec`), read through the design MCP. The first page
+whose content is entirely repository-driven — seventeen real people, no hardcoded names.
 
 | # | Section | Component | State |
 |---|---|---|---|
-| 1 | Page hero | `sections/page-hero/` | **New, and the inner-page template.** Full-bleed banner, `--gradient-hero-scrim-stacked`, breadcrumb, the page's single `<h1>`, a standfirst. Takes its own breadcrumb as data — the trail differs per page and a component deriving it from the route would have to know the site's IA |
-| 2 | Our Endeavours | `sections/prose-split/` | **New.** Display heading and three paragraphs beside a 4:3 photograph |
-| 3 | Our Ambition | `sections/prose-split/` | The same component, one paragraph at `--ledger-measure` beside a 4:5 portrait. The two differ only in props, which is why there is one component and not two |
-| 4 | Our Strategic Pillars | `sections/value-grid/` | **New.** Three `<Card>`s a `--spacing-gap-grid` apart, each with a line-art mark that animates one idea — the bars grow, the gear turns, the leaf sways. Drawn in `pillar-marks.tsx` rather than imported, because an exported PNG cannot animate its parts |
-| 5 | Our Guiding Principles | `sections/value-grid/` | The same component: eight cards, the 340px column floor, no accent |
-| — | Stats band (design §03) | — | **Not built** — see below |
-| — | Our Goals triad (design §06) | — | **Not built** — see below |
+| 1 | Heading, tabs and roster | `sections/team-grid/` | **New.** One `Section background="black-dots"` carrying the breadcrumb, the `<h1>`, the standfirst, a Leadership/Management tab list and both panels of cards. One section and not two because the design draws it as one, and splitting it would put `--spacing-section-y` between a tab and the panel it controls |
+| — | Page hero | — | **Not built** — see below |
 
-**Two sections were deliberately omitted, and this is the one place the design and
-`features/06` disagree.** The design wraps both in `sc-if` flags whose placeholder value
-is `false` — it draws the page with both off — where `features/06` §3–4 asks for both to
-be reused from FE-04. The client's ruling on **2026-09-10** was to follow the design.
-Both already exist on the homepage, so the cost of reversing this is two lines in
-`page.tsx` plus the props; the copy for both is in the design file if it is wanted.
+**The design has no banner hero, and that is the one place it disagrees with
+`features/07` §1.** The feature doc specifies `<PageHero>`; the design opens on the dotted
+black ground with the `<h1>` and a standfirst, and `asset-inventory.md` has no Our Team
+banner to put behind one. **The client's ruling on 2026-09-10 was to follow the design and
+keep the breadcrumb** — which the design also omits, but `accessibility-and-seo.md` §3
+requires `BreadcrumbList` on every page below the root, and that is an obligation rather
+than a visual detail. So the page is the design's opening with `<Breadcrumb>` restored
+above the title.
 
-**Three smaller departures from `features/06`, all following the design:**
+That makes `sections/team-grid/` the **second inner-page opening**, beside
+`sections/page-hero/`. It is not a rival template: a page with a supplied banner still
+uses `<PageHero>`, and FE-08 → FE-15 should pick by whether the client has supplied
+artwork.
 
-- **The hero is `min-h-viewport`, not `aspect-ratio`.** §1 of the feature doc specifies
-  `3/1` on desktop falling to `4/3` on mobile. The design draws a full-viewport hero on a
-  page that snaps, and an aspect-ratio hero inside a snap area either overflows it or
-  leaves a band of ground beneath it.
-- **No `<FeatureBanner>` and no CTA button** (§5, §6). The design has neither.
-- **`<ProseBlock>` is `<ProseSplit>` with `media` omitted.** The feature doc names a
-  heading-over-copy component; the design has no such section, only the split twice. With
-  `media` undefined the grid has one column and the split *is* that component, so a
-  separate primitive would have been the same file with a branch removed.
+**Three smaller departures from `features/07`, all following the design:**
+
+- **The portrait is 3:4, not 1:1.** The feature doc specifies a square; the design draws
+  a portrait crop, which is what a head-and-shoulders photograph wants.
+- **The grid is `auto-fill`, not the doc's 4/3/2/1 breakpoints.** One
+  `repeat(auto-fill, minmax(min(100%, 250px), 1fr))` reflows on the space it has, and
+  `auto-fill` rather than `auto-fit` deliberately: Management has seven cards to
+  Leadership's ten, and `auto-fit` would collapse the empty tracks and draw the same
+  person wider on one tab than on the other.
+- **There is no separate `<TeamGrid>` under a `<PageHero>`.** The one component owns both,
+  for the reason in the table above.
 
 Landed alongside it:
 
-- **`ui/breadcrumb.tsx`** — Home › Company › About Us, emitting its own `BreadcrumbList`
-  from the same array that renders the links, so the markup and the structured data
-  cannot drift. `breadcrumbJsonLd()` is in `lib/seo/json-ld.ts` beside the two the root
-  layout emits. A rung with no `href` ("Company", which groups pages but is not one)
-  emits `name` and `position` and no `item`. **One `<li>` per rung** — the separators are
-  `aria-hidden` spans inside the item they follow, not list items, because a screen
-  reader announcing "list, five items" for a three-step trail is wrong.
-- **Eight tokens**, all in `:root` beside the other component geometry: the two prose
-  media caps and their aspects, the split's column floor, the value grid's two floors and
-  its mark size. Every token the design itself referenced already existed — it was
-  authored against our real theme, so nothing had to be invented to match it.
-- **Three animations** in `animations.css`, still state first and motion only inside
-  `prefers-reduced-motion: no-preference`.
+- **`TeamMember.group`** — new, and in neither `content-model.md` §2 nor
+  `api-contracts.md` §4 before this. A tab is a partition of the roster, so the grouping
+  has to come from the data rather than a hardcoded list of names. Both docs are updated
+  and the backend proposal is a `group` string on `GET /api/v1/team`.
+- **`photoUrl: string | null`** rather than the documented `photo: ImageAsset | null`,
+  following `NewsItem.imageUrl` — a CMS asset the frontend cannot know at build time is a
+  URL for `next/image`, not a bundled import. `photoAlt` is ignored: a portrait's `alt` is
+  the name of the person in it, which `name` already carries.
+- **`lib/utils/sanitize-bio.ts`** — the frontend half of the two-sided sanitisation
+  `api-contracts.md` §4 describes, allowlisting exactly the eight tags it permits. Runs on
+  the server, so `sanitize-html` never reaches the browser bundle; only the clean string
+  crosses into the client leaf.
+- **`rich-text`**, an `@utility` in globals.css, giving those eight tags back the margins
+  the preflight reset strips. Type and colour stay on the element that carries it.
+- **`<EmptyState ground="dark">`** — its first real consumer. The paper palette's
+  near-black type is invisible on `--color-surface-black`; the default is unchanged.
+- **`focus-visible:outline-white` on this page's controls and on `<Breadcrumb>`'s links.**
+  The global ring is `--color-brand-blue`, which is **1.84:1** on `--color-surface-black`
+  — under WCAG 1.4.11's 3.0 floor, so effectively invisible. White is 19.9:1. The
+  breadcrumb fix applies to the About Us hero too.
+- **Seventeen portraits, served from the client's CDN.** They were briefly mirrored into
+  `public/team/` from the legacy site's `/img/team/` while the real URLs were
+  outstanding; **the client supplied them on 2026-09-10** and the copies were deleted —
+  byte-identical, so nothing changed but where they are served from. The fixture stores
+  the **container path** (`web-assets/images/our-team/<slug>`), never the absolute URL,
+  so no hostname is committed (/CLAUDE.md §7); `tryBlobUrl()` composes it with
+  `AZURE_BLOB_BASE_URL`, which `.env.example` now carries. The same mapping survives
+  FE-23 untouched, because `blobUrl()` passes an already-absolute value straight
+  through — which is what the API will send.
 
-**The grids are `auto-fit` tracks, not breakpoints.** Each is one
-`repeat(auto-fit, minmax(min(100%, <floor>), 1fr))`, so a section reflows on the space it
-has rather than on a viewport width — which is what keeps it correct inside a snap area
-on a short laptop as well as on a phone. The `min(100%, …)` is what stops a 380px floor
-from overflowing a 360px viewport.
+  `tryBlobUrl` rather than `blobUrl` deliberately: with the base unset each card falls
+  back to its initials avatar and the roster still renders in full, instead of the whole
+  page becoming an empty state over a configuration mistake. The cost is that the
+  omission is quiet, which is why the working base is the documented default.
+- **`TeamMember.linkedinUrl`** — added 2026-09-10 from the live site's own popups, where
+  **seven of the seventeen** publish a profile and ten do not. Rendered under the
+  biography, which is where the live site puts it, as an outbound link with
+  `rel="noopener noreferrer"`. Sparse by nature rather than unfilled, so a person without
+  one gets no link at all — no disabled affordance. Both contract docs updated.
+  **Dialog only, and not on the card**: the card's whole surface is already the trigger's
+  `::before`, so a link underneath it would be unreachable.
+- **`ui/card.tsx`: `group-focus-within` → `group-has-focus-visible`** — a real bug, found
+  on this page and fixed in the shared primitive. See below.
 
-**The artwork landed on 2026-09-10** — all eleven assets, supplied as CDN URLs under
-`<container>/web-assets/images/about-us/`. Nothing on the page is a placeholder any more.
+**The card accent was stuck after closing a dialog, and the fix was in `<Card>`.** The
+accent keyed off `group-focus-within`. A native `<dialog>` returns focus to its trigger
+on close — correctly, and `features/07` requires it — and that trigger is inside the
+card, so `:focus-within` stayed true and the bar stayed filled indefinitely, including
+while the pointer moved over other cards. `:focus-within` cannot distinguish restored
+focus from a deliberate keyboard visit; `:has(:focus-visible)` defers to the browser's
+own modality heuristic and can. Measured before and after over CDP:
 
-They are **committed at `src/assets/images/about-us/` and imported**, not referenced by
-URL, and that is the deliberate part. `src/lib/assets/cdn.ts` — on
-`sachin/refactoring-design-guideline`, **not yet on `main`** — keeps the bundled import as
-the source of truth and swaps only `src`, because a `StaticImageData` carries the
-intrinsic width, height and `blurDataURL` that `next/image` needs to reserve the box and
-avoid a layout shift, and a bare URL string throws all three away. The CDN's `images/`
-directory is an exact mirror of `src/assets/images/`, so the eleven sit at the path that
-already names their CDN path. When that branch merges, pointing them at it is one
-`cdnImage(asset, 'about-us/…')` per import and nothing downstream changes. Wiring them as
-URLs now would have had to be undone.
+| path | before | after |
+|---|---|---|
+| at rest | collapsed | collapsed |
+| mouse open → `×` or backdrop close | **filled, no focus ring** | collapsed |
+| mouse open → `Esc` close | **filled, no focus ring** | filled, **with** the focus ring — and clears on the next click |
+| `Tab` to the trigger | filled | filled |
 
-Three notes on the assets themselves:
+The `Esc` row is the one that still fills, and that is correct rather than residual: the
+browser treats the restored focus as keyboard-visible and draws its ring there, so the
+accent agrees with the ring instead of contradicting it. It clears on the next click.
+The change touches every `<Card>`; `<ValueGrid>`'s cards contain nothing focusable, and
+the news and ledger cards hold links whose focus is genuinely visible when tabbed to, so
+all three are unaffected or strictly better.
 
-- **`about-us-hero.JPG` breaks the mirror, and the CDN is the side to fix.** Turbopack
-  refuses an uppercase extension outright (*Unknown module type*) and Azure Blob names
-  are case-sensitive, so `.jpg` 404s and `.JPG` will not bundle. The repository holds
-  `.jpg`; the blob wants renaming to match, and it is the only file in that folder that
-  is not already lowercase. Raised in `asset-inventory.md` §9.
-- **The eight principle icons are inverted at the call site.** They are monochrome line
-  art in near-black on transparent and would be invisible on the black card as supplied.
-  `<ValueMark>` applies `brightness-0 invert` — the homepage goal marks' treatment, and
-  the right one here because the design file's `invert(1) hue-rotate(180deg)` exists to
-  preserve colour through an inversion and there is none to preserve.
-- **The icon-to-principle pairing was checked, not assumed.** The filenames are bare
-  ordinals. The artwork settles it: a lightbulb for Entrepreneurial, stacked hands for
-  Teamwork, a handshake under a tick for Trust and Respect, a brain for Owner Mind-Set
-  and a wired brain for Continuous Learning all land on the design's own order.
-
-Both `alt` strings the design was missing are now written from the photographs
-themselves — the banner is a boardroom group shot, which the design's slot did not
-describe at all.
+**Verified in a real browser**, which is new for this project — a headless Chrome driven
+over CDP, scripted in the scratchpad rather than committed. Both tabs switch by pointer
+and by `ArrowLeft`/`ArrowRight`/`Home`/`End` with a roving `tabIndex`; the dialog opens
+modal, moves focus inside, is labelled by the name heading, closes on `Esc` and on a
+backdrop click, and returns focus to its trigger. No horizontal overflow at 360 or 390.
 
 Still open:
 
-- **The Our Ambition sitter's name and role.** The `alt` describes what is visible and
-  asserts no identity, which is as far as it can honestly go without them.
-- **`solar-field.webp` is square (1024×1024) in a 4:3 box.** The design drew that slot at
-  4:3 against a different asset, so `object-cover` centre-crops roughly an eighth off the
-  top and bottom. The horizon and the panel rows both survive it and it reads correctly,
-  but it is a deliberate crop rather than a fit and wants an eye on it.
-- The responsive checklist at all seven widths, and the breadcrumb JSON-LD through a
-  validator. Both need a browser, which this project has no tooling for — the same gap
-  that sent three of FE-04's criteria to FE-24.
+- **A meta description for `/our-team/`.** The design file carries a `<title>` and no
+  `<meta name="description">`, so none is emitted rather than a placeholder being
+  invented. `{{TODO: content}}`.
+- **The `<title>` separator disagrees between design files** — `Our Team - SAEL` here
+  against `About Us | SAEL`. Both are transcribed verbatim. **FE-22 should settle it**
+  against the legacy titles; changing a ranking title is not a decision to make in
+  passing.
+- **Two portraits are not 4:5.** `archana-capoor.webp` is 500x457 and
+  `puneet-upneja.webp` 500x533, where the other fifteen are 500x625. In a 3:4 box
+  `object-cover` crops them left and right rather than top and bottom. Both read
+  correctly, but they are the odd two and want an eye on them.
+- **`photoUrl: null` and `bio: null` are unexercised.** Every one of the seventeen has
+  both, and inventing an eighteenth person to exercise the branches would put a
+  fabricated director on a page of real ones. `features/05` §3 owns that fixture edge
+  case; the card and the page already handle both.
 
 ---
 
 ## 📋 Pending
 
 Delivery order. The critical path — FE-01 → FE-04 plus the FE-25 reconciliation — is
-done, and FE-06 has since established the inner-page template, so FE-07 → FE-15 all
-build on `sections/page-hero/`, `sections/prose-split/` and `sections/value-grid/`
-rather than starting from the design system alone.
+done, and FE-06 and FE-07 have since established the two inner-page openings, so
+FE-08 → FE-15 all build on `sections/page-hero/` or `sections/team-grid/` plus
+`sections/prose-split/` and `sections/value-grid/`, rather than starting from the
+design system alone. Which opening a page takes depends on whether the client has
+supplied a banner photograph for it.
 
-**FE-05 is listed first but is largely already built.** Its repository slice landed
-inside FE-04 and is what feeds the homepage; what remains is the parts no homepage
-surface needed.
+**FE-05 is listed first but is largely already built, and is now smaller still.** Its
+repository slice landed inside FE-04 and feeds the homepage; FE-07 then carved out the
+team slice — `TeamMember`, `getTeamMembers()` and both implementations. **FE-07 was
+promoted ahead of it on 2026-09-10**, on the client's instruction; see the note in In
+Progress. What remains here is the parts no page has needed yet.
 
 | ID | Item | Feature doc | Reads |
 |---|---|---|---|
 | FE-05 | Content repository + mock data layer | `features/05-content-repository.md` | `content-model.md`, `api-contracts.md` |
-| FE-07 | Our Team | `features/07-our-team.md` | `content-model.md` |
 | FE-08 | Solar Energy | `features/08-solar-energy.md` | `design-guidelines.md` |
 | FE-09 | Waste to Energy | `features/09-waste-to-energy.md` | `design-guidelines.md` |
 | FE-10 | Module Manufacturing | `features/10-module-manufacturing.md` | `design-guidelines.md` |

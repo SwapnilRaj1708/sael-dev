@@ -5,7 +5,7 @@ import type { ContentRepository } from './repository';
 
 export { ContentUnavailableError, NotImplementedError } from './repository';
 export type { ContentRepository } from './repository';
-export type { CapacityStat, NewsItem } from './types';
+export type { CapacityStat, NewsItem, TeamGroup, TeamMember } from './types';
 
 let instance: ContentRepository | null = null;
 

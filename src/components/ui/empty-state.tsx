@@ -12,7 +12,19 @@ import { cn } from '@/lib/utils/cn';
  *
  * The message is a prop. This primitive knows nothing about news, or
  * documents, or SAEL.
+ *
+ * `ground` was added by FE-07, its first real consumer: `/our-team/` is drawn
+ * on `--color-surface-black`, where the paper palette's near-black type is
+ * invisible. The default stays `paper` so nothing that already renders one
+ * changes, but most of this site is dark and most callers will want `dark`.
+ * Three colours move together per ground, which is why they are a lookup here
+ * rather than three `cva` variants that a caller could set inconsistently.
  */
+const TONE = {
+  paper: { icon: 'text-inert', title: 'text-ink', description: 'text-body-soft' },
+  dark: { icon: 'text-on-dark-muted', title: 'text-white', description: 'text-on-dark-soft' },
+} as const;
+
 export interface EmptyStateProps extends Omit<ComponentPropsWithRef<'div'>, 'title'> {
   title: ReactNode;
   description?: ReactNode;
@@ -20,6 +32,8 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithRef<'div'>, 'tit
   icon?: LucideIcon;
   /** A recovery route, typically a `<Button>`. */
   action?: ReactNode;
+  /** Which ground this is drawn on. Follow the surrounding `<Section>`. */
+  ground?: keyof typeof TONE;
 }
 
 export function EmptyState({
@@ -27,9 +41,12 @@ export function EmptyState({
   description,
   icon: Icon = FileQuestion,
   action,
+  ground = 'paper',
   className,
   ...props
 }: EmptyStateProps) {
+  const tone = TONE[ground];
+
   return (
     <div
       className={cn(
@@ -38,10 +55,10 @@ export function EmptyState({
       )}
       {...props}
     >
-      <Icon className="size-10 text-inert" aria-hidden="true" focusable="false" />
-      <p className="text-h3 text-ink">{title}</p>
+      <Icon className={cn('size-10', tone.icon)} aria-hidden="true" focusable="false" />
+      <p className={cn('text-h3', tone.title)}>{title}</p>
       {description !== undefined && description !== null && (
-        <p className="max-w-(--measure) text-body text-body-soft">{description}</p>
+        <p className={cn('max-w-(--measure) text-body', tone.description)}>{description}</p>
       )}
       {action}
     </div>

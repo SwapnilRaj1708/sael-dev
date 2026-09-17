@@ -125,10 +125,16 @@ Same item shape with `category: "notifications"`, but **paginated** (envelope fr
     "photoAlt": null,
     "bio": "<p>…</p>",
     "linkedinUrl": "https://www.linkedin.com/in/…",
+    "portraitZoom": 1.5,
     "displayOrder": 1
   }
 ]
 ```
+
+`portraitZoom` is a positive number, optional. It is how far the biography
+dialog zooms the portrait into its head-and-shoulders crop, set per person by
+the client (2026-09-17); `1.5` is the default and a missing, null or
+non-positive value maps to it.
 
 `bio` may contain HTML. **The backend must sanitise it** — the frontend will additionally sanitise before rendering, but server-side sanitisation is the primary control. Permitted tags: `p, br, strong, em, ul, ol, li, a`.
 

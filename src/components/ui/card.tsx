@@ -42,9 +42,20 @@ import { cn } from '@/lib/utils/cn';
  * heuristic instead: after a pointer interaction the ring is not drawn and
  * neither is the accent, and after a keyboard one both are — which is right,
  * because a keyboard user does need to see where focus landed.
+ *
+ * **`shape="outlined"` is the second card idiom**, added 2026-09-17 to the
+ * client's reference for the strategic pillars: a rounded box outlined on all
+ * four sides, with its content set inside `--spacing-flow` of padding. It
+ * keeps the same `group` and ground so the accent and the hover contract are
+ * unchanged; only the frame differs. The hairline idiom stays the default.
  */
-const card = cva('group relative flex w-full border-t', {
+const card = cva('group relative flex w-full', {
   variants: {
+    /** `hairline` hangs from a top rule; `outlined` is a rounded, bordered box. */
+    shape: {
+      hairline: 'border-t',
+      outlined: 'rounded-(--radius-card-outlined) border p-flow',
+    },
     /** Which hairline the card hangs from — follow the section's ground. */
     ground: {
       paper: 'border-hairline-paper',
@@ -57,9 +68,16 @@ const card = cva('group relative flex w-full border-t', {
     inset: {
       top: 'pt-inset',
       block: 'py-inset',
+      /** For `outlined`, whose padding is its own. */
+      none: '',
     },
   },
-  defaultVariants: { ground: 'paper', inset: 'top' },
+  compoundVariants: [
+    // The box needs a stronger line than a lone hairline — see --color-outline-*.
+    { shape: 'outlined', ground: 'dark', className: 'border-outline-dark' },
+    { shape: 'outlined', ground: 'paper', className: 'border-outline-paper' },
+  ],
+  defaultVariants: { ground: 'paper', inset: 'top', shape: 'hairline' },
 });
 
 export interface CardProps extends ComponentPropsWithRef<'div'>, VariantProps<typeof card> {
@@ -81,13 +99,14 @@ export function Card({
   as: Element = 'div',
   ground,
   inset,
+  shape,
   accentClassName,
   className,
   children,
   ...props
 }: CardProps) {
   return (
-    <Element className={cn(card({ ground, inset }), className)} {...props}>
+    <Element className={cn(card({ ground, inset, shape }), className)} {...props}>
       {accentClassName !== undefined && (
         <span
           aria-hidden="true"

@@ -86,8 +86,16 @@ export interface TeamMember {
   photoUrl: string | null;
   bio: string | null;       // may contain sanitised HTML
   linkedinUrl: string | null;
+  portraitZoom: number | null;  // dialog zoom into the passport crop; null = 1.5
   order: number;
 }
+
+`portraitZoom` was added on 2026-09-17. The biography dialog shows the card's
+photograph zoomed to a head-and-shoulders crop, and the client wants to set
+that zoom by eye per person — `1` is the card's own framing, `2` a tight head
+shot. `null` takes the default, `--scale-team-passport` in theme.css. It is
+data, not presentation, because which value is right depends on how each
+photograph happens to be framed.
 
 **Two fields changed in FE-07**, which built `/our-team/` and is the only
 consumer of this type.

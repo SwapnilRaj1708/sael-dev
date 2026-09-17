@@ -169,6 +169,12 @@
    * of anything and cannot inherit one. */
   --color-scrim-dialog: rgb(8 9 12 / 0.72);
   --color-hairline-paper: rgb(20 24 32 / 0.18);
+  /* The outlined card's frame (ui/card.tsx `shape="outlined"`). A full box
+   * drawn at hairline weight vanishes on the dot ground — the client's
+   * reference of 2026-09-17 draws it plainly visible — so it takes roughly
+   * twice the hairline's alpha on each ground. */
+  --color-outline-dark: rgb(255 255 255 / 0.36);
+  --color-outline-paper: rgb(20 24 32 / 0.32);
   --color-hairline-paper-soft: rgb(20 24 32 / 0.2);
 
   /* A rule drawn over a photograph rather than over a flat ground — the
@@ -295,6 +301,23 @@
   --text-body--font-weight: 400;
 
   /* 15 → 17 */
+  /* 18 → 36. The copy on the "Our Ambition" panel, which is a display
+   * statement rather than running text: the client set it at 36 on the
+   * desktop design (2026-09-17) and asked for it to come down to 18 on the
+   * way to the tablet floor. Linear between 768 and 1920 wide. */
+  --text-cutout-copy: clamp(1.125rem, 0.375rem + 1.5625vw, 2.25rem);
+  --text-cutout-copy--line-height: 1.35;
+  --text-cutout-copy--font-weight: 400;
+
+  /* 16 → 24. The same copy on the mobile panel, below `md`. The client set
+   * it in three steps on 2026-09-17 — 16 to 400 wide, 20 to 460, 24 above —
+   * and this is that curve made continuous: 16 at 360, 24 from 460 up. The
+   * slope is steep on purpose; the panel gains width fast across that range
+   * and the copy has to keep pace with it. */
+  --text-cutout-copy-m: clamp(1rem, 8vw - 0.8rem, 1.5rem);
+  --text-cutout-copy-m--line-height: 1.4;
+  --text-cutout-copy-m--font-weight: 400;
+
   --text-body-sm: clamp(0.9375rem, 0.9087rem + 0.1282vw, 1.0625rem);
   --text-body-sm--line-height: 1.5;
   --text-body-sm--font-weight: 400;
@@ -841,6 +864,7 @@
   --radius-quote: 1.125rem; /* 18 */
 
   --radius-card: 0.875rem; /* 14 — news cards */
+  --radius-card-outlined: 2.5rem; /* 40 — the outlined value card, client reference of 2026-09-17 */
   --radius-sdg: 1rem; /* 16 — SDG cards */
   --radius-pill: 62.4375rem; /* 999 — dots, social buttons */
   --radius-none: 0; /* goals cards, CTA buttons — square by design */
@@ -1041,6 +1065,44 @@
   --aspect-prose-landscape: 4/3;
   --aspect-prose-portrait: 4/5;
 
+  /* A cutout split — "Our Ambition" from `md` up: a shaped paper panel
+   * (`bg-for-cutout.svg`, drawn at 700 × 405) with the copy on the shelf under
+   * the notch cut from its top-left corner, and a cut-out portrait standing
+   * against its right edge. Everything inside the panel is positioned as a
+   * fraction of the panel, so it scales with the panel and nothing drifts off
+   * the artwork. The fractions are read off the SVG path: the notch floor is
+   * at 77.57 of 405, the shelf floor at 272.25 of 405.
+   *
+   * The panel is the container's width less an inset on the right, which is
+   * what lets the portrait (34% of the panel) stand proud of the panel's edge
+   * rather than inside it; the inset and the portrait's offset are the
+   * client's own values of 2026-09-17, the inset eased down for a narrow
+   * container so the panel keeps its room. */
+  --cutout-panel-inset-r: clamp(2rem, 5vw, 6rem); /* 32 → 96 */
+  --cutout-portrait-r: 1rem; /* 16 */
+  --cutout-notch-h: 19.15%;
+  --cutout-shelf-b: 32.8%; /* the shelf's floor, measured from the bottom */
+  --cutout-copy-x: 7%; /* clear of the panel's 5% corner radius */
+  --cutout-copy-w: 50%;
+  --cutout-portrait-w: 34%;
+
+  /* The same section below `md`, to the client's mobile reference of
+   * 2026-09-17: a tall paper panel (`bg-for-cutout-mobile.svg`, drawn at
+   * 179 × 322) with the notch at its top-right, the copy running down the
+   * body, and the portrait standing on the panel's bottom-right foot and
+   * overhanging its right edge. The block is capped so a tablet does not get
+   * a panel a screen and a half tall, and the fractions are read off the
+   * path: the notch floor at 26.16 of 322, the foot's top at 276.15 of 322.
+   * The inset and the portrait are fractions of the *block*, the copy of
+   * the panel. */
+  --cutout-m-w: 28rem; /* 448 — the block's cap */
+  --cutout-m-panel-inset-r: 18%; /* the room the portrait overhangs into */
+  --cutout-m-portrait-w: 42%;
+  --cutout-m-notch-h: 8.15%;
+  --cutout-m-foot-b: 14.25%; /* the foot's top, measured from the bottom */
+  --cutout-m-copy-x: 7%;
+  --cutout-m-copy-w: 62%;
+
   /* A grid of value cards. Two floors, because the two surfaces on About Us
    * carry different amounts of copy: three short pillars tile happily at 260,
    * where the eight guiding principles need 340 to keep a card from becoming
@@ -1074,6 +1136,20 @@
   --team-dialog-w: min(45rem, calc(100% - var(--spacing-flow))); /* 720 cap */
   --team-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
   --team-dialog-portrait-w: 6rem; /* 96 */
+  /* The dialog's portrait is the card's photograph zoomed to a passport crop —
+   * head and shoulders, the client's ask of 2026-09-17 — rather than a second
+   * asset. All seventeen portraits share one studio framing, head in the upper
+   * third and shoulders mid-frame, so one zoom fits every face: 1.5× anchored
+   * a little below the top edge keeps each head whole with air above it and
+   * runs the shoulders off the bottom. Checked against every photograph, not
+   * assumed; 1.6× clipped three heads. The card's own crop is unchanged.
+   *
+   * This is the **default**. `TeamMember.portraitZoom` overrides it per person
+   * — the dialog sets this same property inline from the data — so the client
+   * can tune a photograph that sits differently in its frame without touching
+   * the rest. */
+  --scale-team-passport: 1.5;
+  --team-passport-origin: 50% 14%;
 
   /* The pixel strip's six ramp stops, left to right. Separate values rather
    * than one gradient because the scattered squares are painted to a canvas,
@@ -1180,7 +1256,7 @@
   /* Body-copy measure cap. The layout is fluid to the viewport with no max
    * width, so without this, running text reaches 1600px on an ultrawide.
    * docs/responsive-strategy.md §2. */
-  --measure: 68ch;
+  --measure: 90ch;
 
   /* The hero headline's own measure. Far tighter than --measure: this is
    * display type at 28 → 58px, and a line of it is spent long before running

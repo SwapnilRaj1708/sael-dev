@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, type MouseEvent } from 'react';
+import { useRef, type CSSProperties, type MouseEvent } from 'react';
 import { LinkedInIcon } from '@/components/icons/social';
 import type { TeamMember } from '@/lib/content';
 import { SIZES_TEAM_DIALOG_PORTRAIT } from '@/lib/utils/image-sizes';
@@ -89,7 +89,19 @@ export function BioDisclosure({ member, bio }: BioDisclosureProps) {
       >
         <div className="flex flex-col gap-stack p-inset">
           <div className="flex items-start gap-inset">
-            <div className="relative aspect-(--aspect-team-photo) w-(--team-dialog-portrait-w) flex-none overflow-hidden bg-surface-deep">
+            <div
+              className="relative aspect-(--aspect-team-photo) w-(--team-dialog-portrait-w) flex-none overflow-hidden bg-surface-deep"
+              // A data-driven value carried by a custom property — the one
+              // use of `style` /CLAUDE.md §5 allows. Set on the frame so the
+              // portrait's `scale-(--scale-team-passport)` picks it up; left
+              // unset, the token's own 1.5 applies.
+              style={
+                member.portraitZoom === null
+                  ? undefined
+                  : ({ '--scale-team-passport': member.portraitZoom } as CSSProperties &
+                      Record<string, number>)
+              }
+            >
               {member.photoUrl === null ? (
                 <InitialsAvatar name={member.name} className="absolute inset-0" />
               ) : (
@@ -102,7 +114,10 @@ export function BioDisclosure({ member, bio }: BioDisclosureProps) {
                   aria-hidden
                   fill
                   sizes={SIZES_TEAM_DIALOG_PORTRAIT}
-                  className="object-cover"
+                  // Zoomed to a passport crop inside the same 3:4 box — see
+                  // --scale-team-passport in theme.css. The frame above is
+                  // `overflow-hidden`, so the growth is clipped to the box.
+                  className="origin-(--team-passport-origin) scale-(--scale-team-passport) object-cover"
                 />
               )}
             </div>

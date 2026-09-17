@@ -122,4 +122,18 @@ export const SIZES_PROSE_MEDIA_PORTRAIT = '(min-width: 50rem) 420px, 88vw';
 export const SIZES_TEAM_CARD = '(min-width: 64rem) 340px, (min-width: 35rem) 46vw, 92vw';
 
 /** The small portrait in a biography dialog — `--team-dialog-portrait-w`, 96px. */
-export const SIZES_TEAM_DIALOG_PORTRAIT = '96px';
+/** A 96px box, but the portrait is drawn at 1.5× inside it (the passport crop), so 144px of pixels. */
+export const SIZES_TEAM_DIALOG_PORTRAIT = '144px';
+
+/**
+ * The cut-out portrait of the "Our Ambition" panel. From `md` it is 34% of a
+ * panel that is as wide as the container unless the screen's height caps it
+ * first; below `md` it is the prose split's portrait and takes that constant
+ * instead. The 34vw is the uncapped case and over-fetches a little when the
+ * height binds, which is the safe direction.
+ */
+export const SIZES_CUTOUT_PORTRAIT = '(min-width: 48rem) 34vw, 190px';
+
+/* The two panels behind it had `sizes` constants here until 2026-09-17. They
+ * are SVG served from the blob container, so `<CutoutSplit>` renders them
+ * `unoptimized` — no srcset is generated and `sizes` would describe nothing. */

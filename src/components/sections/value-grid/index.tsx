@@ -33,9 +33,16 @@ export interface ValueGridProps {
   /**
    * Draw the accent that fills across each card's hairline on hover.
    * Off by default: a card that is not interactive should not suggest it is,
-   * and neither of these two surfaces links anywhere.
+   * and neither of these two surfaces links anywhere. Ignored for `outlined`,
+   * which has no hairline for the accent to run along.
    */
   accent?: boolean;
+  /**
+   * `hairline` is the v2 card — a top rule, left-aligned. `outlined` is the
+   * client's reference of 2026-09-17 for the strategic pillars: a rounded box
+   * bordered on all sides with the mark, name and copy centred inside it.
+   */
+  variant?: 'hairline' | 'outlined';
 }
 
 const COLUMNS_CLASS: Record<'default' | 'wide', string> = {
@@ -114,7 +121,10 @@ export function ValueGrid({
   columns = 'default',
   spacing = 'default',
   accent = false,
+  variant = 'hairline',
 }: ValueGridProps) {
+  const outlined = variant === 'outlined';
+
   return (
     <Section background="black-dots" spacing={spacing === 'tight' ? 'tight' : 'default'}>
       <div className="flex w-full flex-col gap-flow">
@@ -137,9 +147,18 @@ export function ValueGrid({
                 key={item.name}
                 as="article"
                 ground="dark"
-                accentClassName={accent ? 'bg-(image:--gradient-eyebrow-bright)' : undefined}
+                shape={variant}
+                inset={outlined ? 'none' : 'top'}
+                accentClassName={
+                  accent && !outlined ? 'bg-(image:--gradient-eyebrow-bright)' : undefined
+                }
               >
-                <div className="flex flex-col gap-tight">
+                <div
+                  className={cn(
+                    'flex w-full flex-col gap-tight',
+                    outlined && 'items-center gap-stack text-center',
+                  )}
+                >
                   {item.mark}
                   <h3 className="text-h3 text-white">{item.name}</h3>
                   <p className="text-body-sm text-pretty text-on-dark-soft">{item.body}</p>

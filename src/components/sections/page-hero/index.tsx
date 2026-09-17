@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Section } from '@/components/ui/section';
+import { cn } from '@/lib/utils/cn';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
 import { SIZES_FULL_BLEED } from '@/lib/utils/image-sizes';
 
@@ -14,8 +15,17 @@ export interface PageHeroProps {
   eyebrow?: string;
   /** One paragraph under the title. Optional. */
   intro?: string;
-  /** Root first, current page last. See `<Breadcrumb>`. */
-  breadcrumb: readonly BreadcrumbTrailItem[];
+  /**
+   * Root first, current page last. See `<Breadcrumb>`. Omit to render no
+   * trail — About Us dropped its own on 2026-09-17 at the client's request.
+   */
+  breadcrumb?: readonly BreadcrumbTrailItem[];
+  /**
+   * Where the copy sits along the bottom edge. `start` is the template's
+   * default, bottom-left; `center` sets the stack in the middle of the band
+   * and centres the text within it.
+   */
+  align?: 'start' | 'center';
   /** The banner photograph. `null` until the client supplies it. */
   image: StaticImageData | null;
   /** Meaningful description of the banner, or `''` if it is decorative. */
@@ -70,6 +80,7 @@ export function PageHero({
   image,
   imageAlt,
   pending,
+  align = 'start',
 }: PageHeroProps) {
   return (
     <Section
@@ -108,8 +119,15 @@ export function PageHero({
           {/* The masthead is fixed and overlays this section, so the copy
               clears it here rather than the section offsetting itself — which
               would put a band of ground above a full-bleed photograph. */}
-          <div className="flex flex-col gap-stack pt-[calc(var(--spacing-header)+var(--spacing-flow))] pb-hero-pad-bottom">
-            <Breadcrumb items={breadcrumb} />
+          <div
+            className={cn(
+              'flex flex-col gap-stack pt-[calc(var(--spacing-header)+var(--spacing-flow))] pb-hero-pad-bottom',
+              // The measure caps below are on the children, so centring the
+              // stack is what moves a capped block to the middle of the band.
+              align === 'center' && 'items-center text-center',
+            )}
+          >
+            {breadcrumb !== undefined && <Breadcrumb items={breadcrumb} />}
 
             {eyebrow !== undefined && <Eyebrow tone="bright">{eyebrow}</Eyebrow>}
 

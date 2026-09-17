@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { CutoutSplit } from '@/components/sections/cutout-split';
 import { PageHero } from '@/components/sections/page-hero';
-import { ProseSplit } from '@/components/sections/prose-split';
+// import { ProseSplit } from '@/components/sections/prose-split';
 import { ValueGrid, ValueMark, type ValueGridItem } from '@/components/sections/value-grid';
 import {
   ExcellenceMark,
@@ -13,7 +14,7 @@ import {
   aboutMeta,
   guidingPrinciples,
   ourAmbition,
-  ourEndeavours,
+  // ourEndeavours,
   strategicPillars,
 } from '../_content/about-us';
 
@@ -86,14 +87,27 @@ export default function AboutUsPage() {
   return (
     <div className="-mt-header lg:mt-0">
       <PageHero {...aboutHero} />
-      <ProseSplit {...ourEndeavours} />
-      <ProseSplit {...ourAmbition} />
-      <ValueGrid title={strategicPillars.title} items={pillarItems} spacing="tight" accent />
+      {/* "Our Endeavours" is withheld for now, on the client's instruction of
+          2026-09-17. Its copy and artwork stay in `_content/about-us.ts`. */}
+      {/* <ProseSplit {...ourEndeavours} /> */}
+      <CutoutSplit {...ourAmbition} />
+      {/* Outlined cards, to the client's reference of 2026-09-17. The accent
+          went with the hairline it ran along. */}
       <ValueGrid
-        eyebrow={guidingPrinciples.eyebrow}
+        title={strategicPillars.title}
+        items={pillarItems}
+        spacing="tight"
+        variant="outlined"
+      />
+      <ValueGrid
+        // "What We Believe" withheld on the client's instruction of 2026-09-17.
+        // eyebrow={guidingPrinciples.eyebrow}
         title={guidingPrinciples.title}
         items={principleItems}
         columns="wide"
+        // The accent that fills across the hairline on hover — the client's
+        // ask of 2026-09-17, matching the team cards.
+        accent
       />
     </div>
   );

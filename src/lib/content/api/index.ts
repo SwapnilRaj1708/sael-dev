@@ -38,7 +38,9 @@ export class ApiContentRepository implements ContentRepository {
   /**
    * `GET /api/v1/team`, mapped by `displayOrder` → `order`, `photoUrl` kept,
    * `photoAlt` dropped (a portrait's alternative text is the name beside it),
-   * and `group` read straight through. FE-23 wires the body.
+   * `group` read straight through, and `portraitZoom` read through with a
+   * missing or non-positive value mapped to `null` (the dialog then takes the
+   * default). FE-23 wires the body.
    */
   getTeamMembers(): Promise<TeamMember[]> {
     return Promise.reject(new NotImplementedError('ApiContentRepository.getTeamMembers'));

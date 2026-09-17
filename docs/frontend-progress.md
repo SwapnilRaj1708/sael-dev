@@ -134,24 +134,37 @@ from overflowing a 360px viewport.
 **The artwork landed on 2026-09-10** — all eleven assets, supplied as CDN URLs under
 `<container>/web-assets/images/about-us/`. Nothing on the page is a placeholder any more.
 
-They are **committed at `src/assets/images/about-us/` and imported**, not referenced by
-URL, and that is the deliberate part. `src/lib/assets/cdn.ts` — on
-`sachin/refactoring-design-guideline`, **not yet on `main`** — keeps the bundled import as
-the source of truth and swaps only `src`, because a `StaticImageData` carries the
-intrinsic width, height and `blurDataURL` that `next/image` needs to reserve the box and
-avoid a layout shift, and a bare URL string throws all three away. The CDN's `images/`
-directory is an exact mirror of `src/assets/images/`, so the eleven sit at the path that
-already names their CDN path. When that branch merges, pointing them at it is one
-`cdnImage(asset, 'about-us/…')` per import and nothing downstream changes. Wiring them as
-URLs now would have had to be undone.
+They were **committed at `src/assets/images/about-us/` and imported** until 2026-09-17,
+and that was deliberate: a bundled `StaticImageData` carries the intrinsic width, height
+and `blurDataURL` that `next/image` needs in order to reserve the box and avoid a layout
+shift, and a bare URL string throws all three away. Wiring them as URLs before the
+container was populated would have had to be undone.
 
-Three notes on the assets themselves:
+**The client populated the container on 2026-09-17** — all fourteen assets, including the
+three cut-out panels added that day — and the local copies came out of the repository in
+the same pass. `src/lib/assets/cdn.ts` now closes the gap they left: `cdnImage(path,
+width, height)` returns an object shaped exactly like the one an `import` produces, so
+every `StaticImageData` prop downstream is untouched, but the bytes are fetched from the
+container at runtime. Only the *path* is passed; the host comes from
+`AZURE_BLOB_BASE_URL` via `blobUrl()`, so no hostname sits in the repository
+(/CLAUDE.md §7).
 
-- **`about-us-hero.JPG` breaks the mirror, and the CDN is the side to fix.** Turbopack
-  refuses an uppercase extension outright (*Unknown module type*) and Azure Blob names
-  are case-sensitive, so `.jpg` 404s and `.JPG` will not bundle. The repository holds
-  `.jpg`; the blob wants renaming to match, and it is the only file in that folder that
-  is not already lowercase. Raised in `asset-inventory.md` §9.
+Four notes on the assets themselves:
+
+- **The dimensions are read from the blobs, not from the deleted local copies.** They are
+  what the browser reserves before a byte arrives, so a wrong one is a layout shift that
+  nothing catches. `cutout.png` is 1076 × 1984, not the 1991 a local `file` reading had
+  reported.
+- **`about-us-hero.JPG` is the one uppercase name, and it no longer blocks anything.**
+  Turbopack refused an uppercase extension outright (*Unknown module type*), which is why
+  the repository held a `.jpg` while the only URL that resolved was `.JPG`. Nothing
+  bundles the file now, so the call site simply spells it in upper case. It is still the
+  odd one out in an otherwise lowercase folder and still wants renaming; it is no longer
+  urgent. Raised in `asset-inventory.md` §9.
+- **The two panels are SVG and render `unoptimized`.** Next's optimizer refuses a remote
+  SVG unless `dangerouslyAllowSVG` is set, which it is not and should not be, and the
+  Next docs recommend `unoptimized` for vectors regardless. `sizes` is meaningless
+  without a srcset, so neither panel carries one.
 - **The eight principle icons are inverted at the call site.** They are monochrome line
   art in near-black on transparent and would be invisible on the black card as supplied.
   `<ValueMark>` applies `brightness-0 invert` — the homepage goal marks' treatment, and

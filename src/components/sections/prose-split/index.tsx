@@ -74,50 +74,63 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  *
  * A Server Component. Nothing here is interactive.
  */
-export function ProseSplit({ title, body, media, measure = 'default' }: ProseSplitProps) {
+/**
+ * The split itself, without the `<Section>` around it.
+ *
+ * Exported so `<CutoutSplit>` can render exactly this below `md` and its own
+ * composition above, inside one section, without the two drifting apart.
+ * Everything documented on {@link ProseSplit} applies here.
+ */
+export function ProseSplitLayout({ title, body, media, measure = 'default' }: ProseSplitProps) {
+  return (
+    <div
+      className={cn(
+        'grid w-full items-center gap-x-ledger-col-gap gap-y-flow',
+        'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--prose-split-col-min)),1fr))]',
+      )}
+    >
+      <div className="flex flex-col gap-flow">
+        <Reveal order={0}>
+          <DisplayHeading ground="dark">{title}</DisplayHeading>
+        </Reveal>
+
+        <div className={cn('flex flex-col gap-stack', MEASURE_CLASS[measure])}>
+          {body.map((paragraph, index) => (
+            <Reveal key={paragraph} order={index + 2}>
+              <p className="text-body text-pretty text-body-on-dark">{paragraph}</p>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      {media !== undefined && (
+        <Reveal
+          order={body.length + 2}
+          // `justify-self-center` and the auto margins keep the artwork
+          // centred in its column once the cap binds, rather than pinned to
+          // the column's start edge with the slack all on one side.
+          className={cn(
+            'relative mx-auto w-full justify-self-center',
+            MEDIA_CLASS[media.orientation],
+          )}
+        >
+          <MediaFrame
+            image={media.image}
+            alt={media.alt}
+            sizes={MEDIA_SIZES[media.orientation]}
+            pending={media.pending}
+            className="absolute inset-0"
+          />
+        </Reveal>
+      )}
+    </div>
+  );
+}
+
+export function ProseSplit(props: ProseSplitProps) {
   return (
     <Section background="black-dots">
-      <div
-        className={cn(
-          'grid w-full items-center gap-x-ledger-col-gap gap-y-flow',
-          'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--prose-split-col-min)),1fr))]',
-        )}
-      >
-        <div className="flex flex-col gap-flow">
-          <Reveal order={0}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
-          </Reveal>
-
-          <div className={cn('flex flex-col gap-stack', MEASURE_CLASS[measure])}>
-            {body.map((paragraph, index) => (
-              <Reveal key={paragraph} order={index + 2}>
-                <p className="text-body text-pretty text-body-on-dark">{paragraph}</p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-
-        {media !== undefined && (
-          <Reveal
-            order={body.length + 2}
-            // `justify-self-center` and the auto margins keep the artwork
-            // centred in its column once the cap binds, rather than pinned to
-            // the column's start edge with the slack all on one side.
-            className={cn(
-              'relative mx-auto w-full justify-self-center',
-              MEDIA_CLASS[media.orientation],
-            )}
-          >
-            <MediaFrame
-              image={media.image}
-              alt={media.alt}
-              sizes={MEDIA_SIZES[media.orientation]}
-              pending={media.pending}
-              className="absolute inset-0"
-            />
-          </Reveal>
-        )}
-      </div>
+      <ProseSplitLayout {...props} />
     </Section>
   );
 }

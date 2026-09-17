@@ -246,6 +246,14 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
 - Add the account host to `next.config.ts` `images.remotePatterns`.
 - **PDFs are linked, not proxied.** `<a href={doc.file.url} target="_blank" rel="noopener noreferrer">` with the file type and size in the accessible label: *"Annual Return FY 2024-25, PDF, 2.4 MB, opens in a new tab"*.
 - Never commit a PDF to the repository.
+- **Page furniture can come from the container too, and `cdnImage()` is how.** §8 was
+  written for backend-supplied assets that arrive as data. The About Us artwork is not
+  data — it is fourteen fixed files a section renders unconditionally — and it moved to
+  the container on 2026-09-17 all the same. `cdnImage(path, width, height)` from
+  `@/lib/assets/cdn` describes one: it composes the URL with `blobUrl()` and carries the
+  intrinsic dimensions a bundled import would otherwise have supplied, returning
+  something shaped like `StaticImageData` so no consuming component changes. The
+  dimensions must be read from the blob itself. Vectors must be rendered `unoptimized`.
 - Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/images/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
 
 ---
@@ -270,19 +278,20 @@ Items the client must supply before the relevant tracker item can complete:
 - [ ] Art-directed **portrait crops** of the four hero photographs — *blocks FE-04*
 - [ ] Confirmation that hero photography is final (three unused hero images in the prototype) — *blocks FE-04*
 - [ ] India map as vector, if Option B or C is chosen — *blocks Open Decision #6*
-- [x] ~~**About Us: the eleven page assets**~~ — supplied 2026-09-10 as CDN URLs under
+- [x] ~~**About Us: the page assets**~~ — supplied 2026-09-10 (eleven) and completed
+      2026-09-17 (the three cut-out panels), under
       `<container>/web-assets/images/about-us/`: the boardroom banner, the solar-field
-      photograph, the Our Ambition portrait, and `principle-icon-1` … `-8`. All eleven
-      are committed at `src/assets/images/about-us/`, the path that mirrors the CDN's
-      own, and are imported rather than fetched — see that folder's note in
-      `src/app/_content/about-us.ts`
-- [ ] **Rename `about-us-hero.JPG` on the CDN to `about-us-hero.jpg`.** Turbopack
-      refuses an uppercase extension outright (*Unknown module type*) and Azure Blob
-      names are case-sensitive, so the two sides of the mirror cannot currently agree:
-      the repository holds `.jpg` and the only URL that resolves is `.JPG`. Every other
-      file in that folder is already lowercase, so the blob is the odd one out.
-      Until it is renamed, a `cdnImage()` call for this one file has to spell the
-      extension in upper case. *blocks nothing today; blocks the CDN swap*
+      photograph, the Our Ambition portrait, both cut-out panels, the cut-out sitter, and
+      `principle-icon-1` … `-8`. They were committed at `src/assets/images/about-us/` and
+      imported until the container was populated; **the local copies were deleted on
+      2026-09-17** and all fourteen are now described by `cdnImage()` — see
+      `src/lib/assets/cdn.ts` and the folder note in `src/app/_content/about-us.ts`
+- [ ] **Rename `about-us-hero.JPG` on the CDN to `about-us-hero.jpg`.** Azure Blob names
+      are case-sensitive and this is the only file in the folder that is not lowercase,
+      so the call site has to spell the extension in upper case. It blocked the CDN swap
+      while Turbopack was being asked to bundle the file — it refuses an uppercase
+      extension outright (*Unknown module type*) — but nothing bundles it now.
+      *tidiness only; blocks nothing*
 - [ ] **The Our Ambition sitter's name and role.** The asset is
       `our-ambition-person-image.webp` and the design labelled it only "Portrait
       photograph", so the `alt` describes what is visible — "A person in a business

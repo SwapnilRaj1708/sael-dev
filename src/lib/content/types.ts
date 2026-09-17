@@ -111,5 +111,13 @@ export interface TeamMember {
    * link entirely rather than showing a disabled one.
    */
   linkedinUrl: string | null;
+  /**
+   * How far the biography dialog zooms this person's portrait into its
+   * passport crop — `1` is the card's own framing, `1.5` the house default,
+   * `2` a tight head shot. Per person because the client sets it by eye,
+   * photograph by photograph (2026-09-17). `null` takes the default, which is
+   * `--scale-team-passport` in theme.css.
+   */
+  portraitZoom: number | null;
   order: number;
 }

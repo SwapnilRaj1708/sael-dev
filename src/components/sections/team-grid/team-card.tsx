@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import type { TeamMember } from '@/lib/content';
+import { cn } from '@/lib/utils/cn';
 import { SIZES_TEAM_CARD } from '@/lib/utils/image-sizes';
 import { sanitizeBio } from '@/lib/utils/sanitize-bio';
 import { BioDisclosure } from './bio-disclosure';
@@ -51,7 +52,16 @@ export function TeamCard({ member }: TeamCardProps) {
               alt={member.name}
               fill
               sizes={SIZES_TEAM_CARD}
-              className="object-cover"
+              // A slow, slight zoom on hover, mirrored for keyboard focus so
+              // the card behaves the same however it is reached, and held
+              // still under reduced motion. The frame above is
+              // `overflow-hidden`, so the growth is clipped to the portrait's
+              // own box. Same treatment as the news card.
+              className={cn(
+                'object-cover transition-transform duration-(--duration-card) ease-out',
+                'group-hover:scale-105 group-has-focus-visible:scale-105',
+                'motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-has-focus-visible:scale-100',
+              )}
             />
           )}
         </div>

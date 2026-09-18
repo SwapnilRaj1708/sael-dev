@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
 import { DisplayHeading } from '@/components/ui/display-heading';
+import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
@@ -16,9 +17,25 @@ export interface ProseSplitMedia {
   pending?: string;
   /** `landscape` is 4:3 capped at 560px; `portrait` is 4:5 capped at 420px. */
   orientation: ProseSplitOrientation;
+  /**
+   * Utilities that clip the photograph to a supplied shape: the mask, its
+   * aspect and its width cap together, e.g. `mask-(--mask-solar-overview)
+   * aspect-(--aspect-solar-overview) max-w-(--solar-overview-media-w)`.
+   * **Replaces** the orientation's aspect and cap rather than layering over
+   * them, so the box is described in one place. Omit for the plain rectangle
+   * About Us draws.
+   */
+  mask?: string;
+  /**
+   * The `sizes` hint for the photograph. Defaults to the orientation's; a
+   * `mask` that widens the box must supply the hint that matches it.
+   */
+  sizes?: string;
 }
 
 export interface ProseSplitProps {
+  /** The small uppercase label above the heading. Omit for a section without one. */
+  eyebrow?: string;
   title: string;
   /** One entry per paragraph, in order. */
   body: string[];
@@ -72,6 +89,11 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  * The copy is DOM-first and screen-first, so the reading order is the same
  * stacked as it is side by side.
  *
+ * Two additions on 2026-09-18 for the Solar Energy page, both opt-in so About
+ * Us is untouched: an `eyebrow` above the heading, and a `mask` on the media
+ * that clips the photograph to a designer-supplied shape — the same alpha
+ * mask idiom `intro-split` and `endeavour-split` use.
+ *
  * A Server Component. Nothing here is interactive.
  */
 /**
@@ -81,7 +103,25 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  * composition above, inside one section, without the two drifting apart.
  * Everything documented on {@link ProseSplit} applies here.
  */
-export function ProseSplitLayout({ title, body, media, measure = 'default' }: ProseSplitProps) {
+export function ProseSplitLayout({
+  eyebrow,
+  title,
+  body,
+  media,
+  measure = 'default',
+}: ProseSplitProps) {
+  const headingOrder = eyebrow === undefined ? 0 : 1;
+
+  const frame = media && (
+    <MediaFrame
+      image={media.image}
+      alt={media.alt}
+      sizes={media.sizes ?? MEDIA_SIZES[media.orientation]}
+      pending={media.pending}
+      className="absolute inset-0"
+    />
+  );
+
   return (
     <div
       className={cn(
@@ -90,13 +130,21 @@ export function ProseSplitLayout({ title, body, media, measure = 'default' }: Pr
       )}
     >
       <div className="flex flex-col gap-flow">
-        <Reveal order={0}>
-          <DisplayHeading ground="dark">{title}</DisplayHeading>
-        </Reveal>
+        <div className="flex flex-col gap-stack">
+          {eyebrow !== undefined && (
+            <Reveal order={0}>
+              <Eyebrow tone="bright">{eyebrow}</Eyebrow>
+            </Reveal>
+          )}
+
+          <Reveal order={headingOrder}>
+            <DisplayHeading ground="dark">{title}</DisplayHeading>
+          </Reveal>
+        </div>
 
         <div className={cn('flex flex-col gap-stack', MEASURE_CLASS[measure])}>
           {body.map((paragraph, index) => (
-            <Reveal key={paragraph} order={index + 2}>
+            <Reveal key={paragraph} order={index + headingOrder + 1}>
               <p className="text-body text-pretty text-body-on-dark">{paragraph}</p>
             </Reveal>
           ))}
@@ -105,22 +153,18 @@ export function ProseSplitLayout({ title, body, media, measure = 'default' }: Pr
 
       {media !== undefined && (
         <Reveal
-          order={body.length + 2}
+          order={body.length + headingOrder + 1}
           // `justify-self-center` and the auto margins keep the artwork
           // centred in its column once the cap binds, rather than pinned to
           // the column's start edge with the slack all on one side.
           className={cn(
             'relative mx-auto w-full justify-self-center',
-            MEDIA_CLASS[media.orientation],
+            media.mask === undefined
+              ? MEDIA_CLASS[media.orientation]
+              : [media.mask, 'mask-size-(--mask-fill) mask-no-repeat'],
           )}
         >
-          <MediaFrame
-            image={media.image}
-            alt={media.alt}
-            sizes={MEDIA_SIZES[media.orientation]}
-            pending={media.pending}
-            className="absolute inset-0"
-          />
+          {frame}
         </Reveal>
       )}
     </div>

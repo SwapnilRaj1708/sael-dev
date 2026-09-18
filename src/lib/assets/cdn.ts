@@ -51,7 +51,7 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  * recommend for vectors regardless, since there is nothing to optimise. See
  * `sections/cutout-split`.
  *
- * @param path Container-relative, e.g. `web-assets/images/about-us/cutout.png`.
+ * @param path Container-relative, e.g. `web-assets/media/about-us/cutout.png`.
  * @param width The asset's true intrinsic width, in pixels.
  * @param height The asset's true intrinsic height, in pixels.
  */

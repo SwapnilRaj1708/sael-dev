@@ -113,6 +113,15 @@ export const SIZES_PROSE_MEDIA_LANDSCAPE = '(min-width: 50rem) 560px, 88vw';
 export const SIZES_PROSE_MEDIA_PORTRAIT = '(min-width: 50rem) 420px, 88vw';
 
 /**
+ * The Solar Energy page's two masked photographs, which run wider than the
+ * prose split's own caps — `--solar-overview-media-w` (704px) and
+ * `--solar-execution-media-w` (544px). Same hinge as the prose split, since
+ * they sit in the same grid. The caps and these hints move together.
+ */
+export const SIZES_SOLAR_OVERVIEW_MEDIA = '(min-width: 50rem) 704px, 88vw';
+export const SIZES_SOLAR_EXECUTION_MEDIA = '(min-width: 50rem) 544px, 88vw';
+
+/**
  * A portrait on a team card. The grid's floor is `--team-grid-col-min` (250px)
  * and it is `auto-fill`, so a column never grows much past that on a wide
  * screen — 340px is the widest it is drawn before another track fits. Below

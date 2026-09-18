@@ -17,6 +17,8 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 
 | ID | Item | Feature doc | Owner | Completed |
 |---|---|---|---|---|
+| FE-08 | Solar Energy | `features/08-solar-energy.md` | Swapnil Raj | 2026-09-18 |
+| FE-07 | Our Team | `features/07-our-team.md` | Swapnil Raj | 2026-09-10 |
 | FE-06 | About Us | `features/06-about-us.md` | Swapnil Raj | 2026-09-10 |
 | FE-04 | Homepage | `features/04-homepage.md` | Swapnil Raj | 2026-09-10 |
 | FE-25 | Design-system reconciliation — guidelines vs. the as-built homepage | `design-reconciliation.md` | Swapnil Raj | 2026-09-10 |
@@ -24,11 +26,242 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
 
+### FE-08 — as built
+
+Built to **the client's reference screenshot** for layout and to **the live
+https://www.sael.co/solar-energy/** for every word, on the client's instruction of
+2026-09-18 that the screenshot fixes the structure and the live page fixes the copy.
+`features/08-solar-energy.md` was not the spec for this build and has not been
+reconciled to it; the page is the first business page and the first to take the
+`<PageHero>` opening with a **video** behind it.
+
+| # | Section | Component | State |
+|---|---|---|---|
+| 1 | Hero — "Solar Energy" over a looping video | `sections/page-hero/` | **Extended.** Optional `video`; the photograph becomes its poster and the reduced-motion still |
+| 2 | Overview — copy beside a masked photograph | `sections/prose-split/` | **Extended.** Optional `eyebrow`, and `media.mask` + `media.sizes` for a designer-supplied shape |
+| 3 | Projects — dotted India map, copy, portfolio figure | `sections/projects-map/` | **New.** Composes `<PresenceMapFigure>` beside two paragraphs and a `<CountUp>` |
+| 4 | How Do We Work? — three capabilities beside a masked photograph | `sections/capability-split/` | **New.** Hairline `<Card>` rows, closing rule, mask2 on the artwork |
+| 5 | How We Reduce Cost? — four practice cards | `sections/value-grid/` | Reused, `variant="outlined"` |
+
+**The map was extracted, not forked.** `sections/presence-map/map-figure.tsx` is the
+dotted India artwork, its pins and their callouts, lifted out of `<PresenceMap>` so the
+homepage and this page share one implementation; `<PresenceMap>` composes it and renders
+identically. A `legend` flag turns off the business name in the callout, which on a
+solar-only map would repeat the page's title beside every pin. **A pin with an `href` is
+now a real `<a>` to that location in a new tab** — the live page links fourteen of its
+twenty-three sites to Google Maps, and until this the "Visit Location" line rendered as
+text with nothing behind it. The pins remain the map's text equivalent: every site name
+and capacity is real DOM text on a focusable control, in document order.
+
+**Twenty-three site capacities, transcribed as the live page publishes them**, from
+Kurnool (Andhra Pradesh) 2707 MW down to Assam 1 MW, including the live page's own
+spellings ("Karnatka", "Nagamangla", "Gr. Noida"). Coordinates are fitted through the
+homepage's eleven state pins rather than measured, as those were; the three "Other
+Locations" entries sit near their state centroid; Khavda was clamped inward from the
+artwork's western edge. **The pins want an eye before this ships.**
+
+Landed alongside it:
+
+- **`ui/video-frame.tsx`** — a silent, looping, inline-autoplay `<video>` over a
+  `<MediaFrame>` poster, decorative by contract and `aria-hidden`. `autoPlay` cannot be
+  gated by a media query in markup, so the client leaf decides: the poster is rendered on
+  the server and for anyone preferring reduced motion, and the video mounts only once
+  the preference is known to allow it. The file lives in the blob container at
+  `web-assets/media/solar-energy/patiala-project.mp4`; only the path is committed.
+- **`--mask-solar-overview` and `--mask-solar-execution`** in theme.css — the client's
+  `solarEnergy/mask1.svg` and `mask2.svg` carried as alpha masks, the same idiom
+  `intro-split` and `endeavour-split` use, with `--aspect-solar-*` from their viewBoxes
+  and `--solar-*-media-w` caps (704 / 544) wider than the prose split's own, at the
+  client's request of 2026-09-18 — the notched shapes read smaller than a plain
+  photograph in the same box. `image-sizes.ts` carries matching hints.
+- **`value-grid/solar-marks.tsx`** — seven line-art marks drawn in the `pillar-marks`
+  idiom, at the client's request rather than waiting on artwork: a ticked clipboard, a
+  gauge, a site pin, two people, a ticked calendar, a pylon, a monitor with a trend line.
+  Any one swaps for a supplied file by replacing its line in `page.tsx`.
+- **`web-assets/images` → `web-assets/media`**, everywhere, following the client's
+  rename of the container folder on 2026-09-18. The About Us artwork and the seventeen
+  team portraits resolve from the new prefix; the base URL is unchanged.
+
+**Departures from the reference screenshot, all deliberate:**
+
+- Its four identical EPC cards are placeholder art; the live page's four distinct cards
+  are built.
+- Its boardroom hero photograph is placeholder art; the hero is the client's video.
+- Its "How do we reduce cost?" label reads "How We Reduce Cost?" on the live page, which
+  wins on content.
+- Its gradient on the portfolio figure is rendered as `--color-figure-solar-bright`, the
+  solar business's own accent on the homepage ledger, rather than a new gradient token
+  minted for one number.
+
+Still open:
+
+- **The portfolio figure reads `8299.5 MWp`, not the screenshot's `8299 MWp`.** The live
+  markup is `<span data-target="8299">0</span><span>.5</span> MWp` — the counter lands on
+  8299 and the ".5" is static text after it, so the settled figure is 8299.5. A scrape
+  mid-count reads "0.5 MWp", which is the failure the client warned of. The homepage's
+  mock capacity stat still reads 8299. **Client to confirm which is right.**
+- **No hero poster.** Until a still is supplied (`pending: solar-energy/hero-poster`) the
+  box shows the neutral placeholder before the first frame and for reduced-motion users.
+- **A meta description for `/solar-energy/`.** The live page ships
+  `<meta name="description" content="">`; `{{TODO: content}}` and none emitted.
+- **The map pins**, as above.
+- **`features/08-solar-energy.md`** describes a page this is not, and wants rewriting to
+  the as-built rather than the other way round.
+
+### FE-07 — as built
+
+Merged to `main` on 2026-09-10 (PR 2534). **Revised 2026-09-17 on the client's
+feedback**, together with About Us (PR 2535): the card accent that fills across the
+hairline on hover now runs on the team cards as well as the About Us principle cards,
+matching the two pages to each other.
+
+**FE-05 was skipped to get here, on the client's instruction of 2026-09-10.** It was
+still the top of Pending when FE-07 closed, and is In Progress now. What FE-07 needed from
+it — `TeamMember`,
+`getTeamMembers()` on the interface, and the method in both implementations — was carved
+out and landed here, which is exactly the trade FE-04 made for `CapacityStat` and
+`NewsItem`. FE-05 is correspondingly smaller now; nothing in it was dropped.
+
+Built to **`Our Team.dc.html`**, the client's Claude Design project
+(`a6a044b5-3829-44df-baae-d700f52344ec`), read through the design MCP. The first page
+whose content is entirely repository-driven — seventeen real people, no hardcoded names.
+
+| # | Section | Component | State |
+|---|---|---|---|
+| 1 | Heading, tabs and roster | `sections/team-grid/` | **New.** One `Section background="black-dots"` carrying the breadcrumb, the `<h1>`, the standfirst, a Leadership/Management tab list and both panels of cards. One section and not two because the design draws it as one, and splitting it would put `--spacing-section-y` between a tab and the panel it controls |
+| — | Page hero | — | **Not built** — see below |
+
+**The design has no banner hero, and that is the one place it disagrees with
+`features/07` §1.** The feature doc specifies `<PageHero>`; the design opens on the dotted
+black ground with the `<h1>` and a standfirst, and `asset-inventory.md` has no Our Team
+banner to put behind one. **The client's ruling on 2026-09-10 was to follow the design and
+keep the breadcrumb** — which the design also omits, but `accessibility-and-seo.md` §3
+requires `BreadcrumbList` on every page below the root, and that is an obligation rather
+than a visual detail. So the page is the design's opening with `<Breadcrumb>` restored
+above the title.
+
+That makes `sections/team-grid/` the **second inner-page opening**, beside
+`sections/page-hero/`. It is not a rival template: a page with a supplied banner still
+uses `<PageHero>`, and FE-08 → FE-15 should pick by whether the client has supplied
+artwork.
+
+**Three smaller departures from `features/07`, all following the design:**
+
+- **The portrait is 3:4, not 1:1.** The feature doc specifies a square; the design draws
+  a portrait crop, which is what a head-and-shoulders photograph wants.
+- **The grid is `auto-fill`, not the doc's 4/3/2/1 breakpoints.** One
+  `repeat(auto-fill, minmax(min(100%, 250px), 1fr))` reflows on the space it has, and
+  `auto-fill` rather than `auto-fit` deliberately: Management has seven cards to
+  Leadership's ten, and `auto-fit` would collapse the empty tracks and draw the same
+  person wider on one tab than on the other.
+- **There is no separate `<TeamGrid>` under a `<PageHero>`.** The one component owns both,
+  for the reason in the table above.
+
+Landed alongside it:
+
+- **`TeamMember.group`** — new, and in neither `content-model.md` §2 nor
+  `api-contracts.md` §4 before this. A tab is a partition of the roster, so the grouping
+  has to come from the data rather than a hardcoded list of names. Both docs are updated
+  and the backend proposal is a `group` string on `GET /api/v1/team`.
+- **`photoUrl: string | null`** rather than the documented `photo: ImageAsset | null`,
+  following `NewsItem.imageUrl` — a CMS asset the frontend cannot know at build time is a
+  URL for `next/image`, not a bundled import. `photoAlt` is ignored: a portrait's `alt` is
+  the name of the person in it, which `name` already carries.
+- **`lib/utils/sanitize-bio.ts`** — the frontend half of the two-sided sanitisation
+  `api-contracts.md` §4 describes, allowlisting exactly the eight tags it permits. Runs on
+  the server, so `sanitize-html` never reaches the browser bundle; only the clean string
+  crosses into the client leaf.
+- **`rich-text`**, an `@utility` in globals.css, giving those eight tags back the margins
+  the preflight reset strips. Type and colour stay on the element that carries it.
+- **`<EmptyState ground="dark">`** — its first real consumer. The paper palette's
+  near-black type is invisible on `--color-surface-black`; the default is unchanged.
+- **`focus-visible:outline-white` on this page's controls and on `<Breadcrumb>`'s links.**
+  The global ring is `--color-brand-blue`, which is **1.84:1** on `--color-surface-black`
+  — under WCAG 1.4.11's 3.0 floor, so effectively invisible. White is 19.9:1. The
+  breadcrumb fix applies to the About Us hero too.
+- **Seventeen portraits, served from the client's CDN.** They were briefly mirrored into
+  `public/team/` from the legacy site's `/img/team/` while the real URLs were
+  outstanding; **the client supplied them on 2026-09-10** and the copies were deleted —
+  byte-identical, so nothing changed but where they are served from. The fixture stores
+  the **container path** (`web-assets/media/our-team/<slug>`), never the absolute URL,
+  so no hostname is committed (/CLAUDE.md §7); `tryBlobUrl()` composes it with
+  `AZURE_BLOB_BASE_URL`, which `.env.example` now carries. The same mapping survives
+  FE-23 untouched, because `blobUrl()` passes an already-absolute value straight
+  through — which is what the API will send.
+
+  `tryBlobUrl` rather than `blobUrl` deliberately: with the base unset each card falls
+  back to its initials avatar and the roster still renders in full, instead of the whole
+  page becoming an empty state over a configuration mistake. The cost is that the
+  omission is quiet, which is why the working base is the documented default.
+- **`TeamMember.linkedinUrl`** — added 2026-09-10 from the live site's own popups, where
+  **seven of the seventeen** publish a profile and ten do not. Rendered under the
+  biography, which is where the live site puts it, as an outbound link with
+  `rel="noopener noreferrer"`. Sparse by nature rather than unfilled, so a person without
+  one gets no link at all — no disabled affordance. Both contract docs updated.
+  **Dialog only, and not on the card**: the card's whole surface is already the trigger's
+  `::before`, so a link underneath it would be unreachable.
+- **`ui/card.tsx`: `group-focus-within` → `group-has-focus-visible`** — a real bug, found
+  on this page and fixed in the shared primitive. See below.
+
+**The card accent was stuck after closing a dialog, and the fix was in `<Card>`.** The
+accent keyed off `group-focus-within`. A native `<dialog>` returns focus to its trigger
+on close — correctly, and `features/07` requires it — and that trigger is inside the
+card, so `:focus-within` stayed true and the bar stayed filled indefinitely, including
+while the pointer moved over other cards. `:focus-within` cannot distinguish restored
+focus from a deliberate keyboard visit; `:has(:focus-visible)` defers to the browser's
+own modality heuristic and can. Measured before and after over CDP:
+
+| path | before | after |
+|---|---|---|
+| at rest | collapsed | collapsed |
+| mouse open → `×` or backdrop close | **filled, no focus ring** | collapsed |
+| mouse open → `Esc` close | **filled, no focus ring** | filled, **with** the focus ring — and clears on the next click |
+| `Tab` to the trigger | filled | filled |
+
+The `Esc` row is the one that still fills, and that is correct rather than residual: the
+browser treats the restored focus as keyboard-visible and draws its ring there, so the
+accent agrees with the ring instead of contradicting it. It clears on the next click.
+The change touches every `<Card>`; `<ValueGrid>`'s cards contain nothing focusable, and
+the news and ledger cards hold links whose focus is genuinely visible when tabbed to, so
+all three are unaffected or strictly better.
+
+**Verified in a real browser**, which is new for this project — a headless Chrome driven
+over CDP, scripted in the scratchpad rather than committed. Both tabs switch by pointer
+and by `ArrowLeft`/`ArrowRight`/`Home`/`End` with a roving `tabIndex`; the dialog opens
+modal, moves focus inside, is labelled by the name heading, closes on `Esc` and on a
+backdrop click, and returns focus to its trigger. No horizontal overflow at 360 or 390.
+
+Still open:
+
+- **A meta description for `/our-team/`.** The design file carries a `<title>` and no
+  `<meta name="description">`, so none is emitted rather than a placeholder being
+  invented. `{{TODO: content}}`.
+- **The `<title>` separator disagrees between design files** — `Our Team - SAEL` here
+  against `About Us | SAEL`. Both are transcribed verbatim. **FE-22 should settle it**
+  against the legacy titles; changing a ranking title is not a decision to make in
+  passing.
+- **Two portraits are not 4:5.** `archana-capoor.webp` is 500x457 and
+  `puneet-upneja.webp` 500x533, where the other fifteen are 500x625. In a 3:4 box
+  `object-cover` crops them left and right rather than top and bottom. Both read
+  correctly, but they are the odd two and want an eye on them.
+- **`photoUrl: null` and `bio: null` are unexercised.** Every one of the seventeen has
+  both, and inventing an eighteenth person to exercise the branches would put a
+  fabricated director on a page of real ones. `features/05` §3 owns that fixture edge
+  case; the card and the page already handle both.
+
 ### FE-06 — as built
 
 Built to **`About Us.dc.html`**, the client's Claude Design project
 (`f05dd0a1-42c8-4f44-b688-f8dceb7f677b`), read through the design MCP. It is the first
 content page, so the shared pieces are the deliverable as much as the page is.
+
+**Revised again on 2026-09-17 on the client's feedback** (PR 2535, with FE-07): the
+breadcrumb trail was dropped and the hero copy centred; "Our Endeavours" and the "What We
+Believe" label are withheld, their copy kept in `_content/about-us.ts`; "Our Ambition"
+became the `<CutoutSplit>` composition with the client's shaped panel and cut-out; the
+strategic pillars took the new `outlined` card variant; and the principle cards gained
+the hover accent. The fourteen About Us assets moved from the repository to the blob
+container the same day, described by `cdnImage()`.
 
 **Revised on 2026-09-10 against a second read of `About Us.dc.html`.** The design file
 changed in exactly two ways and nothing else — the whole diff is ten hunks, eight of
@@ -132,7 +365,7 @@ on a short laptop as well as on a phone. The `min(100%, …)` is what stops a 38
 from overflowing a 360px viewport.
 
 **The artwork landed on 2026-09-10** — all eleven assets, supplied as CDN URLs under
-`<container>/web-assets/images/about-us/`. Nothing on the page is a placeholder any more.
+`<container>/web-assets/media/about-us/`. Nothing on the page is a placeholder any more.
 
 They were **committed at `src/assets/images/about-us/` and imported** until 2026-09-17,
 and that was deliberate: a bundled `StaticImageData` carries the intrinsic width, height
@@ -421,162 +654,32 @@ guardrail and the toolchain.
 
 | ID | Item | Feature doc | Reads | Owner | Started |
 |---|---|---|---|---|---|
-| FE-07 | Our Team | `features/07-our-team.md` | `content-model.md`, `api-contracts.md` | Swapnil Raj | 2026-09-10 |
+| FE-05 | Content repository + mock data layer | `features/05-content-repository.md` | `content-model.md`, `api-contracts.md` | Swapnil Raj | 2026-09-18 |
 
-**FE-05 was skipped to get here, on the client's instruction of 2026-09-10.** It is still
-the top of Pending and still has to be done. What FE-07 needed from it — `TeamMember`,
-`getTeamMembers()` on the interface, and the method in both implementations — was carved
-out and landed here, which is exactly the trade FE-04 made for `CapacityStat` and
-`NewsItem`. FE-05 is correspondingly smaller now; nothing in it was dropped.
-
-Built to **`Our Team.dc.html`**, the client's Claude Design project
-(`a6a044b5-3829-44df-baae-d700f52344ec`), read through the design MCP. The first page
-whose content is entirely repository-driven — seventeen real people, no hardcoded names.
-
-| # | Section | Component | State |
-|---|---|---|---|
-| 1 | Heading, tabs and roster | `sections/team-grid/` | **New.** One `Section background="black-dots"` carrying the breadcrumb, the `<h1>`, the standfirst, a Leadership/Management tab list and both panels of cards. One section and not two because the design draws it as one, and splitting it would put `--spacing-section-y` between a tab and the panel it controls |
-| — | Page hero | — | **Not built** — see below |
-
-**The design has no banner hero, and that is the one place it disagrees with
-`features/07` §1.** The feature doc specifies `<PageHero>`; the design opens on the dotted
-black ground with the `<h1>` and a standfirst, and `asset-inventory.md` has no Our Team
-banner to put behind one. **The client's ruling on 2026-09-10 was to follow the design and
-keep the breadcrumb** — which the design also omits, but `accessibility-and-seo.md` §3
-requires `BreadcrumbList` on every page below the root, and that is an obligation rather
-than a visual detail. So the page is the design's opening with `<Breadcrumb>` restored
-above the title.
-
-That makes `sections/team-grid/` the **second inner-page opening**, beside
-`sections/page-hero/`. It is not a rival template: a page with a supplied banner still
-uses `<PageHero>`, and FE-08 → FE-15 should pick by whether the client has supplied
-artwork.
-
-**Three smaller departures from `features/07`, all following the design:**
-
-- **The portrait is 3:4, not 1:1.** The feature doc specifies a square; the design draws
-  a portrait crop, which is what a head-and-shoulders photograph wants.
-- **The grid is `auto-fill`, not the doc's 4/3/2/1 breakpoints.** One
-  `repeat(auto-fill, minmax(min(100%, 250px), 1fr))` reflows on the space it has, and
-  `auto-fill` rather than `auto-fit` deliberately: Management has seven cards to
-  Leadership's ten, and `auto-fit` would collapse the empty tracks and draw the same
-  person wider on one tab than on the other.
-- **There is no separate `<TeamGrid>` under a `<PageHero>`.** The one component owns both,
-  for the reason in the table above.
-
-Landed alongside it:
-
-- **`TeamMember.group`** — new, and in neither `content-model.md` §2 nor
-  `api-contracts.md` §4 before this. A tab is a partition of the roster, so the grouping
-  has to come from the data rather than a hardcoded list of names. Both docs are updated
-  and the backend proposal is a `group` string on `GET /api/v1/team`.
-- **`photoUrl: string | null`** rather than the documented `photo: ImageAsset | null`,
-  following `NewsItem.imageUrl` — a CMS asset the frontend cannot know at build time is a
-  URL for `next/image`, not a bundled import. `photoAlt` is ignored: a portrait's `alt` is
-  the name of the person in it, which `name` already carries.
-- **`lib/utils/sanitize-bio.ts`** — the frontend half of the two-sided sanitisation
-  `api-contracts.md` §4 describes, allowlisting exactly the eight tags it permits. Runs on
-  the server, so `sanitize-html` never reaches the browser bundle; only the clean string
-  crosses into the client leaf.
-- **`rich-text`**, an `@utility` in globals.css, giving those eight tags back the margins
-  the preflight reset strips. Type and colour stay on the element that carries it.
-- **`<EmptyState ground="dark">`** — its first real consumer. The paper palette's
-  near-black type is invisible on `--color-surface-black`; the default is unchanged.
-- **`focus-visible:outline-white` on this page's controls and on `<Breadcrumb>`'s links.**
-  The global ring is `--color-brand-blue`, which is **1.84:1** on `--color-surface-black`
-  — under WCAG 1.4.11's 3.0 floor, so effectively invisible. White is 19.9:1. The
-  breadcrumb fix applies to the About Us hero too.
-- **Seventeen portraits, served from the client's CDN.** They were briefly mirrored into
-  `public/team/` from the legacy site's `/img/team/` while the real URLs were
-  outstanding; **the client supplied them on 2026-09-10** and the copies were deleted —
-  byte-identical, so nothing changed but where they are served from. The fixture stores
-  the **container path** (`web-assets/images/our-team/<slug>`), never the absolute URL,
-  so no hostname is committed (/CLAUDE.md §7); `tryBlobUrl()` composes it with
-  `AZURE_BLOB_BASE_URL`, which `.env.example` now carries. The same mapping survives
-  FE-23 untouched, because `blobUrl()` passes an already-absolute value straight
-  through — which is what the API will send.
-
-  `tryBlobUrl` rather than `blobUrl` deliberately: with the base unset each card falls
-  back to its initials avatar and the roster still renders in full, instead of the whole
-  page becoming an empty state over a configuration mistake. The cost is that the
-  omission is quiet, which is why the working base is the documented default.
-- **`TeamMember.linkedinUrl`** — added 2026-09-10 from the live site's own popups, where
-  **seven of the seventeen** publish a profile and ten do not. Rendered under the
-  biography, which is where the live site puts it, as an outbound link with
-  `rel="noopener noreferrer"`. Sparse by nature rather than unfilled, so a person without
-  one gets no link at all — no disabled affordance. Both contract docs updated.
-  **Dialog only, and not on the card**: the card's whole surface is already the trigger's
-  `::before`, so a link underneath it would be unreachable.
-- **`ui/card.tsx`: `group-focus-within` → `group-has-focus-visible`** — a real bug, found
-  on this page and fixed in the shared primitive. See below.
-
-**The card accent was stuck after closing a dialog, and the fix was in `<Card>`.** The
-accent keyed off `group-focus-within`. A native `<dialog>` returns focus to its trigger
-on close — correctly, and `features/07` requires it — and that trigger is inside the
-card, so `:focus-within` stayed true and the bar stayed filled indefinitely, including
-while the pointer moved over other cards. `:focus-within` cannot distinguish restored
-focus from a deliberate keyboard visit; `:has(:focus-visible)` defers to the browser's
-own modality heuristic and can. Measured before and after over CDP:
-
-| path | before | after |
-|---|---|---|
-| at rest | collapsed | collapsed |
-| mouse open → `×` or backdrop close | **filled, no focus ring** | collapsed |
-| mouse open → `Esc` close | **filled, no focus ring** | filled, **with** the focus ring — and clears on the next click |
-| `Tab` to the trigger | filled | filled |
-
-The `Esc` row is the one that still fills, and that is correct rather than residual: the
-browser treats the restored focus as keyboard-visible and draws its ring there, so the
-accent agrees with the ring instead of contradicting it. It clears on the next click.
-The change touches every `<Card>`; `<ValueGrid>`'s cards contain nothing focusable, and
-the news and ledger cards hold links whose focus is genuinely visible when tabbed to, so
-all three are unaffected or strictly better.
-
-**Verified in a real browser**, which is new for this project — a headless Chrome driven
-over CDP, scripted in the scratchpad rather than committed. Both tabs switch by pointer
-and by `ArrowLeft`/`ArrowRight`/`Home`/`End` with a roving `tabIndex`; the dialog opens
-modal, moves focus inside, is labelled by the name heading, closes on `Esc` and on a
-backdrop click, and returns focus to its trigger. No horizontal overflow at 360 or 390.
-
-Still open:
-
-- **A meta description for `/our-team/`.** The design file carries a `<title>` and no
-  `<meta name="description">`, so none is emitted rather than a placeholder being
-  invented. `{{TODO: content}}`.
-- **The `<title>` separator disagrees between design files** — `Our Team - SAEL` here
-  against `About Us | SAEL`. Both are transcribed verbatim. **FE-22 should settle it**
-  against the legacy titles; changing a ranking title is not a decision to make in
-  passing.
-- **Two portraits are not 4:5.** `archana-capoor.webp` is 500x457 and
-  `puneet-upneja.webp` 500x533, where the other fifteen are 500x625. In a 3:4 box
-  `object-cover` crops them left and right rather than top and bottom. Both read
-  correctly, but they are the odd two and want an eye on them.
-- **`photoUrl: null` and `bio: null` are unexercised.** Every one of the seventeen has
-  both, and inventing an eighteenth person to exercise the branches would put a
-  fabricated director on a page of real ones. `features/05` §3 owns that fixture edge
-  case; the card and the page already handle both.
+Promoted 2026-09-18 as the top of Pending once FE-08 closed, per the rule. Most of it
+has already landed piecemeal — `CapacityStat` and `NewsItem` inside FE-04, `TeamMember`
+inside FE-07 — so what remains is the parts no page has needed yet; see the note under
+Pending.
 
 ---
 
 ## 📋 Pending
 
 Delivery order. The critical path — FE-01 → FE-04 plus the FE-25 reconciliation — is
-done, and FE-06 and FE-07 have since established the two inner-page openings, so
-FE-08 → FE-15 all build on `sections/page-hero/` or `sections/team-grid/` plus
-`sections/prose-split/` and `sections/value-grid/`, rather than starting from the
-design system alone. Which opening a page takes depends on whether the client has
-supplied a banner photograph for it.
+done, and FE-06, FE-07 and FE-08 have since established the inner-page openings, so
+FE-09 → FE-15 all build on `sections/page-hero/` (photograph or video) or
+`sections/team-grid/` plus `sections/prose-split/`, `sections/value-grid/`,
+`sections/projects-map/` and `sections/capability-split/`, rather than starting from
+the design system alone. FE-08 is the template the three remaining business pages
+(FE-09 → FE-11) should follow.
 
-**FE-05 is listed first but is largely already built, and is now smaller still.** Its
-repository slice landed inside FE-04 and feeds the homepage; FE-07 then carved out the
-team slice — `TeamMember`, `getTeamMembers()` and both implementations. **FE-07 was
-promoted ahead of it on 2026-09-10**, on the client's instruction; see the note in In
-Progress. What remains here is the parts no page has needed yet.
+**FE-05 is In Progress now, and is largely already built.** Its repository slice landed
+inside FE-04 and feeds the homepage; FE-07 then carved out the team slice —
+`TeamMember`, `getTeamMembers()` and both implementations. What remains is the parts no
+page has needed yet.
 
 | ID | Item | Feature doc | Reads |
 |---|---|---|---|
-| FE-05 | Content repository + mock data layer | `features/05-content-repository.md` | `content-model.md`, `api-contracts.md` |
-| FE-08 | Solar Energy | `features/08-solar-energy.md` | `design-guidelines.md` |
 | FE-09 | Waste to Energy | `features/09-waste-to-energy.md` | `design-guidelines.md` |
 | FE-10 | Module Manufacturing | `features/10-module-manufacturing.md` | `design-guidelines.md` |
 | FE-11 | Solar Cell Manufacturing | `features/11-solar-cell-manufacturing.md` | `design-guidelines.md` |

@@ -20,7 +20,7 @@ import { cdnImage } from '@/lib/assets/cdn';
  * ## The artwork
  *
  * The fourteen assets live in Azure Blob Storage under
- * `<container>/web-assets/images/about-us/` and are described by
+ * `<container>/web-assets/media/about-us/` and are described by
  * `cdnImage(path, width, height)` — see `src/lib/assets/cdn.ts` for why that
  * helper exists and what it returns.
  *
@@ -66,7 +66,7 @@ export interface PrincipleCopy extends Omit<ValueGridItem, 'mark'> {
  * `AZURE_BLOB_BASE_URL` at render time. docs/asset-inventory.md §8.
  */
 const aboutAsset = (file: string, width: number, height: number): StaticImageData | null =>
-  cdnImage(`web-assets/images/about-us/${file}`, width, height);
+  cdnImage(`web-assets/media/about-us/${file}`, width, height);
 
 /** The eight guiding-principle icons are all 128 square. */
 const principleIcon = (n: number): StaticImageData | null =>

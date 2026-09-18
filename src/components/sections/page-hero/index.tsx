@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Section } from '@/components/ui/section';
+import { VideoFrame } from '@/components/ui/video-frame';
 import { cn } from '@/lib/utils/cn';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
 import { SIZES_FULL_BLEED } from '@/lib/utils/image-sizes';
@@ -30,6 +31,13 @@ export interface PageHeroProps {
   image: StaticImageData | null;
   /** Meaningful description of the banner, or `''` if it is decorative. */
   imageAlt: string;
+  /**
+   * A silent looping video drawn over the photograph, which then serves as
+   * its poster and as the still for reduced motion. Absolute URL, composed
+   * from the blob path at the call site; `null` when the host is unset.
+   * See `<VideoFrame>` for what this is and is not for.
+   */
+  video?: string | null;
   /** The asset's name in docs/asset-inventory.md, for the pending placeholder. */
   pending?: string;
 }
@@ -70,7 +78,10 @@ export interface PageHeroProps {
  * `priority` is set on the banner: it is the page's largest contentful paint,
  * and it is the one image per page that should carry it.
  *
- * A Server Component. Nothing here is interactive.
+ * **`video` swaps the banner for a moving one** — added 2026-09-18 for the
+ * Solar Energy hero. The photograph stays as poster and reduced-motion still.
+ *
+ * A Server Component; only `<VideoFrame>` is client, and only when used.
  */
 export function PageHero({
   title,
@@ -80,6 +91,7 @@ export function PageHero({
   image,
   imageAlt,
   pending,
+  video,
   align = 'start',
 }: PageHeroProps) {
   return (
@@ -99,14 +111,25 @@ export function PageHero({
       fullBleed
     >
       <div className="relative flex min-h-(--page-hero-h) w-full max-w-full items-end overflow-hidden">
-        <MediaFrame
-          image={image}
-          alt={imageAlt}
-          sizes={SIZES_FULL_BLEED}
-          priority
-          pending={pending}
-          className="absolute inset-0"
-        />
+        {video === undefined ? (
+          <MediaFrame
+            image={image}
+            alt={imageAlt}
+            sizes={SIZES_FULL_BLEED}
+            priority
+            pending={pending}
+            className="absolute inset-0"
+          />
+        ) : (
+          <VideoFrame
+            src={video}
+            poster={image}
+            posterAlt={imageAlt}
+            sizes={SIZES_FULL_BLEED}
+            pending={pending}
+            className="absolute inset-0"
+          />
+        )}
 
         {/* Decorative: it carries no information, it protects the contrast of
             the text over it. */}

@@ -242,7 +242,7 @@ svgo -f src/assets/icons --multipass
 Backend-supplied assets (news images, investor PDFs, team photos) live in Blob Storage and arrive as absolute URLs.
 
 - Compose with `blobUrl(path)` from `@/lib/utils/blob-url` — never string-concatenate at a call site.
-- **Store the path, not the URL.** A fixture or a DTO carries `web-assets/images/our-team/jasbir-singh.jpg`; the host comes from `AZURE_BLOB_BASE_URL` at render time. That is what keeps hostnames out of the repository (/CLAUDE.md §7) and lets one fixture work against any environment's container. `blobUrl()` passes an already-absolute value through, so a backend that returns full URLs needs no special case.
+- **Store the path, not the URL.** A fixture or a DTO carries `web-assets/media/our-team/jasbir-singh.jpg`; the host comes from `AZURE_BLOB_BASE_URL` at render time. That is what keeps hostnames out of the repository (/CLAUDE.md §7) and lets one fixture work against any environment's container. `blobUrl()` passes an already-absolute value through, so a backend that returns full URLs needs no special case.
 - Add the account host to `next.config.ts` `images.remotePatterns`.
 - **PDFs are linked, not proxied.** `<a href={doc.file.url} target="_blank" rel="noopener noreferrer">` with the file type and size in the accessible label: *"Annual Return FY 2024-25, PDF, 2.4 MB, opens in a new tab"*.
 - Never commit a PDF to the repository.
@@ -254,7 +254,7 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
   intrinsic dimensions a bundled import would otherwise have supplied, returning
   something shaped like `StaticImageData` so no consuming component changes. The
   dimensions must be read from the blob itself. Vectors must be rendered `unoptimized`.
-- Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/images/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
+- Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/media/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
 
 ---
 
@@ -280,7 +280,7 @@ Items the client must supply before the relevant tracker item can complete:
 - [ ] India map as vector, if Option B or C is chosen — *blocks Open Decision #6*
 - [x] ~~**About Us: the page assets**~~ — supplied 2026-09-10 (eleven) and completed
       2026-09-17 (the three cut-out panels), under
-      `<container>/web-assets/images/about-us/`: the boardroom banner, the solar-field
+      `<container>/web-assets/media/about-us/`: the boardroom banner, the solar-field
       photograph, the Our Ambition portrait, both cut-out panels, the cut-out sitter, and
       `principle-icon-1` … `-8`. They were committed at `src/assets/images/about-us/` and
       imported until the container was populated; **the local copies were deleted on

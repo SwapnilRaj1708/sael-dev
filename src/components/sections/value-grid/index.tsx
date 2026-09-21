@@ -8,8 +8,14 @@ import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
 
 export interface ValueGridItem {
-  /** The card's heading. Rendered as `<h3>` under the section's `<h2>`. */
-  name: string;
+  /**
+   * The card's heading. Rendered as `<h3>` under the section's `<h2>`. Omit
+   * for a card that is a numbered or marked paragraph with no heading of its
+   * own — Module Manufacturing's "Manufacturing Prowess" cards.
+   */
+  name?: string;
+  /** A numeral above the copy — "01". Meta type, not a heading. */
+  ordinal?: string;
   body: string;
   /**
    * The mark at the head of the card. Always decorative — `name` is what
@@ -144,7 +150,7 @@ export function ValueGrid({
           <div className={cn('grid gap-x-gap-grid gap-y-flow', COLUMNS_CLASS[columns])}>
             {items.map((item) => (
               <Card
-                key={item.name}
+                key={item.name ?? item.ordinal ?? item.body}
                 as="article"
                 ground="dark"
                 shape={variant}
@@ -160,7 +166,10 @@ export function ValueGrid({
                   )}
                 >
                   {item.mark}
-                  <h3 className="text-h3 text-white">{item.name}</h3>
+                  {item.ordinal !== undefined && (
+                    <p className="text-meta text-on-dark-faint uppercase">{item.ordinal}</p>
+                  )}
+                  {item.name !== undefined && <h3 className="text-h3 text-white">{item.name}</h3>}
                   <p className="text-body-sm text-pretty text-on-dark-soft">{item.body}</p>
                 </div>
               </Card>

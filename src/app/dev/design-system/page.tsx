@@ -366,6 +366,30 @@ export default function DesignSystemPage() {
           />
         </div>
       </Section>
+      <Section background="black-dots">
+        <SectionHeading eyebrow="Primitives" title='DocumentLink, ground="dark"' />
+        <p className="mt-stack text-body">
+          The same link on the black dot ground — what the business pages&apos; Product Downloads
+          section (<code>sections/product-downloads</code>) is a list of.
+        </p>
+        <ul className="mt-flow max-w-3xl">
+          <li>
+            <DocumentLink
+              ground="dark"
+              href="https://example.blob.core.windows.net/public/datasheet-g12r.pdf"
+              title="SAEL Solar TOPCon Bifacial G12R 615 635 Wp"
+            />
+          </li>
+          <li>
+            <DocumentLink
+              ground="dark"
+              href="https://example.blob.core.windows.net/public/datasheet-m10r.pdf"
+              title="SAEL Solar TOPCon Bifacial M10R 580 600 Wp"
+              fileSize={1_204_000}
+            />
+          </li>
+        </ul>
+      </Section>
 
       {/* ---------------------------------------------------------------- */}
       <Section>

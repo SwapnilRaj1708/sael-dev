@@ -2,6 +2,7 @@ import type { StaticImageData } from 'next/image';
 import {
   PresenceMapFigure,
   type PresenceSite,
+  type SiteMetric,
 } from '@/components/sections/presence-map/map-figure';
 import { CountUp } from '@/components/ui/count-up';
 import { DisplayHeading } from '@/components/ui/display-heading';
@@ -23,15 +24,31 @@ export interface ProjectsMapProps {
   title: string;
   /** One entry per paragraph, in order. */
   body: string[];
-  /** The headline figure under the copy. */
-  figure: ProjectsMapFigure;
+  /**
+   * The headline figure under the copy. Omit for a page whose live source
+   * has none — Solar Cell Manufacturing — rather than inventing a caption.
+   */
+  figure?: ProjectsMapFigure;
   /** The dotted India artwork. `null` until it is supplied. */
   map: { image: StaticImageData | null };
   /** The project sites, one pin each. */
   sites: readonly PresenceSite[];
   /** The map's accessible name — "Map of SAEL solar project sites across India". */
   mapLabel: string;
+  /**
+   * Which business the page is, which colours the figure — the same accent
+   * its figures take on the homepage ledger. Defaults to solar.
+   */
+  business?: SiteMetric;
 }
+
+/** The `-bright` four: the figure sits on black, like the ledger. */
+const FIGURE_CLASS: Record<SiteMetric, string> = {
+  'solar-ipp': 'text-figure-solar-bright',
+  'module-assembly': 'text-figure-module-bright',
+  'solar-cell': 'text-figure-cell-bright',
+  'agri-waste': 'text-figure-agri-bright',
+};
 
 /**
  * A heading over the dotted India map beside running copy and one large
@@ -54,8 +71,8 @@ export interface ProjectsMapProps {
  * puts the map on the left only once there is a left to put it on.
  *
  * The figure is `<CountUp>`, so it counts in on arrival and sits still under
- * `prefers-reduced-motion`. Its colour is the solar business's own accent,
- * the same one its figures take on the homepage ledger.
+ * `prefers-reduced-motion`. Its colour is the page's business's own accent,
+ * the same one its figures take on the homepage ledger — `business` picks it.
  *
  * A Server Component apart from the figure's count-up.
  */
@@ -67,6 +84,7 @@ export function ProjectsMap({
   map,
   sites,
   mapLabel,
+  business = 'solar-ipp',
 }: ProjectsMapProps) {
   return (
     <Section background="black-dots">
@@ -94,12 +112,14 @@ export function ProjectsMap({
               </Reveal>
             ))}
 
-            <Reveal order={body.length + 2} className="mt-stack flex flex-col gap-tight">
-              <p className="text-stat-large text-figure-solar-bright tabular-nums">
-                <CountUp value={figure.value} />
-              </p>
-              <p className="text-h3 text-white">{figure.label}</p>
-            </Reveal>
+            {figure !== undefined && (
+              <Reveal order={body.length + 2} className="mt-stack flex flex-col gap-tight">
+                <p className={cn('text-stat-large tabular-nums', FIGURE_CLASS[business])}>
+                  <CountUp value={figure.value} />
+                </p>
+                <p className="text-h3 text-white">{figure.label}</p>
+              </Reveal>
+            )}
           </div>
 
           <PresenceMapFigure

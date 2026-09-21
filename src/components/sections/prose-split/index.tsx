@@ -18,12 +18,24 @@ export interface ProseSplitMedia {
   /** `landscape` is 4:3 capped at 560px; `portrait` is 4:5 capped at 420px. */
   orientation: ProseSplitOrientation;
   /**
-   * Utilities that clip the photograph to a supplied shape: the mask, its
-   * aspect and its width cap together, e.g. `mask-(--mask-solar-overview)
-   * aspect-(--aspect-solar-overview) max-w-(--solar-overview-media-w)`.
-   * **Replaces** the orientation's aspect and cap rather than layering over
-   * them, so the box is described in one place. Omit for the plain rectangle
-   * About Us draws.
+   * Utilities describing the media box — its aspect and width cap, e.g.
+   * `aspect-(--aspect-solar-overview) max-w-(--business-overview-media-w)`.
+   * **Replaces** the orientation's own pair rather than layering over them,
+   * so the box is described in one place. Omit for the orientation's
+   * default, which is what About Us draws.
+   */
+  frame?: string;
+  /**
+   * A mask utility that clips the photograph to a supplied shape, e.g.
+   * `mask-(--mask-solar-overview)`. Applied with `--mask-fill` and
+   * `mask-no-repeat`, so `frame` must carry that shape's own aspect or the
+   * mask is stretched.
+   *
+   * Omit for a photograph that arrives with its shape already cut into its
+   * alpha channel — masking one of those a second time clips the shape it
+   * already has. Every business-page asset is currently an opaque rectangle,
+   * so every one of them passes a mask; the escape hatch is here because one
+   * export briefly was not.
    */
   mask?: string;
   /**
@@ -90,9 +102,10 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  * stacked as it is side by side.
  *
  * Two additions on 2026-09-18 for the Solar Energy page, both opt-in so About
- * Us is untouched: an `eyebrow` above the heading, and a `mask` on the media
- * that clips the photograph to a designer-supplied shape — the same alpha
- * mask idiom `intro-split` and `endeavour-split` use.
+ * Us is untouched: an `eyebrow` above the heading, and `frame` / `mask` on
+ * the media, which size the box and clip the photograph to a
+ * designer-supplied shape — the same alpha mask idiom `intro-split` and
+ * `endeavour-split` use.
  *
  * A Server Component. Nothing here is interactive.
  */
@@ -159,9 +172,8 @@ export function ProseSplitLayout({
           // the column's start edge with the slack all on one side.
           className={cn(
             'relative mx-auto w-full justify-self-center',
-            media.mask === undefined
-              ? MEDIA_CLASS[media.orientation]
-              : [media.mask, 'mask-size-(--mask-fill) mask-no-repeat'],
+            media.frame ?? MEDIA_CLASS[media.orientation],
+            media.mask !== undefined && [media.mask, 'mask-size-(--mask-fill) mask-no-repeat'],
           )}
         >
           {frame}

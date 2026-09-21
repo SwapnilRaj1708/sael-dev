@@ -1078,13 +1078,19 @@
   /* The Solar Energy photograph masks' own viewBoxes. See --mask-solar-*. */
   --aspect-solar-overview: 385 / 323;
   --aspect-solar-execution: 366 / 436;
-  /* How wide each masked photograph may run beside its copy. Wider than the
+  /* How wide each business page's photograph may run beside its copy. Wider than the
    * prose split's own caps (560 / 420): the shapes carve notches out of their
    * boxes, so a box sized like a plain photograph reads smaller than one, and
    * at the design width it sat centred in its column with slack either side.
-   * Client's ask of 2026-09-18. Below the caps the auto-fit grid governs. */
-  --solar-overview-media-w: 44rem; /* 704 */
-  --solar-execution-media-w: 34rem; /* 544 */
+   * Client's ask of 2026-09-18. Below the caps the auto-fit grid governs.
+   *
+   * Named for the family rather than for Solar Energy: all four business
+   * pages draw the same composition and share these two caps. The `--mask-*`
+   * and `--aspect-solar-*` tokens above keep their names, because those name
+   * the two shape files the client supplied as `solarEnergy/mask1.svg` and
+   * `mask2.svg` — the name is the provenance. */
+  --business-overview-media-w: 44rem; /* 704 */
+  --business-execution-media-w: 34rem; /* 544 */
 
   /* A cutout split — "Our Ambition" from `md` up: a shaped paper panel
    * (`bg-for-cutout.svg`, drawn at 700 × 405) with the copy on the shelf under
@@ -1669,6 +1675,13 @@
   /* Paired with --blur-header / --blur-mega; the design saturates both panes
    * by the same amount, so one token serves both. */
   --saturate-glass: 1.4;
+
+  /* How far a map pin's halo grows before it fades — the pulse's radius, as a
+   * multiple of the pin (--spacing-map-pin). Read by `saelPing` in
+   * animations.css. Was 2.6 until 2026-09-21; doubled on the client's note
+   * that the pulse was hard to see. **This is the number to tune** — change
+   * it here, nowhere else, and every map on the site follows. */
+  --map-ping-scale: 4.2;
 
   /* The primary CTA's hover. A filter rather than a second gradient, so the
    * button lifts without the stops having to be restated. */

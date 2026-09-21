@@ -7,11 +7,15 @@ import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
-import { SIZES_SOLAR_EXECUTION_MEDIA } from '@/lib/utils/image-sizes';
+import { SIZES_BUSINESS_EXECUTION_MEDIA } from '@/lib/utils/image-sizes';
 
 export interface CapabilityItem {
-  /** The entry's heading. Rendered as `<h3>` under the section's `<h2>`. */
-  name: string;
+  /**
+   * The entry's heading. Rendered as `<h3>` under the section's `<h2>`. Omit
+   * for an entry that is a mark and a paragraph only — Solar Cell
+   * Manufacturing's "Highlights".
+   */
+  name?: string;
   body: string;
   /**
    * The mark under the heading. Decorative — `name` carries the meaning — so
@@ -46,9 +50,11 @@ export interface CapabilitySplitProps {
  * column's width, with a photograph beside the whole stack. `<ValueGrid>` lays
  * its cards out in a grid and has no media slot; `<ProseSplit>` has the media
  * slot but takes paragraphs, not headed entries. Each row *is* the v2 `<Card>`
- * in its hairline idiom, `inset="block"` so the rule sits between rows, and a
- * closing rule under the last one so the stack reads as a list rather than as
- * three cards hanging in space.
+ * in its hairline idiom — one rule above each, and nothing under the last.
+ * It was `inset="block"` with a closing rule until 2026-09-21, which put four
+ * lines around three cards; the client asked for the one-rule-per-card the
+ * value grid and the team grid already draw, so the stack is spaced by
+ * `gap-flow` like theirs instead of by the rows' own bottom inset.
  *
  * The list is a `<div>` of `<article>`s rather than a `<ul>`: each entry has
  * its own heading, and a screen reader walking headings gets the same
@@ -59,7 +65,8 @@ export interface CapabilitySplitProps {
  * overflowing a 360px viewport. The list is first in the DOM, so stacked it
  * reads before the photograph.
  *
- * A Server Component. Nothing here is interactive; the rows are not links.
+ * A Server Component. The rows are not links; their hover accent is CSS,
+ * from <Card>.
  */
 export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySplitProps) {
   return (
@@ -81,13 +88,25 @@ export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySpli
             'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--prose-split-col-min)),1fr))]',
           )}
         >
-          <Reveal order={2} className="flex flex-col border-b border-hairline-dark">
+          <Reveal order={2} className="flex flex-col gap-flow">
             {items.map((item) => (
-              <Card key={item.name} as="article" ground="dark" inset="block">
+              <Card
+                key={item.name ?? item.body}
+                as="article"
+                ground="dark"
+                inset="top"
+                // The accent that fills across the hairline on hover — the same
+                // one the guiding principles and the team cards carry, on the
+                // client's ask of 2026-09-21.
+                accentClassName="bg-(image:--gradient-eyebrow-bright)"
+              >
                 <div className="flex w-full flex-col gap-tight">
+                  {/* Mark, then name, then copy — the order the value grid draws
+                      ("Best Practices" on the same page); the client asked for
+                      the two sections to match, 2026-09-21. */}
                   <div className="flex flex-col items-center gap-tight text-center">
-                    <h3 className="text-h3 text-white">{item.name}</h3>
                     {item.mark}
+                    {item.name !== undefined && <h3 className="text-h3 text-white">{item.name}</h3>}
                   </div>
                   <p className="text-body-sm text-pretty text-on-dark-soft">{item.body}</p>
                 </div>
@@ -102,7 +121,7 @@ export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySpli
           <Reveal
             order={3}
             className={cn(
-              'relative mx-auto w-full max-w-(--solar-execution-media-w) justify-self-center',
+              'relative mx-auto w-full max-w-(--business-execution-media-w) justify-self-center',
               'aspect-(--aspect-solar-execution)',
               'mask-(--mask-solar-execution) mask-size-(--mask-fill) mask-no-repeat',
             )}
@@ -110,7 +129,7 @@ export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySpli
             <MediaFrame
               image={media.image}
               alt={media.alt}
-              sizes={SIZES_SOLAR_EXECUTION_MEDIA}
+              sizes={SIZES_BUSINESS_EXECUTION_MEDIA}
               pending={media.pending}
               className="absolute inset-0"
             />

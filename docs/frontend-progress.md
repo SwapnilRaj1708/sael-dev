@@ -17,6 +17,9 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 
 | ID | Item | Feature doc | Owner | Completed |
 |---|---|---|---|---|
+| FE-09 | Waste to Energy | `features/09-waste-to-energy.md` | Swapnil Raj | 2026-09-19 |
+| FE-10 | Module Manufacturing | `features/10-module-manufacturing.md` | Swapnil Raj | 2026-09-19 |
+| FE-11 | Solar Cell Manufacturing | `features/11-solar-cell-manufacturing.md` | Swapnil Raj | 2026-09-19 |
 | FE-08 | Solar Energy | `features/08-solar-energy.md` | Swapnil Raj | 2026-09-18 |
 | FE-07 | Our Team | `features/07-our-team.md` | Swapnil Raj | 2026-09-10 |
 | FE-06 | About Us | `features/06-about-us.md` | Swapnil Raj | 2026-09-10 |
@@ -25,6 +28,99 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-03 | App shell — header, mobile nav, footer, layout | `features/03-app-shell-header-footer.md` | Swapnil Raj | 2026-08-04 |
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
+
+### FE-09, FE-10, FE-11 — as built
+
+The three remaining business pages, built together on 2026-09-19 on the FE-08 template,
+**worked ahead of FE-05 on the client's instruction** — the same trade FE-07 made. As
+with FE-08: the client's reference screenshots fixed the layout, the live sael.co pages
+fixed every word, and `features/09`, `10` and `11` were not the spec and have not been
+reconciled to what was built. Nothing new was minted; the four pages share
+`<PageHero>`, `<ProseSplit>`, `<ProjectsMap>`, `<CapabilitySplit>` and `<ValueGrid>`,
+and three of those grew an opt-in to fit.
+
+| Page | Route | Sections | Figure |
+|---|---|---|---|
+| Waste To Energy | `/waste-to-energy/` | all five — 11 plant pins, 4 technology entries, **6** benefit cards | `164.9 MW`, agri accent |
+| Module Manufacturing | `/module-manufacturing/` | five — no "how do we work?" list on the live page or in the screenshot, but a "Product Downloads" list between the map and the cards; 3 state pins, 3 prowess cards | `3625 MW + 5000 MW (proposed)`, module accent |
+| Solar Cell Manufacturing | `/solar-cell-manufacturing/` | four — 1 pin, 4 unheaded highlights, no cards | **none** — see below |
+
+**What the shared sections gained, all opt-in so FE-08 is untouched:**
+
+- `<ProjectsMap>` — `figure` is optional, and `business` picks the figure's accent from
+  the four `--color-figure-*-bright` tokens so each page's number takes the colour its
+  business has on the homepage ledger.
+- `<CapabilitySplit>` — `name` is optional; Solar Cell's four highlights are a mark and a
+  sentence each, on the live page and in the screenshot.
+- `<ValueGrid>` — `name` is optional and `ordinal` renders a numeral above the copy.
+  Module's prowess cards were "01 / 02 / 03" over a sentence until the client dropped
+  the numerals on 2026-09-21; they are now a mark and a sentence, and no page sets
+  `ordinal`. The prop stays.
+- **`sections/product-downloads/`** — the one new section, added 2026-09-21 (below).
+- **`value-grid/business-marks.tsx`** — seventeen drawn marks, same idiom and same
+  instruction as `solar-marks.tsx`.
+
+**Where the screenshots and the live pages disagree, the live page won:**
+
+- Waste To Energy has **six** benefit cards, not the screenshot's four identical
+  placeholders, and casts its label "Why Waste-to-Energy?" and heading "Benefits of
+  Waste-to-Energy" with a lower-case "to".
+- Module Manufacturing's portfolio figure is on the live page and not in the screenshot;
+  it is carried. Its `<title>` is `Module Manufacturing - SAEL` with a hyphen, as
+  transcribed — FE-22's separator question again.
+
+**Deliberately not built, flagged for the client:**
+
+- **Solar Cell's "5 GW / Portfolio" figure.** The screenshot draws it; the live page has
+  no such block — 5 GW appears only in the paragraph and on the pin, and the word
+  "Portfolio" nowhere on that page. /CLAUDE.md §2 rule 3 forbids adding the caption, so
+  the section renders without a figure. One line restores it once the client confirms.
+- **"More Details" links** on three pins (Punjab, Ferozepur, Jaitu) point at
+  project-detail pages the new site does not have. Only "Visit Location" is carried.
+
+**Client feedback of 2026-09-21, applied across the four business pages:**
+
+- **Module's "Product Downloads" is built after all.** The client asked for the block
+  back, linking to the PDFs where they are today. `sections/product-downloads/` is a
+  heading over a `<ul>` of the investor pages' `<DocumentLink>`, which gained a
+  `ground="dark"` variant for it (paper stays the default; the investor pages are
+  untouched). Two columns from `lg` — heading left, list right — because a three-row
+  list capped at the measure left the right half of a 1920px section empty. The hrefs
+  are composed on `PRODUCTION_URL` + `/documents/product-downloads/…`, and **they
+  become 404s the day the new site takes over www.sael.co** unless the three files are
+  moved to blob storage first; the note beside `moduleDownloads` says so. A cutover
+  task. The dark variant is on `/dev/design-system` under the DocumentLink entry.
+- **Module's prowess cards lost their numerals** — see the `<ValueGrid>` note above.
+- **`<CapabilitySplit>` rows** — one rule per row and none under the last (they were
+  `inset="block"` with a closing rule: four lines around three cards), the same
+  hover accent the guiding-principle and team cards fill across their hairline, and
+  the mark above the heading rather than below it, matching the value grid on the
+  same page. All three pages that draw the section follow.
+- **The map pins' pulse** was hard to see; its radius is now `--map-ping-scale` in
+  theme.css, the one place to tune it, read by `saelPing` in animations.css.
+- **The artwork moved to blob storage.** Solar Energy's two photographs and hero video,
+  and Module Manufacturing's photograph and video, are described by `cdnImage()` /
+  `tryBlobUrl()` against `AZURE_BLOB_BASE_URL`; the two `.webp` files that had been
+  committed under `assets/images/solarEnergy/` for three days are gone. The two shape
+  masks stay in the repo. With it, the media caps and `sizes` hints were renamed from
+  `solar-*` to `business-*`, since all four pages share them, and `<ProseSplit>`
+  split its `mask` prop into `frame` (the box) and `mask` (the clip) so a pre-shaped
+  export can skip the clip.
+- A pointer-tracking spotlight on `<Card>` (after reactbits' SpotlightCard) was built,
+  reviewed and withdrawn the same day. Nothing of it remains in the tree; if it is
+  wanted later it is a client-leaf primitive and a handful of theme tokens.
+
+Still open:
+
+- **Artwork.** Every hero poster is still `null` with a `pending` name. Solar Cell
+  Manufacturing has no supplied media at all; the other three carry what the client
+  has uploaded so far.
+- **Meta descriptions** — all three live pages ship an empty one. `{{TODO: content}}`.
+- **Pin coordinates are fitted, not measured**, as on FE-08. Waste To Energy's Punjab
+  cluster (Ferozepur, Jaitu, Channu) and its **two Bikaner pins** — the live page lists
+  Bikaner 14.9 MW twice with different map links, so both are carried a few units apart
+  — want an eye first.
+- `features/09`, `10` and `11` want rewriting to the as-built.
 
 ### FE-08 — as built
 
@@ -656,10 +752,11 @@ guardrail and the toolchain.
 |---|---|---|---|---|---|
 | FE-05 | Content repository + mock data layer | `features/05-content-repository.md` | `content-model.md`, `api-contracts.md` | Swapnil Raj | 2026-09-18 |
 
-Promoted 2026-09-18 as the top of Pending once FE-08 closed, per the rule. Most of it
-has already landed piecemeal — `CapacityStat` and `NewsItem` inside FE-04, `TeamMember`
-inside FE-07 — so what remains is the parts no page has needed yet; see the note under
-Pending.
+Promoted 2026-09-18 as the top of Pending once FE-08 closed, per the rule. **FE-09 →
+FE-11 were then worked ahead of it on 2026-09-19 on the client's instruction**, the same
+trade FE-07 made; it stays In Progress. Most of it has already landed piecemeal —
+`CapacityStat` and `NewsItem` inside FE-04, `TeamMember` inside FE-07 — so what remains
+is the parts no page has needed yet; see the note under Pending.
 
 ---
 
@@ -667,11 +764,11 @@ Pending.
 
 Delivery order. The critical path — FE-01 → FE-04 plus the FE-25 reconciliation — is
 done, and FE-06, FE-07 and FE-08 have since established the inner-page openings, so
-FE-09 → FE-15 all build on `sections/page-hero/` (photograph or video) or
+FE-12 → FE-15 all build on `sections/page-hero/` (photograph or video) or
 `sections/team-grid/` plus `sections/prose-split/`, `sections/value-grid/`,
 `sections/projects-map/` and `sections/capability-split/`, rather than starting from
-the design system alone. FE-08 is the template the three remaining business pages
-(FE-09 → FE-11) should follow.
+the design system alone. The four business pages (FE-08 → FE-11) are done and are the
+worked example.
 
 **FE-05 is In Progress now, and is largely already built.** Its repository slice landed
 inside FE-04 and feeds the homepage; FE-07 then carved out the team slice —
@@ -680,9 +777,6 @@ page has needed yet.
 
 | ID | Item | Feature doc | Reads |
 |---|---|---|---|
-| FE-09 | Waste to Energy | `features/09-waste-to-energy.md` | `design-guidelines.md` |
-| FE-10 | Module Manufacturing | `features/10-module-manufacturing.md` | `design-guidelines.md` |
-| FE-11 | Solar Cell Manufacturing | `features/11-solar-cell-manufacturing.md` | `design-guidelines.md` |
 | FE-12 | Story of Our Influence | `features/12-story-of-our-influence.md` | `design-guidelines.md` |
 | FE-13 | Our Key ESG Metrics | `features/13-our-key-esg-metrics.md` | `content-model.md` |
 | FE-14 | Our Core Beliefs | `features/14-our-core-beliefs.md` | `design-guidelines.md` |

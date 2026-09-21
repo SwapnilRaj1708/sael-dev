@@ -1,15 +1,14 @@
 import type { StaticImageData } from 'next/image';
 import dottedMap from '@/assets/images/dotted-map.svg';
-import executionPhoto from '@/assets/images/solarEnergy/mask2Image.webp';
-import overviewPhoto from '@/assets/images/solarEnergy/mask1Image.webp';
 import type { CapabilityItem, CapabilitySplitProps } from '@/components/sections/capability-split';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { PresenceSite } from '@/components/sections/presence-map';
 import type { ProjectsMapProps } from '@/components/sections/projects-map';
 import type { ProseSplitProps } from '@/components/sections/prose-split';
 import type { ValueGridItem, ValueGridProps } from '@/components/sections/value-grid';
+import { cdnImage } from '@/lib/assets/cdn';
 import { TODO_CONTENT } from '@/lib/config/site';
-import { SIZES_SOLAR_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
+import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
 import { tryBlobUrl } from '@/lib/utils/blob-url';
 
 /**
@@ -39,11 +38,16 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  *
  * ## The artwork
  *
- * The overview and execution photographs were supplied on 2026-09-18 with
- * the two shapes they are clipped to (`solarEnergy/mask1.svg`, `mask2.svg`,
- * carried as `--mask-solar-*` in theme.css). The hero poster and the icons
- * are still `null` with a `pending` name so the layout is real and the boxes
- * are right. The map is the same `dotted-map.svg` the homepage draws.
+ * The overview and execution photographs and the hero video live in Azure
+ * Blob Storage under `<container>/web-assets/media/solar-energy/`, as of the
+ * client's move of 2026-09-21; they were committed to
+ * `src/assets/images/solarEnergy/` for three days before that. The two
+ * photographs are described by `cdnImage(path, width, height)` — see
+ * `lib/assets/cdn.ts` — with **dimensions read from the blobs themselves**,
+ * and are clipped to the two shapes that stayed in the repository
+ * (`solarEnergy/mask1.svg`, `mask2.svg`, carried as `--mask-solar-*` in
+ * theme.css). The hero poster is still `null` with a `pending` name. The map
+ * is the same `dotted-map.svg` the homepage draws.
  *
  * The marks are joined to their cards by the page, not here: a `mark` is a
  * React node, and this file is data.
@@ -63,6 +67,10 @@ export type PracticeCopy = Omit<ValueGridItem, 'mark'>;
  * day the asset lands.
  */
 const PENDING: StaticImageData | null = null;
+
+/** Describe one asset in the Solar Energy folder of the blob container. */
+const solarAsset = (file: string, width: number, height: number): StaticImageData | null =>
+  cdnImage(`web-assets/media/solar-energy/${file}`, width, height);
 
 export const solarEnergyMeta = {
   /** The live page's own `<title>`, verbatim. */
@@ -84,7 +92,7 @@ export const solarEnergyHero: PageHeroProps = {
   // container-relative and the host comes from AZURE_BLOB_BASE_URL, so no
   // hostname enters the repository (/CLAUDE.md §7); `null` when it is unset,
   // and the hero then shows the poster.
-  video: tryBlobUrl('web-assets/media/solar-energy/patiala-project.mp4'),
+  video: tryBlobUrl('web-assets/media/solar-energy/solar-energy.mp4'),
   // The poster under the video and the still for reduced motion. Not yet
   // supplied.
   image: PENDING,
@@ -102,13 +110,15 @@ export const solarOverview: ProseSplitProps = {
     'Each project commences with a meticulous analysis encompassing technology, land suitability, solar irradiation, and existing grid infrastructure. We also consider factors such as geographical location, climate conditions affecting equipment, local amenities, and potential maintenance requirements. This comprehensive approach ensures that all our capital investment endeavours are undertaken with thorough risk assessment and meticulous planning.',
   ],
   media: {
-    image: overviewPhoto,
+    // 6.2 MB at source; next/image serves derived sizes, never the original.
+    image: solarAsset('mask1Image.jpg', 2730, 1529),
     // The live page's slot carries no alt. Written from the photograph,
     // which shows what is described and nothing more.
     alt: 'Aerial view of rows of solar panels stretching across flat farmland to the horizon',
     orientation: 'landscape',
-    mask: 'mask-(--mask-solar-overview) aspect-(--aspect-solar-overview) max-w-(--solar-overview-media-w)',
-    sizes: SIZES_SOLAR_OVERVIEW_MEDIA,
+    frame: 'aspect-(--aspect-solar-overview) max-w-(--business-overview-media-w)',
+    mask: 'mask-(--mask-solar-overview)',
+    sizes: SIZES_BUSINESS_OVERVIEW_MEDIA,
   },
 };
 
@@ -248,7 +258,7 @@ export const solarCapabilities: {
     },
   ],
   media: {
-    image: executionPhoto,
+    image: solarAsset('mask2Image.webp', 800, 938),
     // The live page's slot carries no alt. Written from the photograph.
     alt: 'Two people at a control desk watching a wall of plant monitoring dashboards',
   },

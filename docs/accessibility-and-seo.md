@@ -44,7 +44,7 @@ Every route below must exist and 200. Verified against the live site on 2026-08-
 | `…/investor-downloads/` | *(same slug)* | FE-17 |
 | `/newsroom/` | `app/newsroom/page.tsx` | FE-18 |
 | `/contact-us/` | `app/contact-us/page.tsx` | FE-19 |
-| `/career/` | `app/career/route.ts` → external redirect | FE-20 |
+| `/career/` | `app/career/page.tsx` — a page since 2026-09-22; it was a 308 to Oracle before that, and browsers cache a 308 | FE-20 |
 | `/privacy-policy/` | `app/privacy-policy/page.tsx` | FE-21 |
 | `/disclaimer/` | `app/disclaimer/page.tsx` | FE-21 |
 | `/terms-and-conditions/` | `app/terms-and-conditions/page.tsx` | FE-21 |

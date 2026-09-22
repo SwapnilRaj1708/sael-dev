@@ -2,9 +2,9 @@ import Image, { type StaticImageData } from 'next/image';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { DisplayHeading } from '@/components/ui/display-heading';
-import { Eyebrow } from '@/components/ui/eyebrow';
+import { Eyebrow, type EyebrowTone } from '@/components/ui/eyebrow';
 import { Reveal } from '@/components/ui/reveal';
-import { Section } from '@/components/ui/section';
+import { Section, type SectionProps } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
 
 export interface ValueGridItem {
@@ -20,10 +20,13 @@ export interface ValueGridItem {
   /**
    * The mark at the head of the card. Always decorative — `name` is what
    * carries the meaning — so whatever is passed must be `aria-hidden`.
-   * Use `<ValueMarkPending>` for an asset the client has not supplied.
+   * Use `<ValueMark image={null}>` for an asset the client has not supplied.
    */
   mark: ReactNode;
 }
+
+/** The ground the section is drawn on. */
+export type ValueGridGround = 'dark' | 'paper';
 
 export interface ValueGridProps {
   eyebrow?: string;
@@ -49,11 +52,64 @@ export interface ValueGridProps {
    * bordered on all sides with the mark, name and copy centred inside it.
    */
   variant?: 'hairline' | 'outlined';
+  /**
+   * Centre a short last row instead of leaving it hanging at the left.
+   *
+   * Off by default, and the grid is then a CSS grid whose last row aligns
+   * with the columns above it — right for eight cards in four columns. On
+   * for a count no column count divides: the Careers page's five culture
+   * cards are five across at the design width, three-and-two on a laptop
+   * and two-two-one on a tablet, and a grid would hang the odd ones left.
+   * A wrapping flex row centres them, and they grow to fill their row up to
+   * `--value-grid-card-max`, so the last row reads as balanced rather than
+   * as a grid with a gap in it.
+   */
+  balance?: boolean;
+  /**
+   * `dark` is the site's default and needs no instruction
+   * (docs/design-guidelines.md §8). `paper` is for a page that alternates its
+   * grounds deliberately, and picks the ramps and inks to match. The marks
+   * are the caller's: a drawn mark defaults to white and needs `text-ink`
+   * passed on paper.
+   */
+  ground?: ValueGridGround;
 }
 
 const COLUMNS_CLASS: Record<'default' | 'wide', string> = {
   default: 'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--value-grid-col-min)),1fr))]',
   wide: 'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--value-grid-col-min-wide)),1fr))]',
+};
+
+/** The same two floors, as a flex basis for the balanced row. */
+const BASIS_CLASS: Record<'default' | 'wide', string> = {
+  default: 'basis-(--value-grid-col-min)',
+  wide: 'basis-(--value-grid-col-min-wide)',
+};
+
+const GROUND: Record<
+  ValueGridGround,
+  {
+    section: SectionProps['background'];
+    eyebrow: EyebrowTone;
+    name: string;
+    body: string;
+    ordinal: string;
+  }
+> = {
+  dark: {
+    section: 'black-dots',
+    eyebrow: 'bright',
+    name: 'text-white',
+    body: 'text-on-dark-soft',
+    ordinal: 'text-on-dark-faint',
+  },
+  paper: {
+    section: 'paper-dots',
+    eyebrow: 'deep',
+    name: 'text-ink',
+    body: 'text-body-soft',
+    ordinal: 'text-meta-paper',
+  },
 };
 
 /**
@@ -118,6 +174,9 @@ export function ValueMark({ image, pending }: { image: StaticImageData | null; p
  * animated, §07's are artwork files that have not been supplied. Keeping it a
  * node is what lets this component stay ignorant of the difference.
  *
+ * `balance` and `ground` were added on 2026-09-22 for the Careers page, both
+ * opt-in — see their prop notes. No earlier call site changes.
+ *
  * A Server Component. The cards' hover and focus states are CSS.
  */
 export function ValueGrid({
@@ -128,36 +187,47 @@ export function ValueGrid({
   spacing = 'default',
   accent = false,
   variant = 'hairline',
+  balance = false,
+  ground = 'dark',
 }: ValueGridProps) {
   const outlined = variant === 'outlined';
+  const tone = GROUND[ground];
 
   return (
-    <Section background="black-dots" spacing={spacing === 'tight' ? 'tight' : 'default'}>
+    <Section background={tone.section} spacing={spacing === 'tight' ? 'tight' : 'default'}>
       <div className="flex w-full flex-col gap-flow">
         <div className="flex flex-col gap-stack">
           {eyebrow !== undefined && (
             <Reveal order={0}>
-              <Eyebrow tone="bright">{eyebrow}</Eyebrow>
+              <Eyebrow tone={tone.eyebrow}>{eyebrow}</Eyebrow>
             </Reveal>
           )}
 
           <Reveal order={eyebrow === undefined ? 0 : 1}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
+            <DisplayHeading ground={ground}>{title}</DisplayHeading>
           </Reveal>
         </div>
 
         <Reveal order={2}>
-          <div className={cn('grid gap-x-gap-grid gap-y-flow', COLUMNS_CLASS[columns])}>
+          <div
+            className={cn(
+              'gap-x-gap-grid gap-y-flow',
+              balance ? 'flex flex-wrap justify-center' : ['grid', COLUMNS_CLASS[columns]],
+            )}
+          >
             {items.map((item) => (
               <Card
                 key={item.name ?? item.ordinal ?? item.body}
                 as="article"
-                ground="dark"
+                ground={ground}
                 shape={variant}
                 inset={outlined ? 'none' : 'top'}
                 accentClassName={
                   accent && !outlined ? 'bg-(image:--gradient-eyebrow-bright)' : undefined
                 }
+                className={cn(
+                  balance && ['grow', BASIS_CLASS[columns], 'max-w-(--value-grid-card-max)'],
+                )}
               >
                 <div
                   className={cn(
@@ -167,10 +237,12 @@ export function ValueGrid({
                 >
                   {item.mark}
                   {item.ordinal !== undefined && (
-                    <p className="text-meta text-on-dark-faint uppercase">{item.ordinal}</p>
+                    <p className={cn('text-meta uppercase', tone.ordinal)}>{item.ordinal}</p>
                   )}
-                  {item.name !== undefined && <h3 className="text-h3 text-white">{item.name}</h3>}
-                  <p className="text-body-sm text-pretty text-on-dark-soft">{item.body}</p>
+                  {item.name !== undefined && (
+                    <h3 className={cn('text-h3', tone.name)}>{item.name}</h3>
+                  )}
+                  <p className={cn('text-body-sm text-pretty', tone.body)}>{item.body}</p>
                 </div>
               </Card>
             ))}

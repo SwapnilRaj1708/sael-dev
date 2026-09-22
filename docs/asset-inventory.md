@@ -254,6 +254,7 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
   intrinsic dimensions a bundled import would otherwise have supplied, returning
   something shaped like `StaticImageData` so no consuming component changes. The
   dimensions must be read from the blob itself. Vectors must be rendered `unoptimized`.
+- **The Careers page's six assets** live at `web-assets/media/career/`, uploaded by the client on 2026-09-22, and are described in `src/app/_content/career.ts` with dimensions read from the blobs' own headers: `career-image-1.webp` 700 × 524 (the intro photograph), `career-image-2.webp`, `-3.webp` and `-4.webp` 1200 × 800 and `career-image-5.jpg` 1024 × 683 (the "Life at SAEL" gallery, in that order; image 2 doubles as the hero's poster), and `career-video.mp4` 1920 × 1080, 12.3 s, H.264 with a silent AAC track (the hero). All five images are byte-identical to the live sael.co files, so the slot mapping is the live page's own. The video has no `cdnImage()` — it is a `<VideoFrame>` fed by `tryBlobUrl()`.
 - Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/media/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
 
 ---

@@ -30,7 +30,11 @@ export interface NavItem {
    * Sustainability and Investors render as plain link lists.
    */
   image?: { src: StaticImageData; alt: string };
-  /** Leaves the site — `/career/` redirects to the client's recruiting system. */
+  /**
+   * Leaves the site, so consumers render a plain anchor with
+   * `rel="noopener noreferrer"` rather than a prefetching `<Link>`. Nothing
+   * sets it today: `/career/` did, until it became a page on 2026-09-22.
+   */
   external?: boolean;
 }
 
@@ -89,7 +93,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     ],
   },
   { label: 'Newsroom', href: '/newsroom/' },
-  { label: 'Career', href: '/career/', external: true },
+  { label: 'Career', href: '/career/' },
   { label: 'Contact Us', href: '/contact-us/' },
 ];
 

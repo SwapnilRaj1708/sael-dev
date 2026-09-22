@@ -265,9 +265,9 @@ Stated so the backend does not build it speculatively:
 - Authentication or user accounts (no gated investor area)
 - Search endpoints
 - Multilingual content
-- Careers/job endpoints — careers redirects to Oracle
+- Careers/job endpoints — `/career/` is a page since 2026-09-22, but its two "Explore" CTAs link out to the Oracle recruiting portal, which is where applications are made. No listing and no application endpoint.
 - Analytics or event ingestion
-- Static page content (About, Business, Sustainability copy) — this is in the repo
+- Static page content (About, Business, Sustainability, Careers copy) — this is in the repo
 - Any write endpoint other than enquiries
 
 ---

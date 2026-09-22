@@ -192,7 +192,7 @@ And the following are **required**:
 - **DIN is a commercially licensed typeface.** Only the files supplied by the client go in `src/assets/fonts/`. Do not substitute a lookalike, and do not fetch DIN from a CDN.
 - **The prototype's `uploads/` folder has unstable filenames** (`pasted-1784663527717-0.png` is the logo). Never reference those names. Use the curated names in `docs/asset-inventory.md`.
 - **The homepage vision timeline** is a scroll-pinned SVG path animation that only works above `lg`. Below `lg` it is a completely different component. Both are specified in `docs/features/04-homepage.md`. Do not attempt to make one component do both.
-- **Careers is not a page we build.** It is a redirect to the client's Oracle recruiting system. See `docs/features/20-career-redirect.md`.
+- **Careers is a page as of 2026-09-22.** It was a 308 redirect to the client's Oracle recruiting system until then, and `docs/features/20-career-redirect.md` still describes that. The page has no form: the two "Explore" CTAs link out to `CAREER_REDIRECT_URL`, which is where applications are made. Returning visitors may keep landing on Oracle until their browser's cached 308 expires.
 - **Investor PDFs live in Azure Blob Storage**, served via absolute URLs from the backend. Do not commit PDFs to the repo.
 
 ---

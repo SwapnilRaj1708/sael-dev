@@ -521,6 +521,13 @@
 
   --spacing-section-y: clamp(3rem, 2.3077rem + 3.0769vw, 6rem); /* 48 → 96 */
   --spacing-section-y-tight: clamp(2.5rem, 2.1394rem + 1.6026vw, 4.0625rem); /* 40 → 65 */
+  /* The foot of a page's last section, where it meets the footer's pixel
+   * strip. The standard rhythm reads as too little there: the strip is
+   * solid along its top edge, so the section's content sits closer to a hard
+   * line than it does to any other section's. Roughly a step and two thirds
+   * over --spacing-section-y, on the client's ask of 2026-09-22. Consumed by
+   * <Section spacing="closing">. */
+  --spacing-section-y-closing: clamp(5rem, 3.8462rem + 5.1282vw, 10rem); /* 80 → 160 */
   /* Heading → content gap. docs/design-guidelines.md §3 calls this
    * `--space-block`; it is `--spacing-flow` here, and the name is load-bearing.
    *
@@ -1138,6 +1145,29 @@
   --value-grid-col-min-wide: 21.25rem; /* 340 — "Our Guiding Principles" */
   --value-mark-size: 3.5rem; /* 56 — the mark at the head of a value card */
 
+  /* How wide a value card may grow when the grid is `balance`d — the Careers
+   * page's five culture cards, which no column count divides at every width.
+   * A balanced grid is a wrapping flex row rather than a CSS grid, so a short
+   * last row centres instead of hanging left, and the cards in it grow to
+   * fill their row. Without a cap a lone fifth card would grow to the full
+   * content width; with this one it stops at roughly two columns' worth,
+   * which is wide enough to read as deliberate and narrow enough to still
+   * read as a card. Consumed by sections/value-grid. */
+  --value-grid-card-max: 30rem; /* 480 */
+
+  /* A photograph in a gallery grid — sections/gallery-grid. The four "Life at
+   * SAEL" photographs are supplied at 1200 × 800 and 1024 × 683, which is 3:2
+   * to within a pixel, so the box takes the assets' own ratio and
+   * `object-cover` crops nothing anyone would notice. */
+  --aspect-gallery: 3 / 2;
+
+  /* A centred panel of copy — the "Looking for your dream job?" card. It
+   * would otherwise run the full content width, which at 1920 is 1608px, and
+   * a three-line card that wide reads as a banner rather than an object.
+   * Narrower than --measure, which is for running copy, and wide enough that
+   * the heading holds one line at the design width. */
+  --panel-max-w: 52rem; /* 832 */
+
   /* The team directory — a tabbed grid of portrait cards, each opening a
    * biography in a modal dialog. `Our Team.dc.html`, docs/features/07.
    *
@@ -1604,6 +1634,51 @@
    * bright patch of photograph. */
   --gradient-hero-foot: linear-gradient(0deg, rgb(6 7 10 / 0.55) 0%, transparent 30%);
 
+  /* The glow behind the Careers page's "Looking for your dream job?" panel —
+   * sections/cta-panel. The brand purple and red of --gradient-cta, at a
+   * fraction of their strength, rising from the panel's top edge and gone by
+   * three quarters of the way down, so the black ground and its dot grid
+   * show through the lower half. Alphas kept low on purpose: the panel is
+   * lit, not painted, and the button on it is the one thing that carries the
+   * gradient at full strength. Added 2026-09-22. */
+  --gradient-panel-glow: radial-gradient(
+    120% 90% at 50% 0%,
+    rgb(69 37 141 / 0.42) 0%,
+    rgb(228 15 20 / 0.14) 48%,
+    transparent 76%
+  );
+
+  /* The ring and halo that sweep round that same panel as it reveals —
+   * ui/glow-frame.tsx, with the motion in animations.css.
+   *
+   * The client pasted in a mesh-gradient border effect on 2026-09-22 (React
+   * state driving inline styles, its own hex palette, a hover follow). This is
+   * that effect re-drawn in the token layer: the mesh is the heading's own
+   * --gradient-heading-bright ramp scattered as seven radial pools, so the
+   * ring reads as the heading's light caught on the frame rather than a
+   * third palette; the halo is the ramp's rose at falling alphas, inset and
+   * outset, so it glows on both sides of the 1px border. The pool positions
+   * are the pasted effect's own. */
+  --gradient-glow-mesh:
+    radial-gradient(at 80% 55%, #7d6fd4 0, transparent 50%),
+    radial-gradient(at 69% 34%, #cf3f7f 0, transparent 50%),
+    radial-gradient(at 8% 6%, #ff4a4f 0, transparent 50%),
+    radial-gradient(at 41% 38%, #7d6fd4 0, transparent 50%),
+    radial-gradient(at 86% 85%, #cf3f7f 0, transparent 50%),
+    radial-gradient(at 82% 18%, #ff4a4f 0, transparent 50%),
+    radial-gradient(at 51% 4%, #cf3f7f 0, transparent 50%), linear-gradient(#7d6fd4 0 100%);
+  --shadow-glow-halo:
+    inset 0 0 0 1px hsl(345 75% 68% / 100%), inset 0 0 1px 0 hsl(345 75% 68% / 60%),
+    inset 0 0 3px 0 hsl(345 75% 68% / 50%), inset 0 0 6px 0 hsl(345 75% 68% / 40%),
+    inset 0 0 15px 0 hsl(345 75% 68% / 30%), inset 0 0 25px 2px hsl(345 75% 68% / 20%),
+    inset 0 0 50px 2px hsl(345 75% 68% / 10%), 0 0 1px 0 hsl(345 75% 68% / 60%),
+    0 0 3px 0 hsl(345 75% 68% / 50%), 0 0 6px 0 hsl(345 75% 68% / 40%),
+    0 0 15px 0 hsl(345 75% 68% / 30%), 0 0 25px 2px hsl(345 75% 68% / 20%),
+    0 0 50px 2px hsl(345 75% 68% / 10%);
+  /* How far outside the panel the halo layer extends, so the outer shadow
+   * has room to bloom and is not clipped at the panel's edge. */
+  --glow-halo-radius: 2.5rem; /* 40 */
+
   /* "Our Goals". The scrim is no longer always on — at rest the photograph is
    * shown as it is, and this arrives with the pointer. See the note in
    * sections/goals-grid. */
@@ -1647,6 +1722,12 @@
   --reveal-shift: 1.75rem; /* 28 */
   --duration-cross-fade: 1100ms; /* hero slide cross-fade */
   --duration-parallax: 500ms; /* hero parallax follow, ease-out */
+  /* A background video fading in over its poster once it is actually
+   * playing — ui/video-frame.tsx. Slower than a card hover and quicker than
+   * the hero's cross-fade: the poster and the first frame are near enough
+   * the same picture that a fast cut would read as a flicker, and a slow one
+   * would make the still look like it had stalled. */
+  --duration-media-fade: 600ms;
 
   /* ---------------------------------------------------------------------
    * Stacking order — docs/design-guidelines.md §4

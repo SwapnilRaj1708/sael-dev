@@ -45,6 +45,12 @@ const section = cva('relative', {
       default: 'py-section-y',
       /** 40 → 65px. "Our Presence", "Solutions". */
       tight: 'py-section-y-tight',
+      /**
+       * The standard above, 80 → 160px below. For a page's last section,
+       * where the footer's pixel strip meets it with a solid edge and the
+       * standard rhythm reads as too little room. Added 2026-09-22.
+       */
+      closing: 'pt-section-y pb-section-y-closing',
       /** For a section that owns its own vertical space, e.g. a banner. */
       none: 'py-0',
     },

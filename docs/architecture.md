@@ -56,7 +56,7 @@ sael-web/
     │   ├── our-core-beliefs/page.tsx
     │   ├── sustainable-development-goals/page.tsx
     │   ├── newsroom/page.tsx
-    │   ├── career/route.ts           # redirect handler, not a page
+    │   ├── career/page.tsx           # a page since 2026-09-22; was a redirect handler
     │   ├── contact-us/page.tsx
     │   ├── privacy-policy/page.tsx
     │   ├── disclaimer/page.tsx
@@ -211,7 +211,7 @@ Deployment target is unknown and may be multi-instance. That rules out ISR (whic
 | Homepage | **SSG shell + cached server fetch** | The only dynamic part is the 3 latest news items. `fetch(..., { next: { revalidate: 300 } })` |
 | Newsroom, Investor documents, Notifications, Our Team, ESG metrics | **Dynamic SSR with a 5-minute data cache** | `fetch(..., { next: { revalidate: 300, tags: ['news'] } })` |
 | Forms | **Route handlers**, `dynamic = 'force-dynamic'` | `src/app/api/forms/[form]/route.ts` |
-| Career | **Route handler redirect** | `permanentRedirect()` — no page |
+| Career | **SSG** | Static page since 2026-09-22 (it was a `permanentRedirect()` handler). No form: the two "Explore" CTAs link out to `CAREER_REDIRECT_URL`, where applications are made |
 
 Notes:
 
@@ -331,7 +331,7 @@ Recorded so work is never blocked. Each has a working default already implemente
 | 1 | ~~Hosting model (VM vs managed)~~ **Resolved** | Azure VM, Nginx + PM2, deployed from an archive. No container. | Client | — |
 | 1a | Whether `/investors/` itself is a page | Not built — §2 lists only its children, and inventing a route would break URL parity | Client | Low — one page, no data contract |
 | 2 | DIN webfont licence | Assumed held; fonts self-hosted from client-supplied files | Client legal | High — would force a substitute typeface |
-| 3 | Oracle careers URL | `CAREER_REDIRECT_URL` env var, redirect stub | Client | Trivial |
+| 3 | Oracle careers URL | `CAREER_REDIRECT_URL` env var; since 2026-09-22 it is the href of the two "Explore" CTAs on the Careers page, which are omitted while it is unset | Client | Trivial |
 | 4 | Whether `www` or apex is canonical | `www.sael.co` (matches current site) | Client | Medium — redirect map depends on it |
 | 5 | Newsroom pagination size and whether detail pages exist | 9 per page; news links out to external publishers as today, no detail route | Client | Medium — a detail route adds a dynamic segment and slug contract |
 | 6 | India presence map — rebuild as interactive SVG or keep as image | Responsive image + accessible state list fallback | Client / design | Medium |

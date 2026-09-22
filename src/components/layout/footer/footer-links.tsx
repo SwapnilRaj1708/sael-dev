@@ -32,8 +32,9 @@ function FooterAnchor({ link }: { link: FooterLink }) {
     'hover:text-brand-red-bright focus-visible:text-brand-red-bright',
   );
 
-  // /career/ is a route handler that redirects off-site, so it is a plain
-  // anchor — there is no client-side navigation to prefetch.
+  // A link that leaves the site is a plain anchor — there is no client-side
+  // navigation to prefetch. None does today; /career/ did until it became a
+  // page on 2026-09-22.
   return link.external === true ? (
     <a href={link.href} className={className}>
       {link.label}

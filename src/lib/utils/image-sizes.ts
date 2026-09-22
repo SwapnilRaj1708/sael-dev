@@ -146,3 +146,10 @@ export const SIZES_CUTOUT_PORTRAIT = '(min-width: 48rem) 34vw, 190px';
 /* The two panels behind it had `sizes` constants here until 2026-09-17. They
  * are SVG served from the blob container, so `<CutoutSplit>` renders them
  * `unoptimized` — no srcset is generated and `sizes` would describe nothing. */
+
+/**
+ * A photograph in a gallery grid — sections/gallery-grid. One column inside
+ * the gutter below `sm`, two from `sm` up; at 1920 a column is ~790px, which
+ * is 41vw, so the first condition is rounded outward from that.
+ */
+export const SIZES_GALLERY = '(min-width: 30rem) 48vw, 92vw';

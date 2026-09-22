@@ -1,14 +1,18 @@
 import type { StaticImageData } from 'next/image';
+import type { ReactNode } from 'react';
 import { DisplayHeading } from '@/components/ui/display-heading';
-import { Eyebrow } from '@/components/ui/eyebrow';
+import { Eyebrow, type EyebrowTone } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
-import { Section } from '@/components/ui/section';
+import { Section, type SectionProps } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
 import { SIZES_PROSE_MEDIA_LANDSCAPE, SIZES_PROSE_MEDIA_PORTRAIT } from '@/lib/utils/image-sizes';
 
 /** Which way up the photograph beside the copy is drawn. */
 export type ProseSplitOrientation = 'landscape' | 'portrait';
+
+/** The ground the section is drawn on. */
+export type ProseSplitGround = 'dark' | 'paper';
 
 export interface ProseSplitMedia {
   image: StaticImageData | null;
@@ -54,12 +58,32 @@ export interface ProseSplitProps {
   /** Omit for a section that is copy only — then it is a prose *block*. */
   media?: ProseSplitMedia;
   /**
+   * Something other than a photograph beside the copy — a stack of cards, a
+   * form. Takes the photograph's column and its reveal order. Ignored when
+   * `media` is given: a section has one thing beside its copy, not two.
+   */
+  aside?: ReactNode;
+  /**
+   * An action under the copy — a `<Button>`. Rendered after the last
+   * paragraph, in its own step of the cascade, so the CTA lands after the
+   * sentence that earns it.
+   */
+  action?: ReactNode;
+  /**
    * How wide the copy is allowed to run. `default` is `--measure` (68ch), for
    * a section of several paragraphs; `narrow` is `--ledger-measure` (46ch),
    * which is what the design sets on a single-paragraph statement so it does
    * not run out into a long thin line beside a portrait.
    */
   measure?: 'default' | 'narrow';
+  /**
+   * `dark` is the site's default and needs no instruction
+   * (docs/design-guidelines.md §8). `paper` is for a page that alternates its
+   * grounds deliberately, and picks the eyebrow ramp, the heading ramp and the
+   * body ink to match — the three things that go wrong when a section is
+   * simply painted lighter.
+   */
+  ground?: ProseSplitGround;
 }
 
 const MEASURE_CLASS: Record<'default' | 'narrow', string> = {
@@ -75,6 +99,19 @@ const MEDIA_CLASS: Record<ProseSplitOrientation, string> = {
 const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
   landscape: SIZES_PROSE_MEDIA_LANDSCAPE,
   portrait: SIZES_PROSE_MEDIA_PORTRAIT,
+};
+
+/**
+ * Everything that follows from the ground, decided once. The eyebrow and
+ * heading ramps are pairs — `bright` on black, `deep` on paper — and the body
+ * ink is the full-strength on-dark value or the paper body colour.
+ */
+const GROUND: Record<
+  ProseSplitGround,
+  { section: SectionProps['background']; eyebrow: EyebrowTone; body: string }
+> = {
+  dark: { section: 'black-dots', eyebrow: 'bright', body: 'text-body-on-dark' },
+  paper: { section: 'paper-dots', eyebrow: 'deep', body: 'text-body-base' },
 };
 
 /**
@@ -107,6 +144,11 @@ const MEDIA_SIZES: Record<ProseSplitOrientation, string> = {
  * designer-supplied shape — the same alpha mask idiom `intro-split` and
  * `endeavour-split` use.
  *
+ * Three more on 2026-09-22 for the Careers page, again opt-in: `ground`,
+ * for a page that alternates paper and black; `action`, for a CTA under the
+ * copy; and `aside`, for something that is not a photograph in the second
+ * column. None of the six earlier call sites changes.
+ *
  * A Server Component. Nothing here is interactive.
  */
 /**
@@ -121,9 +163,15 @@ export function ProseSplitLayout({
   title,
   body,
   media,
+  aside,
+  action,
   measure = 'default',
+  ground = 'dark',
 }: ProseSplitProps) {
+  const tone = GROUND[ground];
   const headingOrder = eyebrow === undefined ? 0 : 1;
+  const actionOrder = body.length + headingOrder + 1;
+  const asideOrder = action === undefined ? actionOrder : actionOrder + 1;
 
   const frame = media && (
     <MediaFrame
@@ -146,27 +194,29 @@ export function ProseSplitLayout({
         <div className="flex flex-col gap-stack">
           {eyebrow !== undefined && (
             <Reveal order={0}>
-              <Eyebrow tone="bright">{eyebrow}</Eyebrow>
+              <Eyebrow tone={tone.eyebrow}>{eyebrow}</Eyebrow>
             </Reveal>
           )}
 
           <Reveal order={headingOrder}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
+            <DisplayHeading ground={ground}>{title}</DisplayHeading>
           </Reveal>
         </div>
 
         <div className={cn('flex flex-col gap-stack', MEASURE_CLASS[measure])}>
           {body.map((paragraph, index) => (
             <Reveal key={paragraph} order={index + headingOrder + 1}>
-              <p className="text-body text-pretty text-body-on-dark">{paragraph}</p>
+              <p className={cn('text-body text-pretty', tone.body)}>{paragraph}</p>
             </Reveal>
           ))}
         </div>
+
+        {action !== undefined && action !== null && <Reveal order={actionOrder}>{action}</Reveal>}
       </div>
 
-      {media !== undefined && (
+      {media !== undefined ? (
         <Reveal
-          order={body.length + headingOrder + 1}
+          order={asideOrder}
           // `justify-self-center` and the auto margins keep the artwork
           // centred in its column once the cap binds, rather than pinned to
           // the column's start edge with the slack all on one side.
@@ -178,6 +228,13 @@ export function ProseSplitLayout({
         >
           {frame}
         </Reveal>
+      ) : (
+        aside !== undefined &&
+        aside !== null && (
+          <Reveal order={asideOrder} className="flex w-full justify-center">
+            {aside}
+          </Reveal>
+        )
       )}
     </div>
   );
@@ -185,7 +242,7 @@ export function ProseSplitLayout({
 
 export function ProseSplit(props: ProseSplitProps) {
   return (
-    <Section background="black-dots">
+    <Section background={GROUND[props.ground ?? 'dark'].section}>
       <ProseSplitLayout {...props} />
     </Section>
   );

@@ -275,7 +275,7 @@ The route handler:
 
 While `CONTENT_SOURCE=mock`, the handler logs the payload and returns `{ ok: true }` after a short delay, so the full success/error UI is buildable today.
 
-Forms in scope: **Contact Us** and **Investor Contact**. Both post to `/api/forms/[form]`. Careers is an external redirect and has no form.
+Forms in scope: **Contact Us** and **Investor Contact**. Both post to `/api/forms/[form]`. Careers has no form: it became a page on 2026-09-22, and its two "Explore" CTAs link out to the Oracle recruiting portal, which is where an application is made.
 
 ---
 

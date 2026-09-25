@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { TOUCH_LIT_ATTR } from '@/components/ui/touch-light';
 import { cn } from '@/lib/utils/cn';
 
 export interface DottedGlowBackgroundProps {
@@ -40,15 +41,15 @@ interface Dot {
  * the triangle-wave pulse and the glow threshold are theirs unchanged. What
  * differs:
  *
- *  - **It shows only on hover.** `<Card>` renders it inside every hairline
- *    card that has an accent; the card's `group` hover fades the layer in to
+ *  - **It shows only on hover, or on a tap.** `<Card>` renders it inside
+ *    every hairline card that has an accent; the card's `group` hover — or,
+ *    on a touch screen, `<TouchLight>`'s tap — fades the layer in to
  *    `--dotted-glow-intensity`. It sits at `z-index: -1` in the card's
  *    isolated stacking context, so the card's content needs nothing.
  *  - **It only draws while it can be seen.** Theirs runs a frame loop for as
  *    long as it is on screen; eight cards would be eight loops painting an
  *    invisible canvas. The loop here starts when a mouse or pen enters the
- *    card and stops once the fade-out has finished. A touch never starts it,
- *    for the same reason `group-hover` does not apply to one.
+ *    card, or a tap lights it, and stops once the fade-out has finished.
  *  - **Reduced motion gets one still frame** rather than the pulse.
  *  - **Colours are tokens**, `--dotted-glow-dot` and `--dotted-glow-light`,
  *    read from the cascade once, with a paper pair for a card on white.
@@ -163,8 +164,7 @@ export function DottedGlowBackground({
       if (active && still.matches) draw(performance.now());
     };
 
-    const handleEnter = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') return;
+    const activate = () => {
       active = true;
       clearTimeout(stopTimer);
       if (still.matches) {
@@ -177,16 +177,33 @@ export function DottedGlowBackground({
 
     // Keep drawing through the fade-out, then stop. The fade is the layer's
     // own transition, so its length is read rather than repeated here.
-    const handleLeave = () => {
+    const deactivate = () => {
       active = false;
       clearTimeout(stopTimer);
       const fadeMs = (parseFloat(getComputedStyle(layer).transitionDuration) || 0) * 1000;
       stopTimer = setTimeout(stop, fadeMs);
     };
 
-    const observer = new ResizeObserver(layout);
-    observer.observe(layer);
+    const touchLit = () => host.hasAttribute(TOUCH_LIT_ATTR);
+
+    // A touch has no hover; <TouchLight> marks a tapped card instead, and
+    // pointerleave fires on every lift of a finger, so both are left to it.
+    const handleEnter = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') activate();
+    };
+    const handleLeave = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch' && !touchLit()) deactivate();
+    };
+
+    const resize = new ResizeObserver(layout);
+    resize.observe(layer);
     layout();
+
+    const tap = new MutationObserver(() => {
+      if (touchLit()) activate();
+      else deactivate();
+    });
+    tap.observe(host, { attributes: true, attributeFilter: [TOUCH_LIT_ATTR] });
 
     host.addEventListener('pointerenter', handleEnter);
     host.addEventListener('pointerleave', handleLeave);
@@ -194,7 +211,8 @@ export function DottedGlowBackground({
     return () => {
       stop();
       clearTimeout(stopTimer);
-      observer.disconnect();
+      resize.disconnect();
+      tap.disconnect();
       host.removeEventListener('pointerenter', handleEnter);
       host.removeEventListener('pointerleave', handleLeave);
     };
@@ -214,6 +232,7 @@ export function DottedGlowBackground({
         'anim-dotted-glow',
         'group-hover:opacity-(--dotted-glow-intensity)',
         'group-has-focus-visible:opacity-(--dotted-glow-intensity)',
+        'group-data-touch-lit:opacity-(--dotted-glow-intensity)',
         className,
       )}
     >

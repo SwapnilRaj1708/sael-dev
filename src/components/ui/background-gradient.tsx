@@ -27,7 +27,8 @@ export interface BackgroundGradientProps {
  *    card's own hover and keyboard focus drive the effect with no new
  *    element round it, and the grid keeps its measurements. The ring is
  *    drawn outside the card's border; see `.anim-bg-gradient` for why.
- *  - **It is hover-only.** Theirs is always lit and brightens on hover.
+ *  - **It is hover-only** — or tap-only on a touch screen, through
+ *    `<TouchLight>`. Theirs is always lit and brightens on hover.
  *  - **The motion is CSS**, so no client JavaScript and no new dependency.
  *    The pan runs only while the card is hovered, and not at all under
  *    reduced motion, where the gradient holds its first frame.
@@ -53,6 +54,7 @@ export function BackgroundGradient({
         'anim-bg-gradient',
         'group-hover:opacity-(--bg-gradient-intensity) group-hover:[--bg-gradient-play:running]',
         'group-has-focus-visible:opacity-(--bg-gradient-intensity) group-has-focus-visible:[--bg-gradient-play:running]',
+        'group-data-touch-lit:opacity-(--bg-gradient-intensity) group-data-touch-lit:[--bg-gradient-play:running]',
         className,
       )}
     >

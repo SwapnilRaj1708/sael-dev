@@ -74,11 +74,21 @@ export function MobileNav() {
   // Focus moves into the drawer on open and back to the hamburger on close.
   // Returning focus matters more than it looks: without it, focus falls back
   // to <body> and the next Tab starts from the top of the document.
+  //
+  // **Only on a close — never on mount.** The effect also runs on the first
+  // render, with `open` false and focus on <body> as it always is on a fresh
+  // load, and it used to take that for a close: every page load focused the
+  // hamburger. With no pointer interaction yet, the browser counts that as
+  // keyboard focus, so a phone showed the ring until the first tap elsewhere.
+  const wasOpen = useRef(false);
   useEffect(() => {
     if (open) {
+      wasOpen.current = true;
       closeRef.current?.focus();
       return;
     }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
     // Only reclaim focus if it is not already somewhere deliberate — a route
     // change moves focus itself.
     if (document.activeElement === document.body) triggerRef.current?.focus();

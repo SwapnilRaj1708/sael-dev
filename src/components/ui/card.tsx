@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentPropsWithRef } from 'react';
 import { BackgroundGradient } from '@/components/ui/background-gradient';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
+import { TouchLight } from '@/components/ui/touch-light';
 import { cn } from '@/lib/utils/cn';
 
 /**
@@ -55,7 +56,8 @@ import { cn } from '@/lib/utils/cn';
  * Every card of each idiom gets the same light on hover, so the client can
  * judge the effect across the whole site rather than on one page: an
  * outlined card gets `<BackgroundGradient>`, and a hairline card with an
- * accent gets `<DottedGlowBackground>`. A hairline card with no accent is
+ * accent gets `<DottedGlowBackground>`. A touch screen has no hover, so
+ * `<TouchLight>` lights a card on a tap instead. A hairline card with no accent is
  * not interactive and gets neither, for the reason it has no accent. The
  * light is a layer at `z-index: -1` inside a card that isolates, so it sits
  * above the card's own ground and below all of its content with nothing
@@ -143,6 +145,7 @@ export function Card({
       {effect === 'dotted-glow' && (
         <DottedGlowBackground ground={tone} intensity={hoverIntensity} />
       )}
+      {effect !== false && <TouchLight />}
       {accentClassName !== undefined && (
         <span
           aria-hidden="true"
@@ -150,6 +153,8 @@ export function Card({
             'absolute inset-x-0 -top-px h-rule-accent origin-left',
             'scale-x-0 transition-transform duration-(--duration-card)',
             'group-hover:scale-x-100 group-has-focus-visible:scale-x-100',
+            // A tap on a touch screen fills it too, with the hover light.
+            'group-data-touch-lit:scale-x-100',
             'motion-reduce:transition-none',
             accentClassName,
           )}

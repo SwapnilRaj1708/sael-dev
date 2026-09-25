@@ -176,6 +176,7 @@ export function BusinessTiles({ eyebrow, tiles, snap = false }: BusinessTilesPro
                 className="flex"
               >
                 <Card
+                  hoverIntensity={0.3}
                   as="article"
                   ground="dark"
                   inset="block"

@@ -676,3 +676,121 @@
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Aceternity UI trial — client request of 2026-09-25
+ *
+ * Two hover effects on every card of the two card idioms, drawn by
+ * ui/card.tsx: the outlined card's background gradient
+ * (ui/background-gradient.tsx) and the accented hairline card's dotted glow
+ * (ui/dotted-glow-background.tsx). Tokens in theme.css under
+ * --gradient-bg-glow. Delete from here to the end of the file to revert.
+ * ------------------------------------------------------------------------ */
+
+/* Aceternity's `backgroundPosition: [0 50%, 100% 50%, 0 50%]` over five
+ * seconds, which their `motion` dependency ran and CSS runs natively. */
+@keyframes bgGradientPan {
+  0%,
+  100% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@layer components {
+  /*
+   * Rendered inside the card, so the card's `group` hover drives it and the
+   * card keeps its box: the light is drawn *outside* the card's border rather
+   * than by padding a wrapper round it, so the grid does not move and the
+   * card's own ground still shows through. Aceternity got the same look by
+   * sitting an opaque card over the gradient; this card is transparent, so
+   * both layers are masked to exclude the card's own area instead.
+   *
+   * At rest the whole layer is at opacity 0 and the pan is paused; the card's
+   * hover lifts it to --bg-gradient-intensity and sets --bg-gradient-play.
+   */
+  .anim-bg-gradient {
+    --bg-gradient-radius: var(--radius-card-outlined);
+    --bg-gradient-reach: calc(var(--bg-gradient-ring) + var(--bg-gradient-bloom));
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    /* Under the card's content, over its ground: the card isolates. */
+    z-index: -1;
+  }
+
+  .anim-bg-gradient[data-ground='paper'] {
+    --gradient-bg-glow: var(--gradient-bg-glow-paper);
+  }
+
+  .anim-bg-gradient-fill {
+    background: var(--gradient-bg-glow);
+    background-size: 400% 400%;
+  }
+
+  /* The sharp ring: the gradient on a box one ring-width larger than the card
+   * all round, with the card's own box masked out of it. */
+  .anim-bg-gradient-ring {
+    position: absolute;
+    inset: calc(var(--bg-gradient-ring) * -1);
+    border-radius: calc(var(--bg-gradient-radius) + var(--bg-gradient-ring));
+    padding: var(--bg-gradient-ring);
+    mask:
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
+    mask-composite: exclude;
+  }
+
+  /* The bloom: the same ring, blurred, inside a box large enough that the
+   * blur falls off before its edge, and the card's box masked out again so
+   * the glow is only ever outside it. */
+  .anim-bg-gradient-glow {
+    position: absolute;
+    inset: calc(var(--bg-gradient-reach) * -1);
+    border-radius: calc(var(--bg-gradient-radius) + var(--bg-gradient-reach));
+    padding: var(--bg-gradient-reach);
+    mask:
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
+    mask-composite: exclude;
+  }
+
+  .anim-bg-gradient-blur {
+    position: absolute;
+    inset: var(--bg-gradient-bloom);
+    border-radius: calc(var(--bg-gradient-radius) + var(--bg-gradient-ring));
+    filter: blur(var(--bg-gradient-blur));
+  }
+
+  /* The dotted glow's canvas, faded at its edges so it reads as light in the
+   * card rather than a rectangle of dots laid over it. */
+  .anim-dotted-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: -1;
+    mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+  }
+
+  .anim-dotted-glow[data-ground='paper'] {
+    --dotted-glow-dot: var(--dotted-glow-dot-paper);
+    --dotted-glow-light: var(--dotted-glow-light-paper);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-bg-gradient,
+    .anim-dotted-glow {
+      transition: opacity var(--duration-card);
+    }
+
+    .anim-bg-gradient-fill {
+      animation: bgGradientPan var(--duration-bg-gradient) ease-in-out infinite;
+      animation-play-state: var(--bg-gradient-play, paused);
+    }
+  }
+}

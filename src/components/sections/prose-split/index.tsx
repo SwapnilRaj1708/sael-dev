@@ -242,7 +242,14 @@ export function ProseSplitLayout({
 
 export function ProseSplit(props: ProseSplitProps) {
   return (
-    <Section background={GROUND[props.ground ?? 'dark'].section}>
+    <Section
+      background={GROUND[props.ground ?? 'dark'].section}
+      // An aside of outlined cards (<PointStack>) carries their hover
+      // gradient, which reaches past the viewport's edge on a phone — see
+      // ui/background-gradient.tsx. `clip`, not `hidden`: the vertical
+      // bloom is left alone.
+      className={cn(props.aside != null && 'overflow-x-clip')}
+    >
       <ProseSplitLayout {...props} />
     </Section>
   );

@@ -1679,6 +1679,54 @@
    * has room to bloom and is not clipped at the panel's edge. */
   --glow-halo-radius: 2.5rem; /* 40 */
 
+  /* Two Aceternity UI effects, trialled on About Us at the client's request of
+   * 2026-09-25 — ui/background-gradient.tsx and ui/dotted-glow-background.tsx.
+   * Both show only on hover, and each has an intensity knob: the value here is
+   * the default, and a caller overrides it with `<Card hoverIntensity>`
+   * (0–1). Every outlined card takes the gradient and every hairline card
+   * with an accent takes the dotted glow — see ui/card.tsx. Delete this
+   * block with the two components to revert.
+   *
+   * The gradient is Aceternity's own four corner pools re-coloured to the
+   * site's bright ramp — coral, lavender, rose — over brand blue, so it reads
+   * as the heading's light rather than a third palette. Their teal, violet,
+   * amber and sky, corner for corner. */
+  --gradient-bg-glow:
+    radial-gradient(circle farthest-side at 0 100%, var(--color-brand-red-bright), transparent),
+    radial-gradient(circle farthest-side at 100% 0, #8f83e0, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #d95a95, transparent),
+    radial-gradient(
+      circle farthest-side at 0 0,
+      var(--color-brand-blue),
+      var(--color-surface-black)
+    );
+  /* Their `p-[4px]` ring and `blur-xl` bloom. */
+  --bg-gradient-ring: 0.25rem; /* 4 */
+  --bg-gradient-blur: 1.5rem; /* 24 */
+  /* Room outside the ring for the blur to fall off in, so it is not clipped. */
+  --bg-gradient-bloom: 3rem; /* 48 */
+  /* Aceternity runs the blurred layer at 0.6 → 1 and the ring at 1. The
+   * client found that too strong, so both ride this one number instead. */
+  --bg-gradient-intensity: 0.55;
+  --duration-bg-gradient: 5s; /* one pan across and back */
+
+  /* The dotted glow: a dim dot that pulses, and the light a bright one gives
+   * off. Aceternity's default glow is a cyan; this is the brand's coral. */
+  --dotted-glow-dot: rgb(230 233 238 / 0.7);
+  --dotted-glow-light: var(--color-brand-red-bright);
+  --dotted-glow-intensity: 0.4;
+
+  /* The same two effects on a paper ground — the homepage's news cards. The
+   * gradient's last pool fades to white rather than to black, and the dots
+   * are the ink hairline's colour at a visible weight. */
+  --gradient-bg-glow-paper:
+    radial-gradient(circle farthest-side at 0 100%, var(--color-brand-red-bright), transparent),
+    radial-gradient(circle farthest-side at 100% 0, #8f83e0, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #d95a95, transparent),
+    radial-gradient(circle farthest-side at 0 0, var(--color-brand-blue), var(--color-surface));
+  --dotted-glow-dot-paper: rgb(20 24 32 / 0.55);
+  --dotted-glow-light-paper: var(--color-brand-red);
+
   /* "Our Goals". The scrim is no longer always on — at rest the photograph is
    * shown as it is, and this arrives with the pointer. See the note in
    * sections/goals-grid. */

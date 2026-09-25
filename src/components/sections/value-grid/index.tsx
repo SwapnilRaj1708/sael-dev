@@ -194,7 +194,15 @@ export function ValueGrid({
   const tone = GROUND[ground];
 
   return (
-    <Section background={tone.section} spacing={spacing === 'tight' ? 'tight' : 'default'}>
+    <Section
+      background={tone.section}
+      spacing={spacing === 'tight' ? 'tight' : 'default'}
+      // An outlined card's hover gradient (ui/background-gradient.tsx)
+      // reaches past the card, and past the viewport's edge on a phone — a
+      // horizontal scroll even while it is invisible. `clip`, not `hidden`,
+      // so the bloom above and below is left alone.
+      className={cn(outlined && 'overflow-x-clip')}
+    >
       <div className="flex w-full flex-col gap-flow">
         <div className="flex flex-col gap-stack">
           {eyebrow !== undefined && (

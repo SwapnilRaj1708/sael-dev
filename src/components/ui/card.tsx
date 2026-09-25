@@ -1,5 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentPropsWithRef } from 'react';
+import { BackgroundGradient } from '@/components/ui/background-gradient';
+import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import { cn } from '@/lib/utils/cn';
 
 /**
@@ -48,6 +50,17 @@ import { cn } from '@/lib/utils/cn';
  * four sides, with its content set inside `--spacing-flow` of padding. It
  * keeps the same `group` and ground so the accent and the hover contract are
  * unchanged; only the frame differs. The hairline idiom stays the default.
+ *
+ * **Hover light — an Aceternity UI trial, client request of 2026-09-25.**
+ * Every card of each idiom gets the same light on hover, so the client can
+ * judge the effect across the whole site rather than on one page: an
+ * outlined card gets `<BackgroundGradient>`, and a hairline card with an
+ * accent gets `<DottedGlowBackground>`. A hairline card with no accent is
+ * not interactive and gets neither, for the reason it has no accent. The
+ * light is a layer at `z-index: -1` inside a card that isolates, so it sits
+ * above the card's own ground and below all of its content with nothing
+ * asked of the children. Pass `hoverEffect={false}` to exempt one card; to
+ * take the trial out, delete the two layers below and their components.
  */
 const card = cva('group relative flex w-full', {
   variants: {
@@ -80,6 +93,8 @@ const card = cva('group relative flex w-full', {
   defaultVariants: { ground: 'paper', inset: 'top', shape: 'hairline' },
 });
 
+export type CardHoverEffect = 'gradient' | 'dotted-glow';
+
 export interface CardProps extends ComponentPropsWithRef<'div'>, VariantProps<typeof card> {
   /**
    * The element to render. Both homepage consumers are `article`, and the
@@ -93,6 +108,13 @@ export interface CardProps extends ComponentPropsWithRef<'div'>, VariantProps<ty
    * suggest it is.
    */
   accentClassName?: string;
+  /**
+   * The hover light. Omit for the idiom's own — see the note above — or pass
+   * `false` for a card that carries a light of its own (the CTA panel).
+   */
+  hoverEffect?: CardHoverEffect | false;
+  /** The light's strength at full hover, 0–1. Omit for the token default. */
+  hoverIntensity?: number;
 }
 
 export function Card({
@@ -101,12 +123,26 @@ export function Card({
   inset,
   shape,
   accentClassName,
+  hoverEffect,
+  hoverIntensity,
   className,
   children,
   ...props
 }: CardProps) {
+  const defaultEffect: CardHoverEffect | false =
+    shape === 'outlined' ? 'gradient' : accentClassName !== undefined ? 'dotted-glow' : false;
+  const effect = hoverEffect ?? defaultEffect;
+  const tone = ground ?? 'paper';
+
   return (
-    <Element className={cn(card({ ground, inset, shape }), className)} {...props}>
+    <Element
+      className={cn(card({ ground, inset, shape }), effect !== false && 'isolate', className)}
+      {...props}
+    >
+      {effect === 'gradient' && <BackgroundGradient ground={tone} intensity={hoverIntensity} />}
+      {effect === 'dotted-glow' && (
+        <DottedGlowBackground ground={tone} intensity={hoverIntensity} />
+      )}
       {accentClassName !== undefined && (
         <span
           aria-hidden="true"

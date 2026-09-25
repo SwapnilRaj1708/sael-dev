@@ -52,6 +52,9 @@ export function CtaPanel({ title, body, action }: CtaPanelProps) {
             shape="outlined"
             ground="dark"
             inset="none"
+            // It has a light of its own in <GlowFrame>, and clips its
+            // overflow, so the outlined card's hover gradient is left off.
+            hoverEffect={false}
             className="flex-col items-center gap-flow overflow-hidden bg-(image:--gradient-panel-glow) py-section-y-tight text-center"
           >
             <DisplayHeading ground="dark">{title}</DisplayHeading>

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "drhp-audio-visuals-english",
+    "title": "DRHP - Audio Visual (English)",
+    "category": "offer-documents",
+    "section": "drhp-audio-visuals-english",
+    "file": {
+      "path": "web-assets/media/offer-documents/SAEL-DRHP-English.mp4",
+      "fileName": "SAEL-DRHP-English.mp4",
+      "mimeType": "video/mp4",
+      "sizeBytes": 111001343
+    },
+    "posterPath": "web-assets/media/offer-documents/drhp-english.png",
+    "captions": [],
+    "legacyPath": "/video/SAEL-DRHP-English.mp4",
+    "legacyPosterPath": "/img/site/drhp-english.png"
+  },
+  {
+    "id": "drhp-audio-visuals-hindi",
+    "title": "DRHP - Audio Visual (Hindi)",
+    "category": "offer-documents",
+    "section": "drhp-audio-visuals-hindi",
+    "file": {
+      "path": "web-assets/media/offer-documents/SAEL-DRHP-Hindi.mp4",
+      "fileName": "SAEL-DRHP-Hindi.mp4",
+      "mimeType": "video/mp4",
+      "sizeBytes": 106541645
+    },
+    "posterPath": "web-assets/media/offer-documents/drhp-hindi.png",
+    "captions": [],
+    "legacyPath": "/video/SAEL-DRHP-Hindi.mp4",
+    "legacyPosterPath": "/img/site/drhp-hindi.png"
+  }
+]

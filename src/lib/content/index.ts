@@ -5,7 +5,18 @@ import type { ContentRepository } from './repository';
 
 export { ContentUnavailableError, NotImplementedError } from './repository';
 export type { ContentRepository } from './repository';
-export type { CapacityStat, NewsItem, TeamGroup, TeamMember } from './types';
+export type {
+  BlobFile,
+  CapacityStat,
+  CaptionTrack,
+  InvestorDocument,
+  InvestorDocumentCategory,
+  InvestorListing,
+  InvestorVideo,
+  NewsItem,
+  TeamGroup,
+  TeamMember,
+} from './types';
 
 let instance: ContentRepository | null = null;
 

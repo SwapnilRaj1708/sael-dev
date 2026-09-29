@@ -1,0 +1,136 @@
+import type { ReactNode } from 'react';
+import { RippleHero } from '@/components/sections/ripple-hero';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Reveal } from '@/components/ui/reveal';
+import { Section } from '@/components/ui/section';
+import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
+import { cn } from '@/lib/utils/cn';
+import { SubPageNav, type SubPageNavProps } from './sub-page-nav';
+
+export type { SubPageNavItem, SubPageNavProps } from './sub-page-nav';
+
+export interface SubPageProps {
+  /** The page's single `<h1>`, verbatim. */
+  title: string;
+  /**
+   * Root first, current page last. See `<Breadcrumb>`. Optional: the Offer
+   * Documents pages dropped theirs on 2026-09-29 at the client's request, as
+   * About Us did on 2026-09-17. Pass it to bring the trail back.
+   */
+  breadcrumb?: readonly BreadcrumbTrailItem[];
+  /**
+   * The area's other pages, shown beside the content from `lg` and after it
+   * below. Omit on an area's index, which *is* that list.
+   */
+  nav?: SubPageNavProps;
+  /**
+   * How the page opens. `plain`, the default, is the trail and `<h1>` on the
+   * dotted ground above the body. `ripple` is `<RippleHero>` — the title
+   * centred in a band across the top half of the screen over the ripple grid,
+   * the client's ask for the Offer Documents index on 2026-09-29. Any
+   * investor page can take it with this one prop.
+   */
+  masthead?: 'plain' | 'ripple';
+  /** The page's body — a document list, a notice, a table. */
+  children: ReactNode;
+}
+
+/**
+ * The investor page template: trail, title, body, and the area's pages.
+ *
+ * **Built with Offer Documents to be what every investor page is built on**
+ * — Financials & Reports and its five sub-pages, Corporate Governance,
+ * Notifications. It is the About Us template's counterpart for document
+ * pages, and it differs from it on purpose.
+ *
+ * **No banner photograph.** `<PageHero>` is a full screen of image with the
+ * title at its foot; on a page whose whole purpose is one PDF, that puts the
+ * PDF a screen below the fold on every device. This opens the way Our Team
+ * does — trail and `<h1>` on the dotted black ground — and the document is on
+ * the first screen at 360px. It is also closer to the legacy page, whose
+ * header is a short band with the title in it, not a photograph.
+ *
+ * **Content first, then the area's pages**, in the DOM and on screen. From
+ * `lg` the nav takes a column to the right; below `lg` it follows the
+ * content. The legacy site puts it on the left, above the content on a phone
+ * — eight links a reader has to get past before the document they came for,
+ * and eight tab stops before it on every breakpoint. Keeping DOM order and
+ * visual order the same at every width means focus order never jumps across
+ * the screen.
+ *
+ * **No breadcrumb on the Offer Documents pages** since 2026-09-29, the
+ * client's call. The trail is still built in their content file and renders
+ * again if a page passes it: Home › Investors › Offer Documents › this page,
+ * with its own `BreadcrumbList`. Without it the side list and the header's
+ * Investors menu are the way around the area.
+ *
+ * `spacing="closing"` — the page's last section meets the footer's pixel
+ * strip, and the standard rhythm is too little room there.
+ *
+ * No `-mt-header`: nothing here is full-bleed, so the masthead offsets the
+ * page exactly as `<main>`'s padding already arranges. With
+ * `masthead="ripple"` the band is full-bleed but still starts under the bar.
+ *
+ * `overflow-x-clip` on the body's section: a `<GlowFrame>` halo reaches past
+ * its card, and on a phone past the screen's edge — a horizontal scroll even
+ * while it is unlit. `clip`, not `hidden`, so it creates no scroll container
+ * and a sticky consent bar inside still sticks.
+ *
+ * A Server Component. What is interactive inside `children` brings its own
+ * client leaf.
+ */
+export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }: SubPageProps) {
+  const body = (
+    <div
+      className={cn(
+        'flex flex-col gap-y-section-y-tight',
+        nav !== undefined &&
+          'lg:grid lg:grid-cols-[minmax(0,1fr)_var(--sub-page-nav-w)] lg:items-start lg:gap-x-ledger-col-gap',
+      )}
+    >
+      <Reveal order={2} className="min-w-0">
+        {children}
+      </Reveal>
+
+      {nav !== undefined && (
+        <Reveal order={3}>
+          <SubPageNav {...nav} />
+        </Reveal>
+      )}
+    </div>
+  );
+
+  if (masthead === 'ripple') {
+    return (
+      <>
+        <RippleHero title={title} breadcrumb={breadcrumb} />
+        <Section background="black-dots" spacing="closing" className="overflow-x-clip">
+          {body}
+        </Section>
+      </>
+    );
+  }
+
+  return (
+    <Section background="black-dots" spacing="closing" className="overflow-x-clip">
+      <div className="flex w-full flex-col gap-flow">
+        <div className="flex flex-col gap-stack">
+          {breadcrumb !== undefined && (
+            <Reveal order={0}>
+              <Breadcrumb items={breadcrumb} />
+            </Reveal>
+          )}
+
+          <Reveal order={1}>
+            {/* The measure, not --hero-measure: that 15ch cap is sized for a
+                two-word title, and "Information with respect to Group
+                Companies" would break into four lines under it. */}
+            <h1 className="max-w-(--measure) text-hero text-balance text-white">{title}</h1>
+          </Reveal>
+        </div>
+
+        {body}
+      </div>
+    </Section>
+  );
+}

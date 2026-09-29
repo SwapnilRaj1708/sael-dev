@@ -669,10 +669,129 @@
       transition: opacity var(--duration-card);
     }
 
-    [data-reveal='shown'] .anim-glow-sweep {
+    /* `data-glow-intro="off"` — `<GlowFrame intro={false}>` — is a frame
+       that lights under the pointer and never sweeps on its own: the Offer
+       Documents tiles, where eight frames sweeping at once as the grid
+       arrives would be a light show, not an invitation. */
+    [data-reveal='shown'] .anim-glow-sweep:not([data-glow-intro='off']) {
       animation:
         glowSweepAngle 4s backwards,
         glowSweepEdge 4s backwards;
+    }
+  }
+
+  /* The keyboard's hover. A frame whose content holds keyboard focus is lit
+     all the way round — ring and halo, no cone, because focus has no pointer
+     angle to aim one at. Set on the layers' own opacity rather than through
+     --glow-edge, which the pointer writes inline on the frame and would win.
+     Still, so it is not motion and applies under reduced motion too.
+     Added 2026-09-29 with the Offer Documents tiles; it also gives the
+     Careers panel's hover light the focus equivalent it lacked
+     (docs/responsive-strategy.md §5). */
+  .anim-glow-sweep:has(:focus-visible) > .anim-glow-border,
+  .anim-glow-sweep:has(:focus-visible) > .anim-glow-halo {
+    opacity: 1;
+    mask-image: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The ripple band — ui/background-ripple.tsx. Aceternity UI's background
+ * ripple effect, at the head of the Offer Documents index at the client's
+ * request of 2026-09-29. Tokens under --ripple-* in theme.css, which also
+ * says how the grid is coloured.
+ *
+ * The still state is the grid at rest. Hover lighting a cell is a change of
+ * state, not motion, and stays under reduced motion without its fade; the
+ * click wave is motion and does not run at all.
+ * ------------------------------------------------------------------------ */
+
+/* Aceternity's `cell-ripple`: rest, lit, rest. */
+@keyframes rippleCell {
+  0%,
+  100% {
+    opacity: var(--ripple-rest);
+  }
+  50% {
+    opacity: var(--ripple-lit);
+  }
+}
+
+@layer components {
+  /* The component's own box, and the reason the colour works.
+   *
+   * `color` keeps a pixel's brightness and replaces its hue, so it can only
+   * leave black black if the black is *true* black: the site's
+   * --color-surface-black is 8/9/12, and recoloured at that brightness it
+   * comes out a clearly saturated navy on the left and oxblood on the right —
+   * a wash over the whole band. So the grid is coloured over pure black
+   * inside this box, and the box is laid onto the page with `screen`, under
+   * which black adds nothing: the page's own ground and dot grid show through
+   * untouched, and only the lit grid adds light. `screen` also makes the box
+   * an isolated group, so the tint below blends with this black and the grid,
+   * never with the page. */
+  .ripple-band {
+    background-color: black;
+    mix-blend-mode: screen;
+  }
+
+  /* Band-sized, so the fade is measured against what is on screen. A flex
+     row, centred: a grid wider than the band then overflows both sides
+     equally into the band's clip, where auto margins would pin it left. */
+  .ripple-mask {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    mask-image: var(--mask-ripple);
+  }
+
+  .ripple-field {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(var(--ripple-cols), var(--ripple-cell));
+    grid-auto-rows: var(--ripple-cell);
+  }
+
+  .ripple-cell {
+    border: var(--ripple-line-w) solid var(--color-ripple-line);
+    background-color: var(--color-ripple-fill);
+    box-shadow: var(--shadow-ripple-cell);
+    opacity: var(--ripple-rest);
+  }
+
+  /* The colour: the whole band, in the ramp's hue at each point, at the
+     brightness of whatever is under it. */
+  .ripple-tint {
+    position: absolute;
+    inset: 0;
+    background-image: var(--gradient-heading-bright);
+    mix-blend-mode: color;
+    pointer-events: none;
+  }
+
+  /* Only where a pointer hovers: on a touch screen `:hover` sticks to the
+     last cell tapped. */
+  @media (hover: hover) {
+    .ripple-cell:hover {
+      opacity: var(--ripple-lit);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ripple-cell {
+      transition: opacity var(--duration-micro);
+    }
+
+    /* `--ripple-d`, the cell's distance from the one clicked, in cells, is
+       the only thing the script writes; the timing is the tokens'. `none`
+       fill, as Aceternity's, so a cell returns to its own rule afterwards
+       and its hover works again. */
+    .ripple-field[data-wave] > .ripple-cell {
+      animation: rippleCell
+        calc(var(--duration-ripple-base) + var(--ripple-d) * var(--duration-ripple-spread)) ease-out
+        calc(var(--ripple-d) * var(--duration-ripple-step)) 1 none;
     }
   }
 }

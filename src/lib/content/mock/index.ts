@@ -1,10 +1,63 @@
 import { env } from '@/lib/config/env';
 import { tryBlobUrl } from '@/lib/utils/blob-url';
 import type { ContentRepository } from '../repository';
-import type { CapacityStat, NewsItem, TeamMember } from '../types';
+import type {
+  BlobFile,
+  CapacityStat,
+  CaptionTrack,
+  InvestorDocument,
+  InvestorDocumentCategory,
+  InvestorListing,
+  InvestorVideo,
+  NewsItem,
+  TeamMember,
+} from '../types';
 import capacityStats from './data/capacity-stats.json';
+import investorDocuments from './data/investor-documents.json';
+import investorVideos from './data/investor-videos.json';
 import newsItems from './data/news-items.json';
 import teamMembers from './data/team-members.json';
+
+/**
+ * A file as the fixtures store it: a path within the blob container, never a
+ * URL. `blobFile()` composes the URL at read time.
+ */
+interface FixtureFile extends Omit<BlobFile, 'url'> {
+  path: string;
+}
+
+/**
+ * The investor fixtures carry one field the domain type does not:
+ * `legacyPath`, the file's path on the legacy www.sael.co, recorded so the
+ * client can upload every file to its blob path in one pass. It is stripped
+ * on read — no component can reach it, and so no component can link to the
+ * legacy site, which goes away at cutover.
+ */
+interface DocumentFixture extends Omit<InvestorDocument, 'category' | 'file'> {
+  category: InvestorDocumentCategory;
+  file: FixtureFile;
+  legacyPath: string;
+}
+
+interface VideoFixture extends Omit<InvestorVideo, 'category' | 'file' | 'posterUrl' | 'captions'> {
+  category: InvestorDocumentCategory;
+  file: FixtureFile;
+  posterPath: string | null;
+  captions: (Omit<CaptionTrack, 'url'> & { path: string })[];
+  legacyPath: string;
+  legacyPosterPath: string | null;
+}
+
+/** Compose a fixture file's URL, or `null` when the container is not configured. */
+function blobFile({ path, ...file }: FixtureFile): BlobFile | null {
+  const url = tryBlobUrl(path);
+  return url === null ? null : { ...file, url };
+}
+
+function inListing(listing: InvestorListing) {
+  return (row: { category: InvestorDocumentCategory; section: string | null }) =>
+    row.category === listing.category && row.section === listing.section;
+}
 
 /**
  * The local-development and pre-backend implementation. docs/content-model.md §4.
@@ -83,5 +136,82 @@ export class MockContentRepository implements ContentRepository {
       .map((member) => ({ ...member, photoUrl: tryBlobUrl(member.photoUrl) }))
       .sort((a, b) => a.order - b.order);
     return this.settle(members);
+  }
+
+  /**
+   * Seeded from the legacy https://www.sael.co/investors/offer-documents/
+   * sub-pages, read from their HTML on 2026-09-29: every title is the legacy
+   * link text verbatim, and every size is the byte count the legacy server
+   * reported for that file the same day.
+   *
+   * **The files are not in the container yet.** Each row's path is where the
+   * client is asked to upload it — the legacy path under `web-assets/`, file
+   * name unchanged — so until that upload every link here 404s. That is the
+   * expected state of a mock (docs/content-model.md §4), not a defect.
+   *
+   * A row whose URL cannot be composed — `AZURE_BLOB_BASE_URL` unset — is
+   * dropped rather than rendered as a title that goes nowhere; the page then
+   * shows its empty state.
+   */
+  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]> {
+    const documents = (investorDocuments as DocumentFixture[])
+      .filter(inListing(listing))
+      // Mapped field by field rather than spread, so `legacyPath` cannot ride
+      // along into a component by accident.
+      .flatMap((row): InvestorDocument[] => {
+        const file = blobFile(row.file);
+        if (file === null) return [];
+
+        return [
+          {
+            id: row.id,
+            title: row.title,
+            category: row.category,
+            section: row.section,
+            group: row.group,
+            publishedAt: row.publishedAt,
+            file,
+            order: row.order,
+          },
+        ];
+      })
+      // Group descending, then `order` — the contract, not the file's line
+      // order. A `null` group sorts last, which only matters for a listing
+      // that mixes grouped and ungrouped rows; none does yet.
+      .sort((a, b) => (b.group ?? '').localeCompare(a.group ?? '') || a.order - b.order);
+    return this.settle(documents);
+  }
+
+  /**
+   * The two DRHP audio-visual presentations, seeded from the legacy pages.
+   * `captions` is empty in both rows because no caption files exist — the
+   * legacy `<video>` carries no `<track>` — and inventing a path for one
+   * would render a caption menu that fails to load.
+   */
+  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]> {
+    const videos = (investorVideos as VideoFixture[])
+      .filter(inListing(listing))
+      .flatMap((row): InvestorVideo[] => {
+        const file = blobFile(row.file);
+        if (file === null) return [];
+
+        return [
+          {
+            id: row.id,
+            title: row.title,
+            category: row.category,
+            section: row.section,
+            file,
+            posterUrl: tryBlobUrl(row.posterPath),
+            // A track whose file cannot be addressed is dropped; the video
+            // still plays, and the menu offers only what will load.
+            captions: row.captions.flatMap(({ path, srcLang, label }): CaptionTrack[] => {
+              const url = tryBlobUrl(path);
+              return url === null ? [] : [{ url, srcLang, label }];
+            }),
+          },
+        ];
+      });
+    return this.settle(videos);
   }
 }

@@ -1,0 +1,210 @@
+[
+  {
+    "id": "drhp",
+    "title": "Draft Red Herring Prospectus",
+    "category": "offer-documents",
+    "section": "drhp",
+    "group": null,
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/drhp/SAEL_DRHP.pdf",
+      "fileName": "SAEL_DRHP.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 13489413
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/drhp/SAEL_DRHP.pdf"
+  },
+  {
+    "id": "corrigendum-to-drhp",
+    "title": "Corrigendum to DRHP",
+    "category": "offer-documents",
+    "section": "corrigendum-to-drhp",
+    "group": null,
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/corrigendum-to-drhp/corrigendum-to-drh.pdf",
+      "fileName": "corrigendum-to-drh.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 550149
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/corrigendum-to-drhp/corrigendum-to-drh.pdf"
+  },
+  {
+    "id": "addendum-to-drhp",
+    "title": "Addendum to DRHP",
+    "category": "offer-documents",
+    "section": "addendum-to-drhp",
+    "group": null,
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/addendum-to-drhp/Addendum-to-DRHP.pdf",
+      "fileName": "Addendum-to-DRHP.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 627753
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/addendum-to-drhp/Addendum-to-DRHP.pdf"
+  },
+  {
+    "id": "industry-report-india-re-market-assessment",
+    "title": "Final Report India RE Market Assessment SAEL 03112025",
+    "category": "offer-documents",
+    "section": "industry-report",
+    "group": null,
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/industry-reports/Final-Report-India-RE-Market-Assessment-SAEL-03112025.pdf",
+      "fileName": "Final-Report-India-RE-Market-Assessment-SAEL-03112025.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 2839816
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/industry-reports/Final-Report-India-RE-Market-Assessment-SAEL-03112025.pdf"
+  },
+  {
+    "id": "group-companies-fy2025-dr-hs-awla-foundation",
+    "title": "Dr. HS Awla Foundation",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2025",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Dr-HS-Awla-Foundation.pdf",
+      "fileName": "Dr-HS-Awla-Foundation.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 8026910
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Dr-HS-Awla-Foundation.pdf"
+  },
+  {
+    "id": "group-companies-fy2025-sapphire-agri-warehousing",
+    "title": "Sapphire Agri Warehousing Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2025",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "fileName": "Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 2995880
+    },
+    "order": 2,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Sapphire-Agri-Warehousing-Private-Limited.pdf"
+  },
+  {
+    "id": "group-companies-fy2025-sun-layer-energy",
+    "title": "Sun Layer Energy Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2025",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Sun-Layer-Energy-Private-Limited.pdf",
+      "fileName": "Sun-Layer-Energy-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 12194000
+    },
+    "order": 3,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Sun-Layer-Energy-Private-Limited.pdf"
+  },
+  {
+    "id": "group-companies-fy2024-dr-hs-awla-foundation",
+    "title": "Dr. HS Awla Foundation",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2024",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Dr-HS-Awla-Foundation.pdf",
+      "fileName": "Dr-HS-Awla-Foundation.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 6933934
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Dr-HS-Awla-Foundation.pdf"
+  },
+  {
+    "id": "group-companies-fy2024-sapphire-agri-warehousing",
+    "title": "Sapphire Agri Warehousing Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2024",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "fileName": "Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 1513884
+    },
+    "order": 2,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sapphire-Agri-Warehousing-Private-Limited.pdf"
+  },
+  {
+    "id": "group-companies-fy2024-sun-layer-energy",
+    "title": "Sun Layer Energy Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2024",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sun-Layer-Energy-Private-Limited.pdf",
+      "fileName": "Sun-Layer-Energy-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 7208449
+    },
+    "order": 3,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sun-Layer-Energy-Private-Limited.pdf"
+  },
+  {
+    "id": "group-companies-fy2023-dr-hs-awla-foundation",
+    "title": "Dr. HS Awla Foundation",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2023",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Dr-HS-Awla-Foundation.pdf",
+      "fileName": "Dr-HS-Awla-Foundation.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 2231861
+    },
+    "order": 1,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Dr-HS-Awla-Foundation.pdf"
+  },
+  {
+    "id": "group-companies-fy2023-sapphire-agri-warehousing",
+    "title": "Sapphire Agri Warehousing Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2023",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "fileName": "Sapphire-Agri-Warehousing-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 11268615
+    },
+    "order": 2,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Sapphire-Agri-Warehousing-Private-Limited.pdf"
+  },
+  {
+    "id": "group-companies-fy2023-sun-layer-energy",
+    "title": "Sun Layer Energy Private Limited",
+    "category": "offer-documents",
+    "section": "information-with-respect-to-group-companies",
+    "group": "FY 2023",
+    "publishedAt": null,
+    "file": {
+      "path": "web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Sun-Layer-Energy-Private-Limited.pdf",
+      "fileName": "Sun-Layer-Energy-Private-Limited.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 1641679
+    },
+    "order": 3,
+    "legacyPath": "/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2023/Sun-Layer-Energy-Private-Limited.pdf"
+  }
+]

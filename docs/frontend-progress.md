@@ -29,6 +29,37 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
 
+### Client trial — Aceternity hover light (not a tracker item), 2026-09-25 → 29
+
+**On `feat/about-us-aceternity-trial`, for the client to judge; not merged.** FE-05 stays
+In Progress and untouched. If the client declines, the branch is dropped; if they accept,
+it merges as it stands. Two unrelated fixes rode along and should ship either way.
+
+- **Every card of each idiom lights on hover**, applied once in `ui/card.tsx`: an outlined
+  card gets Aceternity's *Background Gradient* (`ui/background-gradient.tsx`), an accented
+  hairline card their *Dotted Glow Background* (`ui/dotted-glow-background.tsx`). Both are
+  ported from the registry source rather than installed — Aceternity is copy-in, not a
+  package — so no `motion` dependency: the gradient's pan is CSS, the dots a canvas client
+  leaf that only runs while lit. Recoloured to the brand's bright ramp, hover-only where
+  theirs is always on, and still under reduced motion. The CTA panel is exempt
+  (`hoverEffect={false}`) — it has `<GlowFrame>` already.
+- **Intensity** is `--bg-gradient-intensity` and `--dotted-glow-intensity` in theme.css
+  site-wide, or `<Card hoverIntensity>` per card (the homepage business rows take 0.3).
+- **Touch screens light a card on tap** (`ui/touch-light.tsx`): a second tap, a tap on
+  another card, or any touch elsewhere puts it out; a scroll never lights one. The card
+  accent fills on the tap as it does on hover.
+- **Overflow**: the gradient's bloom reaches past the viewport on a phone, so `<ValueGrid>`
+  (outlined) and `<ProseSplit>` (with an aside) clip `overflow-x`. Verified no horizontal
+  scroll on the eight card-bearing routes at 360 / 768 / 1024 / 1920.
+
+**Fixes carried on the same branch, independent of the trial:**
+
+- **Careers scrolled sideways by 20px at 360.** `<GlowFrame>`'s halo reaches
+  `--glow-halo-radius` past the CTA panel; `<CtaPanel>`'s section now clips `overflow-x`.
+- **The mobile hamburger was focused on every page load**, ring and all, until the first
+  tap. `mobile-nav.tsx`'s return-focus effect ran on mount and took the initial closed
+  state for a close. It now returns focus only after a real open → close.
+
 ### FE-09, FE-10, FE-11 — as built
 
 The three remaining business pages, built together on 2026-09-19 on the FE-08 template,

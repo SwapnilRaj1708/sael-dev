@@ -1,0 +1,61 @@
+import { BackgroundRipple } from '@/components/ui/background-ripple';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Container } from '@/components/ui/container';
+import { Section } from '@/components/ui/section';
+import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
+
+export interface RippleHeroProps {
+  /** The page title. Rendered as the page's single `<h1>`, centred. */
+  title: string;
+  /** Root first, current page last. See `<Breadcrumb>`. */
+  breadcrumb?: readonly BreadcrumbTrailItem[];
+}
+
+/**
+ * A band across the top half of the screen with the page title centred in
+ * it, over `<BackgroundRipple>` — the client's replacement, on 2026-09-29,
+ * for the legacy Offer Documents banner, whose title also sat centred in a
+ * violet-to-red band. It opens all nine Offer Documents pages, each with its
+ * own title: "Offer Documents" on the index, the page's name on the rest.
+ *
+ * Titles run from two words to seven ("Information with respect to Group
+ * Companies"), so the band is a minimum height, not a fixed one: a long
+ * title on a narrow phone grows it rather than overflowing it, and the grid
+ * behind is tall enough to fill it either way.
+ *
+ * **Full-bleed**, so the Section renders no Container and the copy carries
+ * its own. **No `<Reveal>`**: it is above the fold on arrival, as
+ * `<PageHero>` is, and content that animates in when it was already on
+ * screen reads as a glitch.
+ *
+ * **The grid stays live under the title.** The copy is `pointer-events:
+ * none`, so hovering across the title still lights the cells behind it and a
+ * click there still ripples; only the breadcrumb's links take the pointer
+ * back. The price is that the title cannot be selected with a mouse, which a
+ * two-word heading does not need.
+ *
+ * An optional breadcrumb sits centred above the title. The Offer Documents
+ * pages pass none, at the client's request of 2026-09-29.
+ *
+ * The band is `--ripple-hero-h` tall — half the screen less the masthead —
+ * starting under the masthead, which `<main>` already offsets.
+ *
+ * A Server Component; `<BackgroundRipple>` is the client leaf.
+ */
+export function RippleHero({ title, breadcrumb }: RippleHeroProps) {
+  return (
+    <Section background="black-dots" spacing="none" fullBleed>
+      <div className="relative flex min-h-(--ripple-hero-h) w-full items-center overflow-hidden">
+        <BackgroundRipple />
+
+        <Container className="pointer-events-none relative z-10 flex flex-col items-center gap-stack py-section-y-tight text-center">
+          {breadcrumb !== undefined && (
+            <Breadcrumb items={breadcrumb} className="pointer-events-auto" />
+          )}
+
+          <h1 className="max-w-(--measure) text-hero text-balance text-white">{title}</h1>
+        </Container>
+      </div>
+    </Section>
+  );
+}

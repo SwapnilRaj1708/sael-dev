@@ -255,6 +255,29 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
   something shaped like `StaticImageData` so no consuming component changes. The
   dimensions must be read from the blob itself. Vectors must be rendered `unoptimized`.
 - **The Careers page's six assets** live at `web-assets/media/career/`, uploaded by the client on 2026-09-22, and are described in `src/app/_content/career.ts` with dimensions read from the blobs' own headers: `career-image-1.webp` 700 × 524 (the intro photograph), `career-image-2.webp`, `-3.webp` and `-4.webp` 1200 × 800 and `career-image-5.jpg` 1024 × 683 (the "Life at SAEL" gallery, in that order; image 2 doubles as the hero's poster), and `career-video.mp4` 1920 × 1080, 12.3 s, H.264 with a silent AAC track (the hero). All five images are byte-identical to the live sael.co files, so the slot mapping is the live page's own. The video has no `cdnImage()` — it is a `<VideoFrame>` fed by `tryBlobUrl()`.
+- **The Offer Documents files (17) are not uploaded yet** — inventoried 2026-09-29 from the legacy pages, each legacy URL checked (all 200) and its size recorded. They are served from the container, never from the legacy site, which goes away at cutover. The rule is mechanical so the upload can be one pass: **a PDF's blob path is its legacy path with `web-assets` in front**, file name unchanged (including the legacy `corrigendum-to-drh.pdf`); the two videos and their posters go under `web-assets/media/offer-documents/`, file names unchanged. Until the upload, every Offer Documents link 404s. The same paths are in `src/lib/content/mock/data/investor-documents.json` and `investor-videos.json`, each row with its `legacyPath`.
+
+  | Title (as the link reads) | Legacy path on www.sael.co | Blob path | Bytes |
+  |---|---|---|---|
+  | Draft Red Herring Prospectus — **gated** | `/documents/investors/offer-documents/drhp/SAEL_DRHP.pdf` | `web-assets/documents/investors/offer-documents/drhp/SAEL_DRHP.pdf` | 13,489,413 |
+  | Corrigendum to DRHP | `/documents/investors/offer-documents/corrigendum-to-drhp/corrigendum-to-drh.pdf` | `web-assets/documents/investors/offer-documents/corrigendum-to-drhp/corrigendum-to-drh.pdf` | 550,149 |
+  | Addendum to DRHP | `/documents/investors/offer-documents/addendum-to-drhp/Addendum-to-DRHP.pdf` | `web-assets/documents/investors/offer-documents/addendum-to-drhp/Addendum-to-DRHP.pdf` | 627,753 |
+  | Final Report India RE Market Assessment SAEL 03112025 | `/documents/investors/offer-documents/industry-reports/Final-Report-India-RE-Market-Assessment-SAEL-03112025.pdf` | `web-assets/documents/investors/offer-documents/industry-reports/Final-Report-India-RE-Market-Assessment-SAEL-03112025.pdf` | 2,839,816 |
+  | Dr. HS Awla Foundation (FY 2025) | `/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2025/Dr-HS-Awla-Foundation.pdf` | `web-assets` + legacy path | 8,026,910 |
+  | Sapphire Agri Warehousing Private Limited (FY 2025) | `…/information-with-respect-to-group-companies/FY-2025/Sapphire-Agri-Warehousing-Private-Limited.pdf` | `web-assets` + legacy path | 2,995,880 |
+  | Sun Layer Energy Private Limited (FY 2025) | `…/information-with-respect-to-group-companies/FY-2025/Sun-Layer-Energy-Private-Limited.pdf` | `web-assets` + legacy path | 12,194,000 |
+  | Dr. HS Awla Foundation (FY 2024) | `…/FY-2024/Dr-HS-Awla-Foundation.pdf` | `web-assets` + legacy path | 6,933,934 |
+  | Sapphire Agri Warehousing Private Limited (FY 2024) | `…/FY-2024/Sapphire-Agri-Warehousing-Private-Limited.pdf` | `web-assets` + legacy path | 1,513,884 |
+  | Sun Layer Energy Private Limited (FY 2024) | `…/FY-2024/Sun-Layer-Energy-Private-Limited.pdf` | `web-assets` + legacy path | 7,208,449 |
+  | Dr. HS Awla Foundation (FY 2023) | `…/FY-2023/Dr-HS-Awla-Foundation.pdf` | `web-assets` + legacy path | 2,231,861 |
+  | Sapphire Agri Warehousing Private Limited (FY 2023) | `…/FY-2023/Sapphire-Agri-Warehousing-Private-Limited.pdf` | `web-assets` + legacy path | 11,268,615 |
+  | Sun Layer Energy Private Limited (FY 2023) | `…/FY-2023/Sun-Layer-Energy-Private-Limited.pdf` | `web-assets` + legacy path | 1,641,679 |
+  | DRHP - Audio Visual (English) — **gated** | `/video/SAEL-DRHP-English.mp4` | `web-assets/media/offer-documents/SAEL-DRHP-English.mp4` | 111,001,343 |
+  | …its poster (1600 × 900) | `/img/site/drhp-english.png` | `web-assets/media/offer-documents/drhp-english.png` | 134,733 |
+  | DRHP - Audio Visual (Hindi) — **gated** | `/video/SAEL-DRHP-Hindi.mp4` | `web-assets/media/offer-documents/SAEL-DRHP-Hindi.mp4` | 106,541,645 |
+  | …its poster (1600 × 900) | `/img/site/drhp-hindi.png` | `web-assets/media/offer-documents/drhp-hindi.png` | 173,529 |
+
+  The index page's eight tile icons (`/img/site/4603456.png` and siblings) are **not** migrated: they are stock Flaticon artwork of unknown licence, and the tiles draw lucide icons instead.
 - Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/media/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
 
 ---
@@ -298,6 +321,24 @@ Items the client must supply before the relevant tracker item can complete:
       photograph", so the `alt` describes what is visible — "A person in a business
       suit standing in an office" — and asserts no identity. It should name them
 
+- [ ] **Upload the seventeen Offer Documents files** to the blob paths in §8 —
+      *blocks launch of `/investors/offer-documents/`*; every link on those pages
+      404s until then
+- [ ] **Caption files for both DRHP audio-visual videos** (WebVTT — `.vtt`),
+      English and Hindi. None exist: the legacy `<video>` carries no `<track>`,
+      and these are spoken presentations. The site ships without them because
+      there is nothing to ship, not because they are optional; the player picks
+      them up from the data (`captions` on `GET /api/v1/investor-videos`) with
+      no code change. Proposed paths: `web-assets/media/offer-documents/
+      SAEL-DRHP-English.en.vtt` and `SAEL-DRHP-Hindi.hi.vtt`
+- [ ] **A CORS rule on the blob container** allowing `GET` from the site's
+      origins — needed before the first caption file goes up, since a
+      cross-origin `<track>` does not load without it
+- [ ] **Consider re-muxing both DRHP videos with `-movflags +faststart`**
+      (lossless — no re-encode). Both files put their `moov` atom after 106–111 MB
+      of media, so a browser has to fetch the file's tail before it can start.
+      It still plays, via a range request; it starts slower. Legal may prefer
+      the files byte-identical to what was filed, which is a reason to leave them
 - [ ] Favicon / app icon source
 - [ ] OG share image, 1200×630
 

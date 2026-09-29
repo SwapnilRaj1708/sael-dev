@@ -1,4 +1,11 @@
-import type { CapacityStat, NewsItem, TeamMember } from './types';
+import type {
+  CapacityStat,
+  InvestorDocument,
+  InvestorListing,
+  InvestorVideo,
+  NewsItem,
+  TeamMember,
+} from './types';
 
 /**
  * The entire boundary between the application and its content. **Adding a
@@ -6,11 +13,12 @@ import type { CapacityStat, NewsItem, TeamMember } from './types';
  * *both* the mock and the API adapter, and only then building the UI.
  * docs/content-model.md §3.
  *
- * Three methods so far. Two came from the homepage; `getTeamMembers` was
+ * Five methods so far. Two came from the homepage; `getTeamMembers` was
  * carved out of FE-05 by FE-07, which is the page that consumes it — the same
  * trade FE-04 made for stats and news, and the reason the interface is
- * deliberately ordered after its consumers (docs/features/05 §preamble). FE-05
- * fills in the remaining four from docs/content-model.md §3.
+ * deliberately ordered after its consumers (docs/features/05 §preamble). The
+ * two investor methods came in with Offer Documents, the first investor area
+ * built. FE-05 fills in the rest of docs/content-model.md §3.
  *
  * Contract:
  *
@@ -38,6 +46,22 @@ export interface ContentRepository {
    * partitions the result.
    */
   getTeamMembers(): Promise<TeamMember[]>;
+  /**
+   * Every document in one listing, sorted group descending then `order`
+   * ascending — the order the page shows them in. `[]` for a listing with no
+   * documents, never a throw.
+   *
+   * By listing rather than by page because one listing is one request: the
+   * Group Companies page shows three financial years, and asking once and
+   * partitioning by `group` is one round trip where asking per year is three.
+   */
+  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;
+  /**
+   * The videos in one listing. Only the two DRHP audio-visual pages have any,
+   * one each; a list rather than a single item so a listing that grows a
+   * second cut (a sign-language version, say) is not a contract change.
+   */
+  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
 }
 
 /**

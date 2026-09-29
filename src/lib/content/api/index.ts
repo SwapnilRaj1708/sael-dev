@@ -1,5 +1,12 @@
 import { NotImplementedError, type ContentRepository } from '../repository';
-import type { CapacityStat, NewsItem, TeamMember } from '../types';
+import type {
+  CapacityStat,
+  InvestorDocument,
+  InvestorListing,
+  InvestorVideo,
+  NewsItem,
+  TeamMember,
+} from '../types';
 
 export interface ApiContentRepositoryOptions {
   baseUrl: string;
@@ -44,5 +51,30 @@ export class ApiContentRepository implements ContentRepository {
    */
   getTeamMembers(): Promise<TeamMember[]> {
     return Promise.reject(new NotImplementedError('ApiContentRepository.getTeamMembers'));
+  }
+
+  /**
+   * `GET /api/v1/investor-documents?category=…&section=…`, `section` omitted
+   * when the listing's is `null`. Mapped `fileUrl`/`fileName`/`mimeType`/
+   * `sizeBytes` → `file`, `displayOrder` → `order`; `category`, `section`,
+   * `group` and `publishedAt` read straight through. The backend's sort is
+   * trusted — group descending, then `displayOrder` — per
+   * docs/api-contracts.md §1. A row that fails the schema is dropped, not the
+   * listing. FE-23 wires the body.
+   */
+  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]> {
+    void listing;
+    return Promise.reject(new NotImplementedError('ApiContentRepository.getInvestorDocuments'));
+  }
+
+  /**
+   * `GET /api/v1/investor-videos?category=…&section=…`. Mapped as above for
+   * the file; `posterUrl` read through; `captions[]` read through with a
+   * track missing `url` or `srcLang` dropped rather than rendered as a menu
+   * entry that fails to load. FE-23 wires the body.
+   */
+  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]> {
+    void listing;
+    return Promise.reject(new NotImplementedError('ApiContentRepository.getInvestorVideos'));
   }
 }

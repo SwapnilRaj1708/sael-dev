@@ -1208,6 +1208,24 @@
   --scale-team-passport: 1.5;
   --team-passport-origin: 50% 14%;
 
+  /* The investor page template — `sections/sub-page/`, built with Offer
+   * Documents. From `lg` the area's own page list takes a column beside the
+   * content; 288 holds the longest Offer Documents label ("Information with
+   * respect to Group Companies") on two lines at --text-body-sm without
+   * starving the content column at 1024, where it is left with ~500px — the
+   * width a 16:9 video and a paragraph of notice both still read at. */
+  --sub-page-nav-w: 18rem; /* 288 */
+
+  /* The consent dialog — `ui/consent-dialog.tsx`, the DRHP's disclaimer.
+   * From `md` only; below that it is the whole screen. Wider than the team
+   * dialog because it carries twenty-two paragraphs rather than one: 832 sets
+   * the notice at roughly the line length of --measure at --text-body-sm,
+   * where 720 would add a third again to an already long scroll. The legacy
+   * dialog's own cap was 900. Same viewport arithmetic as the team dialog —
+   * `100%` is the viewport, a modal's containing block. */
+  --consent-dialog-w: min(52rem, calc(100% - var(--spacing-flow) * 2)); /* 832 cap */
+  --consent-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
+
   /* The pixel strip's six ramp stops, left to right. Separate values rather
    * than one gradient because the scattered squares are painted to a canvas,
    * which takes a colour and not a CSS gradient.
@@ -1678,6 +1696,48 @@
   /* How far outside the panel the halo layer extends, so the outer shadow
    * has room to bloom and is not clipped at the panel's edge. */
   --glow-halo-radius: 2.5rem; /* 40 */
+
+  /* The ripple band — Aceternity UI's background ripple effect, at the head
+   * of the Offer Documents index at the client's request of 2026-09-29.
+   * ui/background-ripple.tsx, sections/ripple-hero, motion in animations.css.
+   *
+   * The grid is drawn in neutral light, as Aceternity draws it, and then
+   * coloured by one layer over the whole band: --gradient-heading-bright in
+   * `mix-blend-mode: color`, which keeps each cell's brightness and gives it
+   * the ramp's hue at that point across the screen — violet on the left
+   * through magenta to red on the right, the same travel as the legacy
+   * site's banner. It is done over true black and added to the page with
+   * `screen`, so the page's own ground is untouched (animations.css,
+   * `.ripple-band`). So the colour is one token and the grid needs no colour
+   * of its own.
+   *
+   * The neutrals are brighter than Aceternity's dark-mode greys (neutral-700
+   * line, neutral-900 fill, neutral-800 glow) because a hue on a near-black
+   * grey reads as black; the rest and lit opacities are theirs. */
+  --ripple-cell: clamp(2.75rem, 2.5769rem + 0.7692vw, 3.5rem); /* 44 → 56 — theirs is 56 */
+  --ripple-line-w: 0.5px; /* theirs */
+  --color-ripple-line: rgb(255 255 255 / 0.34);
+  --color-ripple-fill: rgb(255 255 255 / 0.03);
+  --shadow-ripple-cell: inset 0 0 40px 1px rgb(255 255 255 / 0.2); /* their blur and spread */
+  --ripple-rest: 0.4;
+  --ripple-lit: 0.8;
+  /* A click sends a wave out from the cell: each cell lights after
+   * `distance × step` and holds for `base + distance × spread` — Aceternity's
+   * 55ms, 200ms and 80ms per cell of distance. */
+  --duration-ripple-step: 55ms;
+  --duration-ripple-base: 200ms;
+  --duration-ripple-spread: 80ms;
+  /* The grid fades from the top centre, so it lights the title and is gone
+   * by the band's foot and its lower corners. Theirs is Tailwind's
+   * `mask-radial-from-20% mask-radial-at-top` on a fixed 1512px grid; this
+   * is sized to the band instead, so the fade lands on the screen at every
+   * width, and reaches transparent exactly at the bottom edge. */
+  --mask-ripple: radial-gradient(ellipse 75% 100% at top, black 25%, transparent 100%);
+  /* The top half of the screen, the client's brief — less the masthead,
+   * which is part of that half. `svh`, so a phone's toolbar showing and
+   * hiding does not resize it mid-scroll; the floor keeps a landscape phone
+   * from squashing it to nothing. */
+  --ripple-hero-h: max(18rem, calc(50svh - var(--spacing-header)));
 
   /* Two Aceternity UI effects, trialled on About Us at the client's request of
    * 2026-09-25 — ui/background-gradient.tsx and ui/dotted-glow-background.tsx.

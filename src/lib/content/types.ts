@@ -17,10 +17,10 @@
  *  - **No invented ids.** Where the backend supplies no stable id, the adapter
  *    derives one deterministically and documents how. Never an array index.
  *
- * This file currently carries only what the homepage consumes. FE-05 adds the
- * rest of docs/content-model.md §2 — `NewsItem`, `InvestorDocument`,
- * `TeamMember`, `EsgMetric`, `Paginated<T>` — alongside the methods that
- * return them.
+ * This file carries what the built pages consume. FE-05 adds the rest of
+ * docs/content-model.md §2 — `EsgMetric`, `Paginated<T>` — alongside the
+ * methods that return them. The investor types at the foot of the file came
+ * in with the Offer Documents area, which is their first consumer.
  */
 
 /**
@@ -120,4 +120,114 @@ export interface TeamMember {
    */
   portraitZoom: number | null;
   order: number;
+}
+
+/* ---------- Investors ---------- */
+
+/**
+ * A file in Azure Blob Storage, as a component needs it.
+ *
+ * `url` is absolute. The mock composes it from a container path with
+ * `tryBlobUrl()`; the API returns it whole. Either way no hostname is ever
+ * written in this repository. docs/asset-inventory.md §8.
+ */
+export interface BlobFile {
+  url: string;
+  /** "SAEL_DRHP.pdf" — the name a visitor's download is saved under. */
+  fileName: string;
+  /** "application/pdf", "video/mp4". */
+  mimeType: string;
+  /**
+   * `null` when the backend does not report one. Carried because the
+   * contract asks for it; whether a page *shows* it is that page's call —
+   * the Offer Documents pages do not, because the legacy site does not.
+   */
+  sizeBytes: number | null;
+}
+
+/**
+ * Which listing on the site a document belongs to. docs/api-contracts.md §3.
+ *
+ * One value per investor page that lists documents — except Offer Documents,
+ * which is eight sub-pages under one category and is told apart by
+ * {@link InvestorListing.section}. `notifications` is served by its own
+ * paginated endpoint in the same item shape, and is here so those items
+ * type-check when that page is built.
+ */
+export type InvestorDocumentCategory =
+  | 'offer-documents'
+  | 'corporate-governance'
+  | 'annual-return'
+  | 'consolidated-financials'
+  | 'standalone-financials'
+  | 'subsidiary-financials'
+  | 'investor-downloads'
+  | 'notifications';
+
+/**
+ * The address of one listing: a category, and the sub-page within it.
+ *
+ * `section` is the sub-page's own URL slug — `drhp`,
+ * `information-with-respect-to-group-companies` — so the value a page asks for
+ * is the value in its address bar and needs no mapping table. `null` for a
+ * category that is a single page.
+ */
+export interface InvestorListing {
+  category: InvestorDocumentCategory;
+  section: string | null;
+}
+
+/**
+ * A downloadable investor document — a PDF, in every case so far.
+ *
+ * `group` partitions a listing, usually by financial year ("FY 2025"); it is
+ * `null` for a listing that is one flat list. `order` sequences documents
+ * within a group, and the repository returns them sorted — group descending,
+ * then `order` ascending — so no page re-sorts. docs/api-contracts.md §3.
+ */
+export interface InvestorDocument {
+  id: string;
+  /** As the link reads, verbatim — "Draft Red Herring Prospectus". */
+  title: string;
+  category: InvestorDocumentCategory;
+  section: string | null;
+  group: string | null;
+  /** ISO 8601, or `null`. None of the offer documents carries one. */
+  publishedAt: string | null;
+  file: BlobFile;
+  order: number;
+}
+
+/** A WebVTT caption track for an {@link InvestorVideo}. */
+export interface CaptionTrack {
+  /** Absolute URL of the `.vtt` file. */
+  url: string;
+  /** BCP 47 — `en`, `hi`. */
+  srcLang: string;
+  /** What the player's caption menu shows — "English", "हिन्दी". */
+  label: string;
+}
+
+/**
+ * A self-hosted disclosure video — the DRHP audio-visual presentations.
+ *
+ * Separate from {@link InvestorDocument} because a video needs two things a
+ * document does not — a poster and caption tracks — and folding them into
+ * every PDF row as nullable fields would give every document two fields with
+ * no meaning. docs/api-contracts.md §3.
+ */
+export interface InvestorVideo {
+  id: string;
+  title: string;
+  category: InvestorDocumentCategory;
+  section: string | null;
+  file: BlobFile;
+  /** Absolute URL of the still shown before playback, or `null`. */
+  posterUrl: string | null;
+  /**
+   * `[]` when none exist — which is the case for both offer videos today. A
+   * spoken presentation needs them, so that is an open action for the client
+   * rather than a finished state; docs/asset-inventory.md §9.
+   */
+  captions: CaptionTrack[];
 }

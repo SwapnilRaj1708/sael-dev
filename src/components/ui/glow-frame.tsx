@@ -8,8 +8,27 @@ import { cn } from '@/lib/utils/cn';
 export interface GlowFrameProps {
   /** The panel the light sweeps round — an outlined `<Card>`, full width. */
   children: ReactNode;
+  /**
+   * Whether the light sweeps once round as the enclosing `<Reveal>` shows.
+   * On by default — the Careers panel. `false` is a frame lit by the pointer
+   * and by keyboard focus only: React Bits' own default (`animated={false}`),
+   * and what the Offer Documents tiles use.
+   */
+  intro?: boolean;
+  /**
+   * The frame's corner radius, which must be the radius of the card inside
+   * it, or the ring will not sit on the card's border. `outlined` is the
+   * outlined card's own 40px; `card` is --radius-card, 14px, for a smaller
+   * card whose `className` sets the same.
+   */
+  radius?: 'outlined' | 'card';
   className?: string;
 }
+
+const RADIUS_CLASS: Record<NonNullable<GlowFrameProps['radius']>, string> = {
+  outlined: 'rounded-(--radius-card-outlined)',
+  card: 'rounded-(--radius-card)',
+};
 
 /**
  * How close to an edge the pointer has to be, as a fraction of the way from
@@ -52,10 +71,20 @@ const EDGE_THRESHOLD = 0.3;
  * `backwards` rather than `both` — a forward fill would pin the properties
  * at the sweep's end state and the pointer could never move them.
  *
+ * **Keyboard focus lights the whole frame.** Anything inside it that takes
+ * `:focus-visible` — the tile's link, the panel's button — lights the ring
+ * and halo all the way round, statically: the hover light's keyboard
+ * equivalent, done in CSS off `:has()`. See animations.css.
+ *
  * The two light layers are decorative and `aria-hidden`. Must be rendered
  * inside a `<Reveal>` for the sweep; outside one only the hover applies.
  */
-export function GlowFrame({ children, className }: GlowFrameProps) {
+export function GlowFrame({
+  children,
+  intro = true,
+  radius = 'outlined',
+  className,
+}: GlowFrameProps) {
   const frame = useRef<HTMLDivElement>(null);
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const reducedMotion = useReducedMotion();
@@ -90,7 +119,8 @@ export function GlowFrame({ children, className }: GlowFrameProps) {
       ref={frame}
       onPointerMove={follow ? handlePointerMove : undefined}
       onPointerLeave={follow ? handlePointerLeave : undefined}
-      className={cn('anim-glow-sweep relative rounded-(--radius-card-outlined)', className)}
+      data-glow-intro={intro ? undefined : 'off'}
+      className={cn('anim-glow-sweep relative', RADIUS_CLASS[radius], className)}
     >
       <span aria-hidden="true" className="anim-glow-halo" />
       {children}

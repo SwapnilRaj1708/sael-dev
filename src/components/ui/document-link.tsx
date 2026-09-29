@@ -22,9 +22,21 @@ import { formatFileSize } from '@/lib/utils/format-file-size';
  * ramp: the hairline, the title and the meta each swap to their on-dark
  * token, and the hover takes the footer's `brand-red-bright` rather than
  * paper's `accent-hover`, which is the red the footer already found too dim
- * on black. Paper stays the default because every investor page is paper.
+ * on black. Paper stays the default so no existing call site changes — but
+ * the investor pages, built from Offer Documents on, are dark like the rest
+ * of the site and pass `ground="dark"` (docs/design-guidelines.md §1).
+ *
+ * **Split in two with Offer Documents** so a gated row can share it: the
+ * row's classes (`documentRow`) and its contents (`<DocumentRowBody>`) are
+ * exported, and `<DocumentLink>` is those two inside an `<a>`. The gated row
+ * in `ui/gated-document-link.tsx` is the same two inside a `<button>`,
+ * because until its disclaimer is confirmed it has no URL to link to. The
+ * rendered link is unchanged by the split.
+ *
+ * The row's classes, exported for an element that is a document row but not
+ * a link, so the two cannot drift apart.
  */
-const documentLink = cva(
+export const documentRow = cva(
   [
     'group flex items-start justify-between gap-4 border-b py-4',
     'transition-colors duration-(--duration-micro)',
@@ -33,7 +45,11 @@ const documentLink = cva(
     variants: {
       ground: {
         paper: 'border-border hover:text-accent-hover',
-        dark: 'border-hairline-dark hover:text-brand-red-bright',
+        // The global ring is --color-brand-blue, 1.84:1 on the black ground
+        // and under WCAG 1.4.11's 3.0 floor; white is the dark surfaces' own
+        // override. Added with Offer Documents — Product Downloads, the other
+        // dark call site, had the invisible ring until then.
+        dark: 'border-hairline-dark hover:text-brand-red-bright focus-visible:outline-white',
       },
     },
     defaultVariants: { ground: 'paper' },
@@ -49,10 +65,61 @@ const META_CLASS: Record<'paper' | 'dark', string> = {
   dark: 'text-on-dark-soft',
 };
 
+export interface DocumentRowBodyProps {
+  title: string;
+  /** Shown verbatim, e.g. `"PDF"`. */
+  fileType?: string;
+  /** Size in bytes. Omitted when the backend does not report one. */
+  fileSize?: number;
+  /**
+   * The end of the accessible name, after the type and size — what activating
+   * the row does, e.g. `"opens in a new tab"`. Omitted when the element says
+   * that itself, as a `<button aria-haspopup="dialog">` does.
+   */
+  action?: string;
+  ground?: 'paper' | 'dark' | null;
+}
+
+/**
+ * The inside of a document row — title, meta line, the accessible name's
+ * tail, and the glyph. Shared by `<DocumentLink>` and the gated row, which
+ * differ only in the element around it.
+ */
+export function DocumentRowBody({
+  title,
+  fileType = 'PDF',
+  fileSize,
+  action,
+  ground,
+}: DocumentRowBodyProps) {
+  const size = fileSize === undefined ? '' : formatFileSize(fileSize);
+  const meta = [fileType, size].filter((part) => part !== '');
+  const tail = [...meta, ...(action === undefined ? [] : [action])];
+  const g = ground ?? 'paper';
+
+  return (
+    <>
+      <span className="flex flex-col gap-1">
+        <span className={cn('text-h3', TITLE_CLASS[g])}>{title}</span>
+
+        {meta.length > 0 && (
+          <span className={cn('text-body-sm', META_CLASS[g])} aria-hidden="true">
+            {meta.join(' · ')}
+          </span>
+        )}
+
+        {tail.length > 0 && <span className="sr-only">, {tail.join(', ')}</span>}
+      </span>
+
+      <ExternalLink className="mt-1 size-5 shrink-0" aria-hidden="true" focusable="false" />
+    </>
+  );
+}
+
 export interface DocumentLinkProps
   extends
     Omit<ComponentPropsWithRef<'a'>, 'children' | 'href' | 'title'>,
-    VariantProps<typeof documentLink> {
+    VariantProps<typeof documentRow> {
   /** The document's absolute URL. Compose it with `blobUrl()`. */
   href: string;
   title: string;
@@ -71,33 +138,21 @@ export function DocumentLink({
   className,
   ...props
 }: DocumentLinkProps) {
-  const size = fileSize === undefined ? '' : formatFileSize(fileSize);
-  const meta = [fileType, size].filter((part) => part !== '');
-  const g = ground ?? 'paper';
-
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn(documentLink({ ground }), className)}
+      className={cn(documentRow({ ground }), className)}
       {...props}
     >
-      <span className="flex flex-col gap-1">
-        <span className={cn('text-h3', TITLE_CLASS[g])}>{title}</span>
-
-        {meta.length > 0 && (
-          <span className={cn('text-body-sm', META_CLASS[g])} aria-hidden="true">
-            {meta.join(' · ')}
-          </span>
-        )}
-
-        <span className="sr-only">
-          {meta.length > 0 && `, ${meta.join(', ')}`}, opens in a new tab
-        </span>
-      </span>
-
-      <ExternalLink className="mt-1 size-5 shrink-0" aria-hidden="true" focusable="false" />
+      <DocumentRowBody
+        title={title}
+        fileType={fileType}
+        fileSize={fileSize}
+        action="opens in a new tab"
+        ground={ground}
+      />
     </a>
   );
 }

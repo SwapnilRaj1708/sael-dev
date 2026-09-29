@@ -68,16 +68,31 @@ Sorted `publishedAt` descending.
 
 ## 3. Investor documents
 
-One endpoint serves every document listing on the site — Offer Documents, Corporate Governance, all five Financials & Reports sub-pages, and Investor Downloads.
+One endpoint serves every document listing on the site — the Offer Documents sub-pages, Corporate Governance, all five Financials & Reports sub-pages, and Investor Downloads. A second serves the two disclosure videos. Both are consumed through `getInvestorDocuments(listing)` and `getInvestorVideos(listing)` on the content repository.
+
+*Revised 2026-09-29 with the Offer Documents area, the first investor pages built.* Offer Documents turned out to be eight sub-pages rather than one listing, so a listing is now addressed by `category` **and** `section`; documents gained an explicit `displayOrder`; and videos got their own endpoint.
 
 ### `GET /api/v1/investor-documents`
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `category` | enum | yes | See enum below |
+| `section` | string | when the category has sections | The sub-page within the category — its URL slug. Only `offer-documents` has sections today; see below. Omit for any other category. |
 | `group` | string | no | Filter to one financial year |
 
 Category enum: `offer-documents`, `corporate-governance`, `annual-return`, `consolidated-financials`, `standalone-financials`, `subsidiary-financials`, `investor-downloads`
+
+Sections of `offer-documents` — each the last segment of the page's URL, so the value a page asks for is the one in its address bar:
+
+| `section` | Page | Documents |
+|---|---|---|
+| `drhp` | `/investors/offer-documents/drhp/` | 1 |
+| `corrigendum-to-drhp` | `…/corrigendum-to-drhp/` | 1 |
+| `addendum-to-drhp` | `…/addendum-to-drhp/` | 1 |
+| `industry-report` | `…/industry-report/` | 1 |
+| `information-with-respect-to-group-companies` | `…/information-with-respect-to-group-companies/` | 9, grouped `FY 2025` / `FY 2024` / `FY 2023` |
+
+The two audio-visual pages are served by `/investor-videos` below, and `outstanding-dues-to-material-creditors` is a table transcribed into the frontend, not a document.
 
 Response (bare array):
 
@@ -87,22 +102,93 @@ Response (bare array):
     "id": "doc-1042",
     "title": "Annual Return FY 2024-25 (MGT-7)",
     "category": "annual-return",
+    "section": null,
     "group": "FY 2024-25",
     "publishedAt": "2025-09-12",
-    "fileUrl": "https://<account>.blob.core.windows.net/public/investors/annual-return-fy2024-25.pdf",
+    "fileUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/documents/investors/annual-return-fy2024-25.pdf",
     "fileName": "annual-return-fy2024-25.pdf",
     "mimeType": "application/pdf",
-    "sizeBytes": 2418123
+    "sizeBytes": 2418123,
+    "displayOrder": 1
   }
 ]
+```
+
+An Offer Documents row, for comparison:
+
+```json
+{
+  "id": "group-companies-fy2024-sun-layer-energy",
+  "title": "Sun Layer Energy Private Limited",
+  "category": "offer-documents",
+  "section": "information-with-respect-to-group-companies",
+  "group": "FY 2024",
+  "publishedAt": null,
+  "fileUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sun-Layer-Energy-Private-Limited.pdf",
+  "fileName": "Sun-Layer-Energy-Private-Limited.pdf",
+  "mimeType": "application/pdf",
+  "sizeBytes": 7208449,
+  "displayOrder": 3
+}
 ```
 
 Requirements on the backend:
 
 - `fileUrl` is an **absolute, publicly readable** Azure Blob URL. The frontend links directly; it does not proxy downloads.
-- `sizeBytes` is needed — the UI shows "PDF · 2.4 MB" so users on mobile data know what they are opening. If unavailable, send `null` and the UI omits it.
-- `group` drives the accordion grouping on the Financials pages. Use a consistent format (`FY 2024-25`). If `group` is `null` for every item in a category, the UI renders a flat list.
-- Sorted by `group` descending, then `publishedAt` descending.
+- `title` is shown **verbatim** as the link text. For regulated documents it is the text the company published — do not normalise, case or trim it.
+- `sizeBytes` is needed — the Financials pages show "PDF · 2.4 MB" so users on mobile data know what they are opening. If unavailable, send `null` and the UI omits it. (The Offer Documents pages deliberately show no size, because the legacy pages show none; they still want the field.)
+- `group` partitions a listing: accordions on the Financials pages, stacked year headings on Group Companies. Use a consistent format (`FY 2024-25`, or `FY 2025` where the published label is that). If `group` is `null` for every item in a listing, the UI renders a flat list.
+- `displayOrder` sequences documents within a group, ascending. **New** — the proposal previously sorted by `publishedAt`, but none of the offer documents carries a date, and the order the company lists them in is itself part of what it published.
+- Sorted by `group` descending, then `displayOrder` ascending. The frontend does not re-sort (§1).
+- `publishedAt` is `null` where the document has no date to show. Never a placeholder date.
+
+### `GET /api/v1/investor-videos`
+
+*New 2026-09-29.* The DRHP's audio-visual presentations, one video per page. Separate from documents because a video carries a poster and caption tracks, which would otherwise be two meaningless fields on every PDF.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `category` | enum | yes | As above |
+| `section` | string | when the category has sections | `drhp-audio-visuals-english`, `drhp-audio-visuals-hindi` |
+
+Response (bare array — one item per listing today):
+
+```json
+[
+  {
+    "id": "drhp-audio-visuals-english",
+    "title": "DRHP - Audio Visual (English)",
+    "category": "offer-documents",
+    "section": "drhp-audio-visuals-english",
+    "fileUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/media/offer-documents/SAEL-DRHP-English.mp4",
+    "fileName": "SAEL-DRHP-English.mp4",
+    "mimeType": "video/mp4",
+    "sizeBytes": 111001343,
+    "posterUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/media/offer-documents/drhp-english.png",
+    "captions": [
+      {
+        "url": "https://<account>.blob.core.windows.net/<container>/web-assets/media/offer-documents/SAEL-DRHP-English.en.vtt",
+        "srcLang": "en",
+        "label": "English"
+      }
+    ]
+  }
+]
+```
+
+- `captions` is an array of **WebVTT** tracks, `[]` when there are none — which is the case for both videos today. `srcLang` is BCP 47 (`en`, `hi`); `label` is what the player's caption menu shows. The first track is the default.
+- A caption track on another origin only loads if the container sends CORS headers for the site's origin (`GET`, `https://www.sael.co` and any staging origin). **Configure that before the first `.vtt` is uploaded** — the player turns on `crossorigin` only when a track is present, because with it on and no CORS rule the video itself fails.
+- `posterUrl` may be `null`; the player then shows its own first frame.
+
+### Consent-gated listings — what the backend needs to know
+
+Three Offer Documents pages put their files behind a disclaimer the reader must confirm: `drhp` (per document, on click), and both audio-visual pages (per page, on arrival). **The endpoints do not change for them** — no flag, no auth, no token. The gate is a frontend behaviour:
+
+- The frontend never renders a gated listing's `fileUrl`, `posterUrl` or caption URLs into the page. It fetches them server-side, through a Next.js Server Action, only after the reader presses "I Confirm", and hands the browser just the URL it needs. The rest of the row stays on the server.
+- Which listings are gated is recorded in the frontend's content (`src/app/_content/offer-documents.ts`), next to the disclaimer text, because it changes when the legal text changes — with a filing, which is a reviewed deploy.
+- The files themselves are public blobs, exactly as they were public files on the legacy site. The gate is the click-through affirmation the disclosure requires, not access control, and nothing here pretends otherwise.
+
+**For legal review — indexing.** The proposal is: the gated pages are indexable (their disclaimer text is ordinary HTML), and the gated files are not linked from anything a crawler reads. What that cannot stop is a search engine finding a blob URL some other way — a share, a referrer. If the gated files must also not be indexed, the container needs to send `X-Robots-Tag: noindex` on them. Azure Blob Storage cannot set arbitrary response headers itself, so that means fronting the container with Azure Front Door or CDN and a rules-engine header on the `web-assets/documents/investors/offer-documents/drhp/` and `web-assets/media/offer-documents/` paths. Not configured; a decision for legal and infrastructure.
 
 ### `GET /api/v1/notifications`
 
@@ -262,7 +348,7 @@ Requirements:
 
 Stated so the backend does not build it speculatively:
 
-- Authentication or user accounts (no gated investor area)
+- Authentication or user accounts (no gated investor area). The Offer Documents consent gates are not an exception: they are a click-through disclaimer handled entirely in the frontend, and need nothing from these endpoints — see §3.
 - Search endpoints
 - Multilingual content
 - Careers/job endpoints — `/career/` is a page since 2026-09-22, but its two "Explore" CTAs link out to the Oracle recruiting portal, which is where applications are made. No listing and no application endpoint.

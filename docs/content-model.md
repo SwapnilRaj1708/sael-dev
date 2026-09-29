@@ -53,6 +53,14 @@ export interface NewsItem {
 }
 
 /* ---------- Investors ---------- */
+/* Built 2026-09-29 with Offer Documents — see the note after this block. */
+
+export interface BlobFile {
+  url: string;              // absolute, Azure Blob — composed from a path by the repository
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number | null; // carried; whether a page shows it is the page's call
+}
 
 export type InvestorDocumentCategory =
   | 'offer-documents'
@@ -62,16 +70,40 @@ export type InvestorDocumentCategory =
   | 'standalone-financials'
   | 'subsidiary-financials'
   | 'investor-downloads'
-  | 'notifications';
+  | 'notifications';          // its own paginated endpoint, same item shape
+
+/** One listing: a category, and the sub-page within it (its URL slug), or null. */
+export interface InvestorListing {
+  category: InvestorDocumentCategory;
+  section: string | null;
+}
 
 export interface InvestorDocument {
   id: string;
-  title: string;
+  title: string;            // verbatim — the published link text
   category: InvestorDocumentCategory;
-  /** Grouping label within a category, usually a financial year: "FY 2024-25". */
+  section: string | null;
+  /** Grouping label within a listing, usually a financial year: "FY 2025". */
   group: string | null;
   publishedAt: string | null;
-  file: BlobAsset;
+  file: BlobFile;
+  order: number;            // within a group, ascending
+}
+
+export interface CaptionTrack {
+  url: string;              // WebVTT
+  srcLang: string;          // BCP 47
+  label: string;
+}
+
+export interface InvestorVideo {
+  id: string;
+  title: string;
+  category: InvestorDocumentCategory;
+  section: string | null;
+  file: BlobFile;
+  posterUrl: string | null;
+  captions: CaptionTrack[]; // [] when none exist
 }
 
 /* ---------- Company ---------- */
@@ -89,6 +121,17 @@ export interface TeamMember {
   portraitZoom: number | null;  // dialog zoom into the passport crop; null = 1.5
   order: number;
 }
+
+**The investor types changed when Offer Documents was built (2026-09-29).**
+Offer Documents is eight sub-pages, not one listing, so a listing is addressed
+by `InvestorListing` — `category` plus `section`, the sub-page's own slug —
+rather than by category alone. `BlobAsset`'s optional `sizeBytes` became
+`BlobFile`'s nullable one, per the conventions below. Documents gained `order`,
+because none of the offer documents is dated and the company's own order is
+part of what it published. Videos became their own type, `InvestorVideo`,
+rather than a document with two fields no PDF would ever fill. `notifications`
+left the category enum: it has its own paginated endpoint. The API contract
+matches — `api-contracts.md` §3.
 
 `portraitZoom` was added on 2026-09-17. The biography dialog shows the card's
 photograph zoomed to a head-and-shoulders crop, and the client wants to set
@@ -168,9 +211,8 @@ export interface ContentRepository {
   getNewsPage(params: { page: number; pageSize: number }): Promise<Paginated<NewsItem>>;
 
   // Investors
-  getInvestorDocuments(params: {
-    category: InvestorDocumentCategory;
-  }): Promise<InvestorDocument[]>;
+  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;
+  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
   getNotifications(params: { page: number; pageSize: number }): Promise<Paginated<InvestorDocument>>;
 
   // Company

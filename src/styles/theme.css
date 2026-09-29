@@ -1209,8 +1209,8 @@
   --team-passport-origin: 50% 14%;
 
   /* The investor page template — `sections/sub-page/`, built with Offer
-   * Documents. From `lg` the area's own page list takes a column beside the
-   * content; 288 holds the longest Offer Documents label ("Information with
+   * Documents. From `lg` the area's own page list takes a column to the left
+   * of the content; 288 holds the longest Offer Documents label ("Information with
    * respect to Group Companies") on two lines at --text-body-sm without
    * starving the content column at 1024, where it is left with ~500px — the
    * width a 16:9 video and a paragraph of notice both still read at. */
@@ -1693,6 +1693,21 @@
     0 0 3px 0 hsl(345 75% 68% / 50%), 0 0 6px 0 hsl(345 75% 68% / 40%),
     0 0 15px 0 hsl(345 75% 68% / 30%), 0 0 25px 2px hsl(345 75% 68% / 20%),
     0 0 50px 2px hsl(345 75% 68% / 10%);
+  /* The same halo, about a quarter brighter at every layer, and how much
+   * sooner the light reaches full strength — `<GlowFrame strength="strong">`,
+   * the Offer Documents tiles' tuning of 2026-09-29. */
+  --shadow-glow-halo-strong:
+    inset 0 0 0 1px hsl(345 75% 68% / 100%), inset 0 0 1px 0 hsl(345 75% 68% / 75%),
+    inset 0 0 3px 0 hsl(345 75% 68% / 62%), inset 0 0 6px 0 hsl(345 75% 68% / 50%),
+    inset 0 0 15px 0 hsl(345 75% 68% / 38%), inset 0 0 25px 2px hsl(345 75% 68% / 25%),
+    inset 0 0 50px 2px hsl(345 75% 68% / 13%), 0 0 1px 0 hsl(345 75% 68% / 75%),
+    0 0 3px 0 hsl(345 75% 68% / 62%), 0 0 6px 0 hsl(345 75% 68% / 50%),
+    0 0 15px 0 hsl(345 75% 68% / 38%), 0 0 25px 2px hsl(345 75% 68% / 25%),
+    0 0 50px 2px hsl(345 75% 68% / 13%);
+  --glow-gain-strong: 1.25;
+  /* Hovered, a tile grows by this much — the client's 5%, 2026-09-29. */
+  --scale-tile-hover: 1.05;
+
   /* How far outside the panel the halo layer extends, so the outer shadow
    * has room to bloom and is not clipped at the panel's edge. */
   --glow-halo-radius: 2.5rem; /* 40 */

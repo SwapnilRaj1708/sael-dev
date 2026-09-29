@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ExternalLink } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
+import { PdfIcon } from '@/components/icons/pdf';
 import { cn } from '@/lib/utils/cn';
 import { formatFileSize } from '@/lib/utils/format-file-size';
 
@@ -64,6 +65,11 @@ const META_CLASS: Record<'paper' | 'dark', string> = {
   paper: 'text-body-soft',
   dark: 'text-on-dark-soft',
 };
+/** The file-type mark takes the brand red of the ground it sits on. */
+const MARK_CLASS: Record<'paper' | 'dark', string> = {
+  paper: 'text-brand-red',
+  dark: 'text-brand-red-bright',
+};
 
 export interface DocumentRowBodyProps {
   title: string;
@@ -78,12 +84,19 @@ export interface DocumentRowBodyProps {
    */
   action?: string;
   ground?: 'paper' | 'dark' | null;
+  /**
+   * Lead the row with a PDF mark when the file is one — the client's ask of
+   * 2026-09-29 for the investor pages, so a PDF reads as one at a glance.
+   * Off by default, so the business pages' Product Downloads are unchanged.
+   * Decorative: the accessible name already says "PDF".
+   */
+  typeMark?: boolean;
 }
 
 /**
- * The inside of a document row — title, meta line, the accessible name's
- * tail, and the glyph. Shared by `<DocumentLink>` and the gated row, which
- * differ only in the element around it.
+ * The inside of a document row — the optional PDF mark, title, meta line,
+ * the accessible name's tail, and the glyph. Shared by `<DocumentLink>` and
+ * the gated row, which differ only in the element around it.
  */
 export function DocumentRowBody({
   title,
@@ -91,6 +104,7 @@ export function DocumentRowBody({
   fileSize,
   action,
   ground,
+  typeMark = false,
 }: DocumentRowBodyProps) {
   const size = fileSize === undefined ? '' : formatFileSize(fileSize);
   const meta = [fileType, size].filter((part) => part !== '');
@@ -99,7 +113,13 @@ export function DocumentRowBody({
 
   return (
     <>
-      <span className="flex flex-col gap-1">
+      {typeMark && fileType === 'PDF' && (
+        <PdfIcon className={cn('size-icon-mark shrink-0', MARK_CLASS[g])} />
+      )}
+
+      {/* Takes the room between the mark and the glyph, so a long title wraps
+          rather than pushing the glyph off the row. */}
+      <span className="flex flex-1 flex-col gap-1">
         <span className={cn('text-h3', TITLE_CLASS[g])}>{title}</span>
 
         {meta.length > 0 && (
@@ -127,6 +147,8 @@ export interface DocumentLinkProps
   fileType?: string;
   /** Size in bytes. Omitted when the backend does not report one. */
   fileSize?: number;
+  /** Lead with a PDF mark. See `<DocumentRowBody>`. */
+  typeMark?: boolean;
 }
 
 export function DocumentLink({
@@ -135,6 +157,7 @@ export function DocumentLink({
   fileType = 'PDF',
   fileSize,
   ground,
+  typeMark,
   className,
   ...props
 }: DocumentLinkProps) {
@@ -152,6 +175,7 @@ export function DocumentLink({
         fileSize={fileSize}
         action="opens in a new tab"
         ground={ground}
+        typeMark={typeMark}
       />
     </a>
   );

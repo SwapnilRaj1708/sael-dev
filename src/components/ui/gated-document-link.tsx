@@ -112,7 +112,7 @@ export function GatedDocumentLink({
         }}
         className={cn(documentRow({ ground }), 'w-full cursor-pointer text-left')}
       >
-        <DocumentRowBody title={title} fileType={fileType} ground={ground} />
+        <DocumentRowBody title={title} fileType={fileType} ground={ground} typeMark />
       </button>
 
       <ConsentDialog

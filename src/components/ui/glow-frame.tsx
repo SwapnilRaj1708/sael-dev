@@ -22,6 +22,13 @@ export interface GlowFrameProps {
    * card whose `className` sets the same.
    */
   radius?: 'outlined' | 'card';
+  /**
+   * `strong` lights nearer the centre (a 20% dead zone instead of 30%),
+   * reaches full strength sooner, and blooms a brighter halo. The client's
+   * tuning for the Offer Documents tiles, 2026-09-29; `default` is the
+   * Careers panel, unchanged.
+   */
+  strength?: 'default' | 'strong';
   className?: string;
 }
 
@@ -36,7 +43,10 @@ const RADIUS_CLASS: Record<NonNullable<GlowFrameProps['radius']>, string> = {
  * whole panel would light on entry; at 1 it never would. The pasted effect's
  * own `edgeSensitivity` of 30.
  */
-const EDGE_THRESHOLD = 0.3;
+const EDGE_THRESHOLD: Record<NonNullable<GlowFrameProps['strength']>, number> = {
+  default: 0.3,
+  strong: 0.2,
+};
 
 /**
  * A frame whose border lights up and sweeps once round as its section
@@ -82,6 +92,7 @@ const EDGE_THRESHOLD = 0.3;
 export function GlowFrame({
   children,
   intro = true,
+  strength = 'default',
   radius = 'outlined',
   className,
 }: GlowFrameProps) {
@@ -102,7 +113,8 @@ export function GlowFrame({
 
     // 0 at the centre, 1 at the nearest edge.
     const proximity = Math.min(1, Math.max(Math.abs(dx) / cx, Math.abs(dy) / cy));
-    const edge = Math.max(0, (proximity - EDGE_THRESHOLD) / (1 - EDGE_THRESHOLD));
+    const threshold = EDGE_THRESHOLD[strength];
+    const edge = Math.max(0, (proximity - threshold) / (1 - threshold));
     // Measured clockwise from the top, which is where a conic gradient starts.
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
 
@@ -120,6 +132,7 @@ export function GlowFrame({
       onPointerMove={follow ? handlePointerMove : undefined}
       onPointerLeave={follow ? handlePointerLeave : undefined}
       data-glow-intro={intro ? undefined : 'off'}
+      data-glow-strength={strength === 'strong' ? 'strong' : undefined}
       className={cn('anim-glow-sweep relative', RADIUS_CLASS[radius], className)}
     >
       <span aria-hidden="true" className="anim-glow-halo" />

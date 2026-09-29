@@ -50,13 +50,16 @@ export interface SubPageProps {
  * the first screen at 360px. It is also closer to the legacy page, whose
  * header is a short band with the title in it, not a photograph.
  *
- * **Content first, then the area's pages**, in the DOM and on screen. From
- * `lg` the nav takes a column to the right; below `lg` it follows the
- * content. The legacy site puts it on the left, above the content on a phone
- * — eight links a reader has to get past before the document they came for,
- * and eight tab stops before it on every breakpoint. Keeping DOM order and
- * visual order the same at every width means focus order never jumps across
- * the screen.
+ * **The area's pages on the left from `lg`**, as on the legacy site — the
+ * client's call of 2026-09-29, reversing this template's first layout, which
+ * put them on the right. Below `lg` they follow the content.
+ *
+ * **In the source, the content still comes first.** The grid places the list
+ * in the left column; the DOM does not move it. On a phone, and to a screen
+ * reader everywhere, the document comes before eight links to other pages —
+ * which is the order a reader who came for the document needs. The cost is
+ * at `lg` and up, where Tab reaches the content before the list beside it on
+ * the left; the content is still reached first, which is the point.
  *
  * **No breadcrumb on the Offer Documents pages** since 2026-09-29, the
  * client's call. The trail is still built in their content file and renders
@@ -85,15 +88,17 @@ export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }
       className={cn(
         'flex flex-col gap-y-section-y-tight',
         nav !== undefined &&
-          'lg:grid lg:grid-cols-[minmax(0,1fr)_var(--sub-page-nav-w)] lg:items-start lg:gap-x-ledger-col-gap',
+          'lg:grid lg:grid-cols-[var(--sub-page-nav-w)_minmax(0,1fr)] lg:items-start lg:gap-x-ledger-col-gap',
       )}
     >
-      <Reveal order={2} className="min-w-0">
+      {/* Placed in the grid's second column from `lg`: the list takes the
+          first, on the left. See the note on order above. */}
+      <Reveal order={2} className="min-w-0 lg:col-start-2 lg:row-start-1">
         {children}
       </Reveal>
 
       {nav !== undefined && (
-        <Reveal order={3}>
+        <Reveal order={3} className="lg:col-start-1 lg:row-start-1">
           <SubPageNav {...nav} />
         </Reveal>
       )}

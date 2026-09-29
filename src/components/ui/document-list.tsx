@@ -63,6 +63,8 @@ function rows(props: DocumentListProps): ReactNode {
           title={item.title}
           fileType={item.fileType}
           fileSize={item.fileSize}
+          // The investor pages' PDF mark — `<DocumentRowBody>`.
+          typeMark
         />
       </li>
     ));

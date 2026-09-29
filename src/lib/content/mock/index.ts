@@ -29,9 +29,9 @@ interface FixtureFile extends Omit<BlobFile, 'url'> {
 /**
  * The investor fixtures carry one field the domain type does not:
  * `legacyPath`, the file's path on the legacy www.sael.co, recorded so the
- * client can upload every file to its blob path in one pass. It is stripped
- * on read — no component can reach it, and so no component can link to the
- * legacy site, which goes away at cutover.
+ * client can upload every file to its blob path in one pass. It is never
+ * handed to a component as such — see `fixtureUrl()` for the one, temporary,
+ * way it becomes a URL.
  */
 interface DocumentFixture extends Omit<InvestorDocument, 'category' | 'file'> {
   category: InvestorDocumentCategory;
@@ -48,9 +48,30 @@ interface VideoFixture extends Omit<InvestorVideo, 'category' | 'file' | 'poster
   legacyPosterPath: string | null;
 }
 
-/** Compose a fixture file's URL, or `null` when the container is not configured. */
-function blobFile({ path, ...file }: FixtureFile): BlobFile | null {
-  const url = tryBlobUrl(path);
+/**
+ * A fixture file's URL: its legacy copy while `LEGACY_ASSET_BASE_URL` is set,
+ * its blob path otherwise — `null` if neither can be composed.
+ *
+ * **The legacy branch is temporary**, the client's instruction of 2026-09-29:
+ * the Offer Documents files are not in the container yet, so until they are,
+ * the links point at the live site's own copies rather than 404ing. The
+ * origin comes from the environment, not from here (/CLAUDE.md §7), and the
+ * path is the one the fixture already records. Unset the variable after the
+ * upload — and before cutover at the latest, when that origin becomes this
+ * site and those paths stop existing — and every link falls back to its blob
+ * path with no code change.
+ */
+function fixtureUrl(path: string | null, legacyPath: string | null): string | null {
+  const legacyBase = env.LEGACY_ASSET_BASE_URL;
+  if (legacyBase !== undefined && legacyPath !== null) {
+    return `${legacyBase.replace(/\/+$/, '')}${legacyPath}`;
+  }
+  return tryBlobUrl(path);
+}
+
+/** Resolve a fixture file to a `BlobFile`, or `null` if it has no URL. */
+function blobFile({ path, ...file }: FixtureFile, legacyPath: string | null): BlobFile | null {
+  const url = fixtureUrl(path, legacyPath);
   return url === null ? null : { ...file, url };
 }
 
@@ -159,7 +180,7 @@ export class MockContentRepository implements ContentRepository {
       // Mapped field by field rather than spread, so `legacyPath` cannot ride
       // along into a component by accident.
       .flatMap((row): InvestorDocument[] => {
-        const file = blobFile(row.file);
+        const file = blobFile(row.file, row.legacyPath);
         if (file === null) return [];
 
         return [
@@ -192,7 +213,7 @@ export class MockContentRepository implements ContentRepository {
     const videos = (investorVideos as VideoFixture[])
       .filter(inListing(listing))
       .flatMap((row): InvestorVideo[] => {
-        const file = blobFile(row.file);
+        const file = blobFile(row.file, row.legacyPath);
         if (file === null) return [];
 
         return [
@@ -202,7 +223,7 @@ export class MockContentRepository implements ContentRepository {
             category: row.category,
             section: row.section,
             file,
-            posterUrl: tryBlobUrl(row.posterPath),
+            posterUrl: fixtureUrl(row.posterPath, row.legacyPosterPath),
             // A track whose file cannot be addressed is dropped; the video
             // still plays, and the menu offers only what will load.
             captions: row.captions.flatMap(({ path, srcLang, label }): CaptionTrack[] => {

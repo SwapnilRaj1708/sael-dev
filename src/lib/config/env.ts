@@ -24,6 +24,9 @@ const envSchema = z
     API_BASE_URL: optionalUrl,
     API_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
     AZURE_BLOB_BASE_URL: optionalUrl,
+    // Temporary: the legacy site's origin, while the Offer Documents files are
+    // not yet in the container. See .env.example and the mock repository.
+    LEGACY_ASSET_BASE_URL: optionalUrl,
     NEXT_PUBLIC_SITE_URL: z.url(),
     CAREER_REDIRECT_URL: optionalUrl,
     MOCK_LATENCY_MS: z.coerce.number().int().nonnegative().default(0),
@@ -46,6 +49,7 @@ const parsed = envSchema.safeParse({
   API_BASE_URL: process.env.API_BASE_URL,
   API_TIMEOUT_MS: process.env.API_TIMEOUT_MS,
   AZURE_BLOB_BASE_URL: process.env.AZURE_BLOB_BASE_URL,
+  LEGACY_ASSET_BASE_URL: process.env.LEGACY_ASSET_BASE_URL,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   CAREER_REDIRECT_URL: process.env.CAREER_REDIRECT_URL,
   MOCK_LATENCY_MS: process.env.MOCK_LATENCY_MS,

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { GlowFrame } from '@/components/ui/glow-frame';
+import { cn } from '@/lib/utils/cn';
 
 export interface LinkGridItem {
   /** The link text, verbatim. */
@@ -40,7 +41,10 @@ export interface LinkGridProps {
  * mode, where the light is stripped. It replaced the hairline card's accent bar and
  * the Aceternity dotted glow the tiles had until then; `hoverEffect={false}`
  * keeps the outlined card's own hover gradient off too, so there is one light
- * per tile, not two. The corner is --radius-card rather than the outlined
+ * per tile, not two. Tuned `strength="strong"` — lighting nearer the centre,
+ * sooner and brighter — and lifted 5% on hover or focus, the client's asks
+ * of 2026-09-29, as is the Careers panel's rising glow on every tile's
+ * ground. The corner is --radius-card rather than the outlined
  * card's 40px, which on a tile a phone draws 90px tall is half a pill — and
  * the frame is told the same radius so its ring sits on the card's border.
  *
@@ -70,7 +74,18 @@ export function LinkGrid({ label, items }: LinkGridProps) {
     >
       {items.map((item) => (
         <li key={item.href} className="flex">
-          <GlowFrame intro={false} radius="card" className="flex w-full">
+          <GlowFrame
+            intro={false}
+            radius="card"
+            strength="strong"
+            // A 5% lift under the pointer or keyboard focus — the frame, not
+            // the card, so the light grows with it. `hover:` only fires where a
+            // pointer can hover, and neither moves under reduced motion.
+            className={cn(
+              'flex w-full transition-transform duration-(--duration-card)',
+              'motion-safe:hover:scale-(--scale-tile-hover) motion-safe:has-focus-visible:scale-(--scale-tile-hover)',
+            )}
+          >
             <Card
               shape="outlined"
               ground="dark"
@@ -80,7 +95,10 @@ export function LinkGrid({ label, items }: LinkGridProps) {
               // forced-colours mode the frame's shadows and masks are dropped,
               // so there the tile takes a real outline instead, in the
               // system's own focus colour.
-              className="h-full rounded-(--radius-card) forced-colors:has-focus-visible:outline-2 forced-colors:has-focus-visible:outline-offset-2"
+              // The Careers "Looking for your dream job?" panel's glow — brand
+              // purple rising from the top edge — the client's ask of
+              // 2026-09-29, so the tiles read as lit rather than as outlines.
+              className="h-full rounded-(--radius-card) bg-(image:--gradient-panel-glow) forced-colors:has-focus-visible:outline-2 forced-colors:has-focus-visible:outline-offset-2"
             >
               <div className="flex w-full items-center gap-stack sm:flex-col sm:items-start">
                 {item.mark !== undefined && (

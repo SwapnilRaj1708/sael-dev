@@ -600,6 +600,7 @@
   .anim-glow-sweep {
     --glow-angle: 110deg;
     --glow-edge: 0;
+    --glow-gain: 1;
   }
 
   /* The ring: the mesh, clipped to the border pixel by masking the content
@@ -609,7 +610,7 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    opacity: var(--glow-edge);
+    opacity: min(1, calc(var(--glow-edge) * var(--glow-gain)));
     mask-image: conic-gradient(
       from var(--glow-angle) at center,
       black 25%,
@@ -642,7 +643,7 @@
     inset: calc(var(--glow-halo-radius) * -1);
     border-radius: inherit;
     pointer-events: none;
-    opacity: var(--glow-edge);
+    opacity: min(1, calc(var(--glow-edge) * var(--glow-gain)));
     mix-blend-mode: plus-lighter;
     mask-image: conic-gradient(
       from var(--glow-angle) at center,
@@ -678,6 +679,18 @@
         glowSweepAngle 4s backwards,
         glowSweepEdge 4s backwards;
     }
+  }
+
+  /* `<GlowFrame strength="strong">` — the Offer Documents tiles, the client's
+     tuning of 2026-09-29. The light climbs to full strength a quarter sooner
+     as the pointer nears an edge, and the halo blooms brighter. The dead zone
+     in the middle is narrowed in glow-frame.tsx, where the pointer is read. */
+  .anim-glow-sweep[data-glow-strength='strong'] {
+    --glow-gain: var(--glow-gain-strong);
+  }
+
+  .anim-glow-sweep[data-glow-strength='strong'] > .anim-glow-halo::before {
+    box-shadow: var(--shadow-glow-halo-strong);
   }
 
   /* The keyboard's hover. A frame whose content holds keyboard focus is lit

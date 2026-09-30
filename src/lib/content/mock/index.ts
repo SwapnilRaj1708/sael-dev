@@ -3,6 +3,8 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
 import type { ContentRepository } from '../repository';
 import type {
   BlobFile,
+  BoardCommittee,
+  BoardMember,
   CapacityStat,
   CaptionTrack,
   InvestorDocument,
@@ -12,6 +14,8 @@ import type {
   NewsItem,
   TeamMember,
 } from '../types';
+import boardCommittees from './data/board-committees.json';
+import boardMembers from './data/board-members.json';
 import capacityStats from './data/capacity-stats.json';
 import investorDocuments from './data/investor-documents.json';
 import investorVideos from './data/investor-videos.json';
@@ -190,16 +194,17 @@ export class MockContentRepository implements ContentRepository {
             category: row.category,
             section: row.section,
             group: row.group,
+            subgroup: row.subgroup,
             publishedAt: row.publishedAt,
             file,
             order: row.order,
           },
         ];
       })
-      // Group descending, then `order` — the contract, not the file's line
-      // order. A `null` group sorts last, which only matters for a listing
-      // that mixes grouped and ungrouped rows; none does yet.
-      .sort((a, b) => (b.group ?? '').localeCompare(a.group ?? '') || a.order - b.order);
+      // `order` alone, across the whole listing — the contract, not the
+      // file's line order. Headings follow their first document, so the
+      // business orders the groups too (docs/api-contracts.md §3).
+      .sort((a, b) => a.order - b.order);
     return this.settle(documents);
   }
 
@@ -234,5 +239,30 @@ export class MockContentRepository implements ContentRepository {
         ];
       });
     return this.settle(videos);
+  }
+
+  /**
+   * The ten directors on the legacy
+   * https://www.sael.co/investors/corporate-governance/board-of-directors/,
+   * read from its HTML on 2026-09-30 — name, designation and the "About"
+   * text exactly as that page has them, bios as the page's own `<p>` and
+   * `<strong>` markup with the source whitespace collapsed. **Not** copied
+   * from `team-members.json`: the two pages word the same people differently,
+   * and this one is the governance record.
+   */
+  getBoardMembers(): Promise<BoardMember[]> {
+    const members = [...(boardMembers as BoardMember[])].sort((a, b) => a.order - b.order);
+    return this.settle(members);
+  }
+
+  /**
+   * The six committees on the legacy board-committees page, same read, same
+   * rules: every name, category and position verbatim — including where this
+   * page spells a director differently from the board page ("Bjornar",
+   * "Kewal Kundanlal Handa").
+   */
+  getBoardCommittees(): Promise<BoardCommittee[]> {
+    const committees = [...(boardCommittees as BoardCommittee[])].sort((a, b) => a.order - b.order);
+    return this.settle(committees);
   }
 }

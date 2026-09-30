@@ -32,17 +32,29 @@ export interface DocumentListGate {
 }
 
 interface DocumentListBaseProps {
-  /** The list's heading, verbatim. */
-  heading: string;
+  /**
+   * The list's heading, verbatim. Omitted for a list that sits under a
+   * heading of its own already — the documents of a group that also has
+   * subgroups.
+   */
+  heading?: string;
   /**
    * The section's anchor, and the root of its heading's id. Stable across
    * builds because a legacy deep link may point at it — `#fy2025`.
    */
   id: string;
-  /** `h2` under the page title; `h3` for a list inside another section. */
+  /**
+   * `h2` under the page title; `h3` for a list inside another section — a
+   * year inside General Meeting's "Extra-Ordinary General Meeting" — which
+   * also steps the heading's size down, so the outline reads by eye too.
+   */
   headingLevel?: 'h2' | 'h3';
-  /** Shown in place of the list when there is nothing in it. */
-  emptyTitle: string;
+  /**
+   * Shown in place of the list when there is nothing in it. Omit it and an
+   * empty list renders its heading alone — for a heading the source page
+   * carries with nothing under it, where a failure message would be untrue.
+   */
+  emptyTitle?: string;
   emptyDescription?: string;
 }
 
@@ -113,15 +125,27 @@ function rows(props: DocumentListProps): ReactNode {
 export function DocumentList(props: DocumentListProps) {
   const { heading, id, headingLevel: Heading = 'h2', emptyTitle, emptyDescription } = props;
   const headingId = `${id}-heading`;
+  const empty = props.items.length === 0;
 
   return (
-    <section id={id} aria-labelledby={headingId} className="flex flex-col gap-stack">
-      <Heading id={headingId} className="text-h2 text-white">
-        {heading}
-      </Heading>
+    <section
+      id={id}
+      aria-labelledby={heading === undefined ? undefined : headingId}
+      className="flex flex-col gap-stack"
+    >
+      {heading !== undefined && (
+        <Heading
+          id={headingId}
+          className={Heading === 'h2' ? 'text-h2 text-white' : 'text-h3 text-on-dark-soft'}
+        >
+          {heading}
+        </Heading>
+      )}
 
-      {props.items.length === 0 ? (
-        <EmptyState ground="dark" title={emptyTitle} description={emptyDescription} />
+      {empty ? (
+        emptyTitle !== undefined && (
+          <EmptyState ground="dark" title={emptyTitle} description={emptyDescription} />
+        )
       ) : (
         <ul className="flex flex-col">{rows(props)}</ul>
       )}

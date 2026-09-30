@@ -83,11 +83,13 @@ export interface InvestorDocument {
   title: string;            // verbatim — the published link text
   category: InvestorDocumentCategory;
   section: string | null;
-  /** Grouping label within a listing, usually a financial year: "FY 2025". */
+  /** Heading label within a listing, verbatim: "FY 2025", "Statutory Policies". */
   group: string | null;
+  /** A second tier under `group` — General Meeting's EGM years. Else null. */
+  subgroup: string | null;
   publishedAt: string | null;
   file: BlobFile;
-  order: number;            // within a group, ascending
+  order: number;            // across the listing; headings follow their first document
 }
 
 export interface CaptionTrack {
@@ -104,6 +106,29 @@ export interface InvestorVideo {
   file: BlobFile;
   posterUrl: string | null;
   captions: CaptionTrack[]; // [] when none exist
+}
+
+/* ---------- Governance (2026-09-30) ---------- */
+
+export interface BoardMember {
+  id: string;
+  name: string;             // verbatim — "Øistein Magnar Andresen"
+  designation: string;
+  bio: string | null;       // sanitised HTML, as TeamMember.bio
+  order: number;
+}
+
+export interface CommitteeMember {
+  name: string;             // as the committee page writes it
+  category: string;         // "Non-Executive Independent Director"
+  position: string;         // "Chairman" | "Member" | "Invitee", verbatim
+}
+
+export interface BoardCommittee {
+  id: string;
+  name: string;             // "Audit Committee"
+  members: CommitteeMember[];
+  order: number;
 }
 
 /* ---------- Company ---------- */
@@ -132,6 +157,17 @@ part of what it published. Videos became their own type, `InvestorVideo`,
 rather than a document with two fields no PDF would ever fill. `notifications`
 left the category enum: it has its own paginated endpoint. The API contract
 matches — `api-contracts.md` §3.
+
+**The rest of the investor area (2026-09-30)** added `subgroup` — General
+Meeting nests financial years under "Extra-Ordinary General Meeting" — and
+made `order` run across the whole listing rather than within a group, because
+the order of the headings is the company's to set and no sort on the labels
+gives it (CSR runs oldest year first; named groups have no natural order). It
+also added the board and its committees as repository surfaces rather than
+copy: a board changes by resolution and must be current on the site within
+days (SEBI LODR Reg. 46), and it is a separate record from `TeamMember` even
+for the same person, because the governance page words them differently.
+`api-contracts.md` §3–4.
 
 `portraitZoom` was added on 2026-09-17. The biography dialog shows the card's
 photograph zoomed to a head-and-shoulders crop, and the client wants to set
@@ -213,6 +249,8 @@ export interface ContentRepository {
   // Investors
   getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;
   getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
+  getBoardMembers(): Promise<BoardMember[]>;
+  getBoardCommittees(): Promise<BoardCommittee[]>;
   getNotifications(params: { page: number; pageSize: number }): Promise<Paginated<InvestorDocument>>;
 
   // Company

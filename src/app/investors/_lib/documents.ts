@@ -1,3 +1,4 @@
+import type { DocumentGroupData } from '@/components/ui/document-groups';
 import type { DocumentListGatedItem, DocumentListLink } from '@/components/ui/document-list';
 import { getContentRepository, type InvestorDocument, type InvestorListing } from '@/lib/content';
 
@@ -73,37 +74,80 @@ export function toGatedItems(documents: readonly InvestorDocument[]): DocumentLi
   }));
 }
 
-export interface DocumentGroup {
-  /** The group's label, verbatim from the data — "FY 2025". */
-  label: string;
+/**
+ * A heading's anchor: the label lowercased, with everything but letters and
+ * digits removed — "FY 2025" → "fy2025". That is exactly how the legacy
+ * site's tab ids are formed, so its deep links (`…/annual-return/#fy2024`)
+ * still land. A subgroup's anchor is prefixed with its group's.
+ */
+export function anchorOf(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+export interface GroupingOptions {
   /**
-   * Its anchor: the label lowercased with everything but letters and digits
-   * removed — "fy2025". That is the legacy page's own tab id, so a deep link
-   * to `…/information-with-respect-to-group-companies/#fy2025` still lands.
+   * Group headings the page shows whatever the data holds, in this order,
+   * ahead of any group the data adds. For a heading the legacy page carries
+   * with nothing under it — General Meeting's "Postal Ballot" — and which is
+   * content in its own right. Empty ones render as a heading alone.
    */
-  anchor: string;
-  documents: InvestorDocument[];
+  declared?: readonly string[];
 }
 
 /**
- * Split a listing by `group`, in the order the repository returned them —
- * which the contract makes group descending, so the newest year comes first.
- * Never re-sorted here. Documents with no group are left out: a grouped page
- * has nowhere to put them, and none exist.
+ * A listing, grouped for `<DocumentGroups>`: headings in the order of their
+ * first document (the repository sorts by `order`, and so the business
+ * orders the headings too), subgroups likewise within a group. Never
+ * re-sorted here.
+ *
+ * Documents with no `group` are kept, as an unheaded group at the top,
+ * rather than dropped: a document the business uploads without a heading
+ * should still be on the page. None exist today.
  */
-export function groupDocuments(documents: readonly InvestorDocument[]): DocumentGroup[] {
-  const groups = new Map<string, InvestorDocument[]>();
-
-  for (const document of documents) {
-    if (document.group === null) continue;
-    const bucket = groups.get(document.group) ?? [];
-    bucket.push(document);
-    groups.set(document.group, bucket);
+export function toDocumentGroups(
+  documents: readonly InvestorDocument[],
+  { declared = [] }: GroupingOptions = {},
+): DocumentGroupData[] {
+  interface Bucket {
+    items: InvestorDocument[];
+    subgroups: Map<string, InvestorDocument[]>;
   }
 
-  return [...groups].map(([label, members]) => ({
-    label,
-    anchor: label.toLowerCase().replace(/[^a-z0-9]/g, ''),
-    documents: members,
-  }));
+  const buckets = new Map<string | null, Bucket>();
+  const bucket = (label: string | null): Bucket => {
+    let found = buckets.get(label);
+    if (found === undefined) {
+      found = { items: [], subgroups: new Map() };
+      buckets.set(label, found);
+    }
+    return found;
+  };
+
+  if (documents.some((document) => document.group === null)) bucket(null);
+  for (const label of declared) bucket(label);
+
+  for (const document of documents) {
+    const target = bucket(document.group);
+    if (document.subgroup === null) {
+      target.items.push(document);
+    } else {
+      const members = target.subgroups.get(document.subgroup) ?? [];
+      members.push(document);
+      target.subgroups.set(document.subgroup, members);
+    }
+  }
+
+  return [...buckets].map(([label, { items, subgroups }]) => {
+    const anchor = label === null ? 'documents' : anchorOf(label);
+    return {
+      label,
+      anchor,
+      items: toDocumentLinks(items),
+      subgroups: [...subgroups].map(([sublabel, members]) => ({
+        label: sublabel,
+        anchor: `${anchor}-${anchorOf(sublabel)}`,
+        items: toDocumentLinks(members),
+      })),
+    };
+  });
 }

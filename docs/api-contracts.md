@@ -72,6 +72,8 @@ One endpoint serves every document listing on the site — the Offer Documents s
 
 *Revised 2026-09-29 with the Offer Documents area, the first investor pages built.* Offer Documents turned out to be eight sub-pages rather than one listing, so a listing is now addressed by `category` **and** `section`; documents gained an explicit `displayOrder`; and videos got their own endpoint.
 
+*Revised again 2026-09-30 with the rest of the investor area.* Corporate Governance is also one category over several pages, so it takes `section` too; documents gained a `subgroup` (General Meeting nests years under a heading); and `displayOrder` now runs across the whole listing rather than within a group, so the business orders the headings as well as the documents. The Financials pages and Notifications are one category each and need no `section`.
+
 ### `GET /api/v1/investor-documents`
 
 | Param | Type | Required | Notes |
@@ -94,6 +96,19 @@ Sections of `offer-documents` — each the last segment of the page's URL, so th
 
 The two audio-visual pages are served by `/investor-videos` below, and `outstanding-dues-to-material-creditors` is a table transcribed into the frontend, not a document.
 
+Sections of `corporate-governance`, on the same rule. Board of Directors and Board Committees are not document listings — see the governance endpoints in §4.
+
+| `section` | Page | Documents |
+|---|---|---|
+| `codes-and-policies` | `/investors/corporate-governance/codes-and-policies/` | 24, grouped `Statutory Policies` / `Corporate Policies` |
+| `sustainability-reports` | `…/sustainability-reports/` | 5, grouped `ESG and GHG Reports` / `SAEL Solar 300MW MHP1 Project’s Environment & Social Reports` |
+| `csr` | `…/csr/` | 3, grouped `FY2026` / `FY2027` — the company's spelling and order |
+| `general-meeting` | `…/general-meeting/` | 21, grouped `Annual General` / `Extra-Ordinary General Meeting`, the latter subgrouped `FY 2026` … `FY 2023` |
+| `familiarization-programme` | `…/familiarization-programme/` | 1, grouped `FY 2026` |
+| `other-documents` | `…/other-documents/` | 4, grouped `Other Documents` / `Composite Scheme of Arrangement` |
+
+The one-page categories, with no `section`: `annual-return` (4), `consolidated-financials` (3), `standalone-financials` (3), `subsidiary-financials` (64), `investor-downloads` (12) and `notifications` (2) — every one grouped by financial year.
+
 Response (bare array):
 
 ```json
@@ -104,6 +119,7 @@ Response (bare array):
     "category": "annual-return",
     "section": null,
     "group": "FY 2024-25",
+    "subgroup": null,
     "publishedAt": "2025-09-12",
     "fileUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/documents/investors/annual-return-fy2024-25.pdf",
     "fileName": "annual-return-fy2024-25.pdf",
@@ -123,6 +139,7 @@ An Offer Documents row, for comparison:
   "category": "offer-documents",
   "section": "information-with-respect-to-group-companies",
   "group": "FY 2024",
+  "subgroup": null,
   "publishedAt": null,
   "fileUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/documents/investors/offer-documents/information-with-respect-to-group-companies/FY-2024/Sun-Layer-Energy-Private-Limited.pdf",
   "fileName": "Sun-Layer-Energy-Private-Limited.pdf",
@@ -138,8 +155,11 @@ Requirements on the backend:
 - `title` is shown **verbatim** as the link text. For regulated documents it is the text the company published — do not normalise, case or trim it.
 - `sizeBytes` is needed — the Financials pages show "PDF · 2.4 MB" so users on mobile data know what they are opening. If unavailable, send `null` and the UI omits it. (The Offer Documents pages deliberately show no size, because the legacy pages show none; they still want the field.)
 - `group` partitions a listing: accordions on the Financials pages, stacked year headings on Group Companies. Use a consistent format (`FY 2024-25`, or `FY 2025` where the published label is that). If `group` is `null` for every item in a listing, the UI renders a flat list.
-- `displayOrder` sequences documents within a group, ascending. **New** — the proposal previously sorted by `publishedAt`, but none of the offer documents carries a date, and the order the company lists them in is itself part of what it published.
-- Sorted by `group` descending, then `displayOrder` ascending. The frontend does not re-sort (§1).
+- `group` and `subgroup` are **labels, shown verbatim** — send them exactly as the company writes them, inconsistencies included (`FY 2025`, `FY2026`). The frontend derives each heading's anchor from its label (lower-cased, letters and digits only: `FY 2025` → `#fy2025`), which is how the legacy site formed its tab ids, so old deep links still land.
+- `subgroup` divides a group once more, and is `null` everywhere but General Meeting, whose "Extra-Ordinary General Meeting" is divided by financial year. **New 2026-09-30.**
+- `displayOrder` runs **across the whole listing**, ascending, and the frontend shows headings in the order of their first document. **Changed 2026-09-30** from "within a group", because a sort on the labels cannot give the order the company publishes: years run newest first on most pages but oldest first on CSR, and named groups ("ESG and GHG Reports" before "SAEL Solar 300MW MHP1 Project’s …") have no natural sort at all. The proposal before that sorted by `publishedAt`, but none of these documents carries a date.
+- Sorted by `displayOrder` ascending. The frontend does not re-sort (§1).
+- A heading the company shows with nothing under it (General Meeting's "Postal Ballot") is declared by the frontend, not sent — there is no document to carry it.
 - `publishedAt` is `null` where the document has no date to show. Never a placeholder date.
 
 ### `GET /api/v1/investor-videos`
@@ -194,9 +214,51 @@ Three Offer Documents pages put their files behind a disclaimer the reader must 
 
 Same item shape with `category: "notifications"`, but **paginated** (envelope from §1). Params: `page`, `pageSize` (default 20).
 
+**Not needed yet.** With two notifications, `/investors/notifications/` reads `GET /api/v1/investor-documents?category=notifications` like every other listing, grouped by year. This paginated endpoint stays the proposal for when the list outgrows one page.
+
 ---
 
 ## 4. Company data
+
+### `GET /api/v1/board-members`
+
+*New 2026-09-30.* The Board of Directors, as `/investors/corporate-governance/board-of-directors/` lists it. Bare array, sorted by `displayOrder`.
+
+```json
+[
+  {
+    "id": "jasbir-singh",
+    "name": "Jasbir Singh",
+    "designation": "Managing Director and Chairperson",
+    "bio": "<p><strong>Jasbir Singh</strong> is the Managing Director and Chairperson of our Company. …</p>",
+    "displayOrder": 1
+  }
+]
+```
+
+- **A separate record from `/team`**, even for the same person: this is the governance record, worded for the board page, and neither page may silently rewrite the other.
+- `bio` is HTML with the same permitted tags as `/team` (`p, br, strong, em, ul, ol, li, a`), sanitised by the backend and again by the frontend. `null` when there is none.
+- Why an endpoint rather than copy in the repo: the board changes by resolution, and SEBI LODR Reg. 46 wants the website current within days of it — faster than a deploy cycle, and in step with the Notifications that announce resignations.
+
+### `GET /api/v1/board-committees`
+
+*New 2026-09-30.* The board's committees, as `/investors/corporate-governance/board-committees/` lists them. Bare array, sorted by `displayOrder`; members in the order sent.
+
+```json
+[
+  {
+    "id": "audit-committee",
+    "name": "Audit Committee",
+    "members": [
+      { "name": "Mr. Harbhajan Singh", "category": "Non-Executive Independent Director", "position": "Chairman" }
+    ],
+    "displayOrder": 1
+  }
+]
+```
+
+- Every string is shown verbatim, including where it spells a director differently from `/board-members` ("Bjornar" / "Bjørnar"). The frontend does not reconcile them.
+- `position` is the member's role on the committee — the page's "Designation" column ("Chairman", "Member", "Invitee").
 
 ### `GET /api/v1/team`
 

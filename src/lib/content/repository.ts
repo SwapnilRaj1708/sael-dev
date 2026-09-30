@@ -1,4 +1,6 @@
 import type {
+  BoardCommittee,
+  BoardMember,
   CapacityStat,
   InvestorDocument,
   InvestorListing,
@@ -47,9 +49,9 @@ export interface ContentRepository {
    */
   getTeamMembers(): Promise<TeamMember[]>;
   /**
-   * Every document in one listing, sorted group descending then `order`
-   * ascending — the order the page shows them in. `[]` for a listing with no
-   * documents, never a throw.
+   * Every document in one listing, sorted by `order` — the order the page
+   * shows them in, headings included (a group appears where its first
+   * document does). `[]` for a listing with no documents, never a throw.
    *
    * By listing rather than by page because one listing is one request: the
    * Group Companies page shows three financial years, and asking once and
@@ -62,6 +64,15 @@ export interface ContentRepository {
    * second cut (a sign-language version, say) is not a contract change.
    */
   getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
+  /**
+   * The board, in the order the company lists it. Dynamic rather than static
+   * copy because the board changes by resolution, not by design review, and
+   * the website must reflect a change within days of it (SEBI LODR Reg. 46)
+   * — the same record Notifications announces resignations from.
+   */
+  getBoardMembers(): Promise<BoardMember[]>;
+  /** The board's committees and their members, each in the company's order. */
+  getBoardCommittees(): Promise<BoardCommittee[]>;
 }
 
 /**

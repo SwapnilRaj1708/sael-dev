@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { financialsNav, financialsPages } from '@/app/_content/financials-and-reports';
+import { governanceNav, governancePages } from '@/app/_content/corporate-governance';
 import { investorDocumentsEmpty, jumpLinksLabel } from '@/app/_content/investors';
 import { loadInvestorDocuments, toDocumentGroups } from '@/app/investors/_lib/documents';
 import { SubPage } from '@/components/sections/sub-page';
 import { DocumentGroups } from '@/components/ui/document-groups';
 import { buildMetadata } from '@/lib/seo/metadata';
 
-const page = financialsPages.standalone;
+const page = governancePages.sustainabilityReports;
 
 export const metadata: Metadata = buildMetadata({
   title: page.meta.title,
@@ -16,25 +16,20 @@ export const metadata: Metadata = buildMetadata({
 });
 
 /**
- * Standalone Financials of the Company — one set of statements a year, the
- * title as each year's link reads it ("SAEL Industries Limited", then
- * "SAEL Industries Ltd.").
+ * Sustainability Reports — the ESG reports, and the environmental and social
+ * studies of the 300MW MHP1 project, under the legacy page's two headings.
  *
- * **Not gated** — the legacy page carries no consent notice, and the files
- * are plain links there and here.
- *
- * The years are `<DocumentGroups>`, the investor pages' one year-group
- * pattern: every year stacked under its own `<h2>`, newest first as the
- * business orders them, with a row of links to each above — the legacy tab
- * row, whose ids (`#fy2025`) are the years' anchors, so old deep links land.
+ * **Not gated** — the legacy page carries no consent notice. Its headings
+ * are `<DocumentGroups>`, the investor pages' one group pattern, in the order
+ * the business sets through `order`.
  *
  * A Server Component; the ripple band is the one client leaf.
  */
-export default async function StandaloneFinancialsPage() {
+export default async function SustainabilityReportsPage() {
   const groups = toDocumentGroups(await loadInvestorDocuments(page.listing));
 
   return (
-    <SubPage masthead="ripple" title={page.name} nav={financialsNav(page)}>
+    <SubPage masthead="ripple" title={page.name} nav={governanceNav(page)}>
       <DocumentGroups
         groups={groups}
         jumpLabel={jumpLinksLabel}

@@ -1,0 +1,194 @@
+[
+  {
+    "id": "audit-committee",
+    "name": "Audit Committee",
+    "members": [
+      {
+        "name": "Mr. Harbhajan Singh",
+        "category": "Non-Executive Independent Director",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Hemant Sahai",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Ashok Lavasa",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Bjornar Baugerud",
+        "category": "Non-Executive Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Laxit Awla",
+        "category": "Executive Director & CEO",
+        "position": "Invitee"
+      }
+    ],
+    "order": 1
+  },
+  {
+    "id": "nomination-and-remuneration-committee",
+    "name": "Nomination and Remuneration Committee",
+    "members": [
+      {
+        "name": "Mr. Harbhajan Singh",
+        "category": "Non-Executive Independent Director",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Hemant Sahai",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Ms. Archana Capoor",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Sukhbir Singh",
+        "category": "Non-Executive Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Bjornar Baugerud",
+        "category": "Non-Executive Director",
+        "position": "Invitee"
+      }
+    ],
+    "order": 2
+  },
+  {
+    "id": "stakeholders-relationship-committee",
+    "name": "Stakeholders Relationship Committee",
+    "members": [
+      {
+        "name": "Mr. Sukhbir Singh",
+        "category": "Non-Executive Director",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Harbhajan Singh",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Ashok Lavasa",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Laxit Awla",
+        "category": "Executive Director & CEO",
+        "position": "Member"
+      }
+    ],
+    "order": 3
+  },
+  {
+    "id": "risk-management-committee",
+    "name": "Risk Management Committee",
+    "members": [
+      {
+        "name": "Mr. Laxit Awla",
+        "category": "Executive Director & CEO",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Hemant Sahai",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Kewal Kundanlal Handa",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Oistein Magnar Andresen",
+        "category": "Nominee Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Dushyant Kumar",
+        "category": "CFO",
+        "position": "Invitee"
+      },
+      {
+        "name": "Mr. Puneet Upneja",
+        "category": "General Counsel",
+        "position": "Invitee"
+      }
+    ],
+    "order": 4
+  },
+  {
+    "id": "corporate-social-responsibility-committee",
+    "name": "Corporate Social Responsibility Committee",
+    "members": [
+      {
+        "name": "Mr. Jasbir Singh",
+        "category": "Managing Director",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Harbhajan Singh",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Ms. Archana Capoor",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Kewal Kundanlal Handa",
+        "category": "Non-Executive Independent Director",
+        "position": "Member"
+      }
+    ],
+    "order": 5
+  },
+  {
+    "id": "environmental-safety-social-and-governance-committee",
+    "name": "Environmental, Safety, Social and Governance Committee",
+    "members": [
+      {
+        "name": "Mr. Laxit Awla",
+        "category": "Executive Director & CEO",
+        "position": "Chairman"
+      },
+      {
+        "name": "Mr. Bjornar Baugerud",
+        "category": "Nominee Director",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Dushyant Kumar",
+        "category": "Chief Financial Officer",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Mukesh Arora",
+        "category": "ESG Head",
+        "position": "Member"
+      },
+      {
+        "name": "Ms. Supreet Gupta",
+        "category": "Chief Human Resource Officer",
+        "position": "Member"
+      },
+      {
+        "name": "Mr. Puneet Upneja",
+        "category": "Head of Legal",
+        "position": "Member"
+      }
+    ],
+    "order": 6
+  }
+]

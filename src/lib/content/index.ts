@@ -7,6 +7,9 @@ export { ContentUnavailableError, NotImplementedError } from './repository';
 export type { ContentRepository } from './repository';
 export type {
   BlobFile,
+  BoardCommittee,
+  BoardMember,
+  CommitteeMember,
   CapacityStat,
   CaptionTrack,
   InvestorDocument,

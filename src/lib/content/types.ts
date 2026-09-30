@@ -180,10 +180,19 @@ export interface InvestorListing {
 /**
  * A downloadable investor document — a PDF, in every case so far.
  *
- * `group` partitions a listing, usually by financial year ("FY 2025"); it is
- * `null` for a listing that is one flat list. `order` sequences documents
- * within a group, and the repository returns them sorted — group descending,
- * then `order` ascending — so no page re-sorts. docs/api-contracts.md §3.
+ * `group` partitions a listing under headings — a financial year ("FY 2025",
+ * "FY2026") or a name ("Statutory Policies"); `null` for a listing that is
+ * one flat list. `subgroup` partitions a group once more, for the one page
+ * that nests: General Meeting's "Extra-Ordinary General Meeting", by year.
+ * Both are labels, shown verbatim, so the legacy site's inconsistent year
+ * spellings stay as the company wrote them.
+ *
+ * `order` runs across the whole listing, and the repository returns the
+ * listing sorted by it — so the business sets the order of documents *and*
+ * of the headings, which appear in the order of their first document. Years
+ * newest first on most pages, oldest first on CSR, named groups in the
+ * company's own order: none of that is a sort a page could derive from the
+ * labels. docs/api-contracts.md §3.
  */
 export interface InvestorDocument {
   id: string;
@@ -192,7 +201,8 @@ export interface InvestorDocument {
   category: InvestorDocumentCategory;
   section: string | null;
   group: string | null;
-  /** ISO 8601, or `null`. None of the offer documents carries one. */
+  subgroup: string | null;
+  /** ISO 8601, or `null`. None of the investor documents carries one. */
   publishedAt: string | null;
   file: BlobFile;
   order: number;
@@ -230,4 +240,49 @@ export interface InvestorVideo {
    * rather than a finished state; docs/asset-inventory.md §9.
    */
   captions: CaptionTrack[];
+}
+
+/* ---------- Governance ---------- */
+
+/**
+ * A director, as `/investors/corporate-governance/board-of-directors/`
+ * lists them.
+ *
+ * **Not a `TeamMember`**, though some are the same people. This is the
+ * governance record — a regulated disclosure of the board — and its
+ * designations and biographies are worded for that page, not for Our Team;
+ * the two are kept as separate records so that neither can silently rewrite
+ * the other. docs/api-contracts.md §4.
+ */
+export interface BoardMember {
+  id: string;
+  /** Verbatim, diacritics included — "Øistein Magnar Andresen". */
+  name: string;
+  /** "Managing Director and Chairperson". Plain text. */
+  designation: string;
+  /**
+   * The "About" text: HTML, `p` and `strong` in practice, sanitised again
+   * before it renders exactly as `TeamMember.bio` is. `null` when none.
+   */
+  bio: string | null;
+  order: number;
+}
+
+/** One row of a committee's table. Every field verbatim. */
+export interface CommitteeMember {
+  /** "Mr. Harbhajan Singh" — as the committee page writes it. */
+  name: string;
+  /** "Non-Executive Independent Director". */
+  category: string;
+  /** The member's role on the committee — "Chairman", "Member", "Invitee". */
+  position: string;
+}
+
+/** A board committee and its members, in the order the company lists them. */
+export interface BoardCommittee {
+  id: string;
+  /** "Audit Committee". */
+  name: string;
+  members: CommitteeMember[];
+  order: number;
 }

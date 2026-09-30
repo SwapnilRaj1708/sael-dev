@@ -1223,6 +1223,16 @@
    * where 720 would add a third again to an already long scroll. The legacy
    * dialog's own cap was 900. Same viewport arithmetic as the team dialog —
    * `100%` is the viewport, a modal's containing block. */
+  /* The document filter's field — ui/document-filter.tsx — clears the search
+   * glyph inside it: the glyph's own inset, its 20px (lucide's `size-5`),
+   * and a tight gap before the typed text. */
+  --spacing-filter-inset: calc(var(--spacing-stack) + 1.25rem + var(--spacing-tight));
+
+  /* A balanced tile row — `<LinkGrid balance>` — two across from `sm`,
+   * three from `xl`, each a share of the row less the gaps between. */
+  --link-grid-basis-2: calc((100% - var(--spacing-gap-grid)) / 2);
+  --link-grid-basis-3: calc((100% - var(--spacing-gap-grid) * 2) / 3);
+
   --consent-dialog-w: min(52rem, calc(100% - var(--spacing-flow) * 2)); /* 832 cap */
   --consent-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
 
@@ -1748,11 +1758,27 @@
    * is sized to the band instead, so the fade lands on the screen at every
    * width, and reaches transparent exactly at the bottom edge. */
   --mask-ripple: radial-gradient(ellipse 75% 100% at top, black 25%, transparent 100%);
-  /* The top half of the screen, the client's brief — less the masthead,
-   * which is part of that half. `svh`, so a phone's toolbar showing and
-   * hiding does not resize it mid-scroll; the floor keeps a landscape phone
-   * from squashing it to nothing. */
-  --ripple-hero-h: max(18rem, calc(50svh - var(--spacing-header)));
+  /* The band's height. First the top half of the screen, less the masthead
+   * — the client's brief of 2026-09-29 — then, on 2026-09-30, cut down
+   * because it pushed the page's content too far below the fold: by a
+   * quarter on phones and tablets and by 30% from `lg`, where the screen is
+   * shorter relative to its width and the band read as tallest. Each is
+   * still a share of the screen's own height, so it scales with the device.
+   * `svh`, so a phone's toolbar showing and hiding does not resize it
+   * mid-scroll. The floor, 208px, holds the longest title at 360px (three
+   * lines) with its padding, and keeps a landscape phone's band from
+   * collapsing; it is a minimum, so a longer title still grows the band.
+   *
+   * At 360×740 that is 226px (from 302), at 1440×900 267px (from 382), at
+   * 1920×1080 330px (from 472). */
+  --ripple-hero-h: max(13rem, calc((50svh - var(--spacing-header)) * 0.75));
+  --ripple-hero-h-lg: max(13rem, calc((50svh - var(--spacing-header)) * 0.7));
+  /* How far the band's title sits below the band's centre: a quarter of
+   * the top padding of the section under the band (`pt-section-y`,
+   * 48 → 96), the client's call of 2026-09-30 — so the title leans toward the
+   * content it introduces. 12px on a phone, 24px at the design width. Tied to
+   * that token, so the two cannot drift apart. */
+  --ripple-title-shift: calc(var(--spacing-section-y) / 4);
 
   /* Two Aceternity UI effects, trialled on About Us at the client's request of
    * 2026-09-25 — ui/background-gradient.tsx and ui/dotted-glow-background.tsx.

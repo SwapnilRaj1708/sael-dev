@@ -1,5 +1,7 @@
 import { NotImplementedError, type ContentRepository } from '../repository';
 import type {
+  BoardCommittee,
+  BoardMember,
   CapacityStat,
   InvestorDocument,
   InvestorListing,
@@ -57,8 +59,8 @@ export class ApiContentRepository implements ContentRepository {
    * `GET /api/v1/investor-documents?category=…&section=…`, `section` omitted
    * when the listing's is `null`. Mapped `fileUrl`/`fileName`/`mimeType`/
    * `sizeBytes` → `file`, `displayOrder` → `order`; `category`, `section`,
-   * `group` and `publishedAt` read straight through. The backend's sort is
-   * trusted — group descending, then `displayOrder` — per
+   * `group`, `subgroup` and `publishedAt` read straight through. The
+   * backend's sort is trusted — `displayOrder` across the listing — per
    * docs/api-contracts.md §1. A row that fails the schema is dropped, not the
    * listing. FE-23 wires the body.
    */
@@ -76,5 +78,22 @@ export class ApiContentRepository implements ContentRepository {
   getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]> {
     void listing;
     return Promise.reject(new NotImplementedError('ApiContentRepository.getInvestorVideos'));
+  }
+
+  /**
+   * `GET /api/v1/board-members`, mapped `displayOrder` → `order`, `bio` kept
+   * as HTML (the page sanitises it again, as it does a team biography).
+   * FE-23 wires the body.
+   */
+  getBoardMembers(): Promise<BoardMember[]> {
+    return Promise.reject(new NotImplementedError('ApiContentRepository.getBoardMembers'));
+  }
+
+  /**
+   * `GET /api/v1/board-committees`, mapped `displayOrder` → `order`, members
+   * read through in the order sent. FE-23 wires the body.
+   */
+  getBoardCommittees(): Promise<BoardCommittee[]> {
+    return Promise.reject(new NotImplementedError('ApiContentRepository.getBoardCommittees'));
   }
 }

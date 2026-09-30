@@ -17,6 +17,14 @@ export interface LinkGridProps {
   /** Names the list for assistive technology — the area, e.g. "Offer Documents". */
   label: string;
   items: readonly LinkGridItem[];
+  /**
+   * Centre a short last row instead of hanging it left: one per row below
+   * `sm`, two to `xl`, three above — so five tiles fall as 2 + 2 + 1 and
+   * 3 + 2, never four over a lone one. For a count the four-column grid does
+   * not divide; Financials & Reports has five. Off by default, so eight
+   * tiles keep their 4 × 2.
+   */
+  balance?: boolean;
 }
 
 /**
@@ -66,14 +74,26 @@ export interface LinkGridProps {
  *
  * A Server Component; `<GlowFrame>` is the client leaf, for the pointer.
  */
-export function LinkGrid({ label, items }: LinkGridProps) {
+export function LinkGrid({ label, items, balance = false }: LinkGridProps) {
   return (
     <ul
       aria-label={label}
-      className="grid grid-cols-1 gap-x-gap-grid gap-y-stack sm:grid-cols-2 sm:gap-y-flow xl:grid-cols-4"
+      className={cn(
+        'gap-x-gap-grid gap-y-stack sm:gap-y-flow',
+        balance
+          ? 'flex flex-wrap justify-center'
+          : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4',
+      )}
     >
       {items.map((item) => (
-        <li key={item.href} className="flex">
+        <li
+          key={item.href}
+          className={cn(
+            'flex',
+            balance &&
+              'w-full flex-none sm:w-auto sm:basis-(--link-grid-basis-2) xl:basis-(--link-grid-basis-3)',
+          )}
+        >
           <GlowFrame
             intro={false}
             radius="card"

@@ -37,18 +37,32 @@ export interface RippleHeroProps {
  * An optional breadcrumb sits centred above the title. The Offer Documents
  * pages pass none, at the client's request of 2026-09-29.
  *
- * The band is `--ripple-hero-h` tall — half the screen less the masthead —
- * starting under the masthead, which `<main>` already offsets.
+ * The band is `--ripple-hero-h` tall — half the screen less the masthead,
+ * cut by a quarter, and by 30% from `lg` (`--ripple-hero-h-lg`), the
+ * client's call of 2026-09-30 so the content starts higher — starting under
+ * the masthead, which `<main>` already offsets.
+ *
+ * The title sits below the band's centre by a quarter of the top padding
+ * of the section under it (`--ripple-title-shift`), also the client's call of
+ * 2026-09-30.
  *
  * A Server Component; `<BackgroundRipple>` is the client leaf.
  */
 export function RippleHero({ title, breadcrumb }: RippleHeroProps) {
   return (
     <Section background="black-dots" spacing="none" fullBleed>
-      <div className="relative flex min-h-(--ripple-hero-h) w-full items-center overflow-hidden">
+      <div className="relative flex min-h-(--ripple-hero-h) w-full items-center overflow-hidden lg:min-h-(--ripple-hero-h-lg)">
         <BackgroundRipple />
 
-        <Container className="pointer-events-none relative z-10 flex flex-col items-center gap-stack py-section-y-tight text-center">
+        <Container
+          // Centred in the band, then moved down by a quarter of the top padding
+          // of the section beneath it (--ripple-title-shift). A translate rather
+          // than a margin: in a centred flex row a margin moves the copy by
+          // only half itself. The bottom padding (40 → 65) is larger than the
+          // shift (12 → 24), so even when a long title sets the band's height
+          // the title stays inside it.
+          className="pointer-events-none relative z-10 flex translate-y-(--ripple-title-shift) flex-col items-center gap-stack py-section-y-tight text-center"
+        >
           {breadcrumb !== undefined && (
             <Breadcrumb items={breadcrumb} className="pointer-events-auto" />
           )}

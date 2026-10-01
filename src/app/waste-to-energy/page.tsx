@@ -62,7 +62,7 @@ const benefitItems: ValueGridItem[] = wasteToEnergyBenefits.items.map((item, ind
 }));
 
 /**
- * Waste To Energy — the Solar Energy template, all five sections.
+ * Agri Waste-to-Energy — the Solar Energy template, all five sections.
  *
  * Built to the client's reference screenshot for layout and to the live
  * https://www.sael.co/waste-to-energy/ for every word. Hero, overview beside

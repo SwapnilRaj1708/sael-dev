@@ -43,6 +43,8 @@ Every route below must exist and 200. Verified against the live site on 2026-08-
 | `…/standalone-financials-of-material-subsidiary-companies/` | *(same slug)* | FE-17 |
 | `…/investor-downloads/` | *(same slug)* | FE-17 |
 | `/newsroom/` | `app/newsroom/page.tsx` | FE-18 |
+| `/newsroom/press-release/`, `/in-the-news/`, `/our-views/`, `/multimedia/` | `app/newsroom/<section>/page.tsx` — every item on one page, as on the legacy site; no paging | FE-18 |
+| `/newsroom/press-release/<slug>/`, `/newsroom/our-views/<slug>/` | `app/newsroom/<section>/[slug]/page.tsx` — `generateStaticParams`, `dynamicParams = false`, slugs verbatim (including `…-india39s-green-future`) | FE-18 |
 | `/contact-us/` | `app/contact-us/page.tsx` | FE-19 |
 | `/career/` | `app/career/page.tsx` — a page since 2026-09-22; it was a 308 to Oracle before that, and browsers cache a 308 | FE-20 |
 | `/privacy-policy/` | `app/privacy-policy/page.tsx` | FE-21 |
@@ -100,7 +102,7 @@ Carry over from the legacy site's root layout: `google-site-verification` conten
 | `Organization` | Root layout | Legal name **SAEL Industries Limited**, logo, `sameAs` for the four social profiles, `address` (H. No. 44, Model Town, Firozpur, Guruharsahai, Punjab, 152022, IN), `telephone` (011-44910011) |
 | `WebSite` | Root layout | Name and URL. No `SearchAction` — there is no site search. |
 | `BreadcrumbList` | Every page below the root | Especially the nested investor pages |
-| `NewsArticle` | Newsroom items | Only if SAEL hosts article bodies. Currently they link out, so **omit** — marking up someone else's article is wrong. |
+| `NewsArticle` | Press Release and Our Views article pages | SAEL hosts these bodies (since 2026-10-01), so they are marked up — headline, URL, image, `datePublished` where the article shows one, SAEL as author and publisher. **Never** for In The News: those link out to articles other publications host, and marking up someone else's article is wrong. `lib/seo/json-ld.ts`. |
 
 Validate with Google's Rich Results Test before launch.
 

@@ -41,15 +41,29 @@ export interface ImageAsset {
 
 /* ---------- Newsroom ---------- */
 
+/* Built 2026-10-01 with the Newsroom. Four sections; two of them host articles. */
+
+export type NewsCategory = 'press-release' | 'in-the-news' | 'our-views' | 'multimedia';
+export type NewsArticleCategory = 'press-release' | 'our-views';
+
 export interface NewsItem {
   id: string;
-  title: string;
-  publishedAt: string;      // ISO 8601 date, e.g. "2026-06-29"
-  image: ImageAsset | null;
-  /** External publisher URL. SAEL currently links out rather than hosting articles. */
-  externalUrl: string | null;
-  source: string | null;    // "The Hindu BusinessLine"
-  excerpt: string | null;
+  category: NewsCategory;
+  title: string;              // verbatim, as the legacy card reads
+  publishedAt: string | null; // ISO 8601 date; null for Our Views and Multimedia, which show none
+  href: string;               // resolved by the repository: article page, publication, or YouTube watch URL
+  imageUrl: string | null;    // a Multimedia item's is its YouTube thumbnail
+  imageAlt: string | null;    // legacy alt; a card falls back to the title
+  slug: string | null;        // press-release, our-views — verbatim legacy URL segment
+  externalUrl: string | null; // in-the-news
+  videoId: string | null;     // multimedia
+  publication: string | null; // null in every row: the legacy cards show none
+}
+
+export interface NewsArticle extends NewsItem {
+  category: NewsArticleCategory;
+  slug: string;
+  body: string;               // CMS HTML; sanitised again on render (lib/utils/sanitize-article.ts)
 }
 
 /* ---------- Investors ---------- */
@@ -242,9 +256,10 @@ export interface Paginated<T> {
 
 ```ts
 export interface ContentRepository {
-  // Newsroom
-  getLatestNews(params: { limit: number }): Promise<NewsItem[]>;
-  getNewsPage(params: { page: number; pageSize: number }): Promise<Paginated<NewsItem>>;
+  // Newsroom — built 2026-10-01. No paging: the legacy listings have none,
+  // and paged URLs would be new URLs. `category` omitted is the homepage's call.
+  getNewsItems(options?: { category?: NewsCategory; limit?: number }): Promise<NewsItem[]>;
+  getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null>;
 
   // Investors
   getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;

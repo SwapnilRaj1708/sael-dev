@@ -12,10 +12,6 @@ import heroImage1 from '@/assets/images/hero/hero-copy-2-1.png';
 import heroImage2 from '@/assets/images/hero/hero-copy-2-2.png';
 import heroImage3 from '@/assets/images/hero/hero-copy-2-3.png';
 import heroImage4 from '@/assets/images/hero/hero-copy-2-4.png';
-import saelIcon1 from '@/assets/images/hero/cropped-sael-icon-1.png';
-import saelIcon2 from '@/assets/images/hero/cropped-sael-icon-2.png';
-import saelIcon3 from '@/assets/images/hero/cropped-sael-icon-3.png';
-import saelIcon4 from '@/assets/images/hero/cropped-sael-icon-4.png';
 import solBhadra from '@/assets/images/solutions/sol-bhadra.jpg';
 import solKishangarh from '@/assets/images/solutions/sol-kishangarh.jpg';
 import solMizoram from '@/assets/images/solutions/sol-mizoram.jpg';
@@ -65,6 +61,10 @@ import { TODO_CONTENT } from '@/lib/config/site';
  * headline above it — `<HeroHeadline>` matches on words, and a highlight that
  * does not match renders flat rather than breaking the headline.
  *
+ * The marks are the business ledger's own, with the business name typed
+ * beneath each one, since 2026-10-01. The client's lettered artwork
+ * (`cropped-sael-icon-*.png`) carried the old names baked in.
+ *
  * The progress bar no longer takes a ramp per slide: it fills once across the
  * whole cycle from one gradient. See `<HeroProgress>`.
  *
@@ -84,37 +84,53 @@ export const heroSlides: HeroSlide[] = [
       // Describes the scene, not the brand. docs/design-guidelines.md §6.
       alt: TODO_CONTENT,
     },
-    symbol: { image: saelIcon1, pending: 'icons/symbol-cell-manufacturing' },
-    headline: 'A leading manufacturer for Bifacial TOPCon solar modules',
-    highlight: 'Bifacial TOPCon solar modules',
+    symbol: {
+      image: iconSolarGeneration,
+      pending: 'icons/symbol-solar-generation',
+      label: ['Solar Energy', 'Generation'],
+    },
+    headline: 'Not Block,\nWe Unlock the power of the sun',
+    highlight: 'Block,\nWe Unlock',
     highlightClassName: 'bg-(image:--gradient-hero-word-1)',
   },
   {
     id: 'energy-generation',
     image: {
-      desktop: heroImage2,
+      desktop: heroImage4,
       mobile: heroImageMobile2,
       alt: TODO_CONTENT,
     },
-    symbol: { image: saelIcon2, pending: 'icons/symbol-module-manufacturing' },
-    headline: 'Generating clean energy by investing in advanced technology and systems',
-    highlight: 'clean energy',
+    symbol: {
+      image: iconModuleManufacturing,
+      pending: 'icons/symbol-module-manufacturing',
+      label: ['Solar Module', 'Manufacturing'],
+    },
+    headline: 'Look towards a future of Unlimited Solar Energy',
+    highlight: 'Unlimited Solar Energy',
     highlightClassName: 'bg-(image:--gradient-hero-word-2)',
   },
   {
     id: 'clean-energy-vision',
     image: { desktop: heroImage3, mobile: heroImageMobile3, alt: TODO_CONTENT },
-    symbol: { image: saelIcon3, pending: 'icons/symbol-solar-generation' },
-    headline: 'A vision to building the capacity for India’s clean energy needs',
-    highlight: 'clean energy',
+    symbol: {
+      image: iconCellManufacturing,
+      pending: 'icons/symbol-cell-manufacturing',
+      label: ['Solar Cell', 'Manufacturing'],
+    },
+    headline: 'Energy Independence, courtesy the Sun',
+    highlight: 'Energy Independence,',
     highlightClassName: 'bg-(image:--gradient-hero-word-3)',
   },
   {
     id: 'agri-waste',
-    image: { desktop: heroImage4, mobile: heroImageMobile4, alt: TODO_CONTENT },
-    symbol: { image: saelIcon4, pending: 'icons/symbol-agri-waste' },
-    headline: 'Converting ~2 million tonnes of paddy waste into clean energy',
-    highlight: 'clean energy',
+    image: { desktop: heroImage2, mobile: heroImageMobile4, alt: TODO_CONTENT },
+    symbol: {
+      image: iconAgriWaste,
+      pending: 'icons/symbol-agri-waste',
+      label: ['Agri Waste-', 'To-Energy'],
+    },
+    headline: 'Not pollution, but a charged Solution',
+    highlight: 'Not pollution,',
     highlightClassName: 'bg-(image:--gradient-hero-word-4)',
   },
 ];
@@ -179,8 +195,7 @@ export const businessTiles = [
     icon: iconSolarGeneration,
     title: 'Solar Energy Generation',
     description:
-      'SAEL develops and operates large-scale solar power plants, generating clean, ' +
-      'affordable energy across India and advancing the nation’s renewable transition.',
+      'SAEL develops and operates large-scale solar power plants, generating clean, affordable energy across India and advancing the nation’s renewable transition.',
     href: '/solar-energy/',
     ctaLabel: 'Know more about solar energy generation',
     figureClassName: 'text-figure-solar-bright',
@@ -191,12 +206,8 @@ export const businessTiles = [
     id: 'cell-manufacturing',
     icon: iconCellManufacturing,
     title: 'Solar Cell Manufacturing',
-    // The design marks this business as upcoming, and the footnote on the
-    // capacity figure explains what the asterisk means.
-    titleMarker: '*',
     description:
-      'Our facilities manufacture high-efficiency solar cells using advanced bifacial ' +
-      'TOPCon technology, delivering superior output and reliability.',
+      'Our facilities manufacture high-efficiency solar cells using advanced bifacial TOPCon technology, delivering superior output and reliability.',
     href: '/solar-cell-manufacturing/',
     ctaLabel: 'Know more about solar cell manufacturing',
     figureClassName: 'text-figure-cell-bright',
@@ -211,8 +222,7 @@ export const businessTiles = [
     icon: iconModuleManufacturing,
     title: 'Solar Module Manufacturing',
     description:
-      'We produce bifacial solar modules engineered for performance, durability and ' +
-      'long-term reliability across diverse operating environments.',
+      'We produce bifacial solar modules engineered for performance, durability, and long-term reliability across diverse operating environments.',
     href: '/module-manufacturing/',
     ctaLabel: 'Know more about solar module manufacturing',
     figureClassName: 'text-figure-module-bright',
@@ -222,10 +232,9 @@ export const businessTiles = [
   {
     id: 'agri-waste',
     icon: iconAgriWaste,
-    title: 'Agri Waste to Energy',
+    title: 'Agri Waste-to-Energy',
     description:
-      'We convert agricultural residue into clean energy, reducing stubble burning and ' +
-      'emissions while creating value for farming communities.',
+      'We convert agricultural residue into clean energy, reducing stubble burning and emissions while creating value for farming communities.',
     href: '/waste-to-energy/',
     ctaLabel: 'Know more about agri waste to energy',
     figureClassName: 'text-figure-agri-bright',
@@ -270,7 +279,7 @@ export const businessTiles = [
  *
  * **One thing does not reconcile, and it is the client's to answer, not ours.**
  * The Solar IPP figures sum to **9090 MW**, where page 1 of the same PDF says
- * **8.3 GWp** and `getCapacityStats()` returns 8299 MWp. No single value
+ * **8.3 GWp** and `getCapacityStats()` returned 8299 MWp until 2026-10-01 (it reads 8.3 GWp now). No single value
  * accounts for the 791 MW gap, so it is not one misread icon — the map and the
  * headline look like different as-of dates. Both are reproduced as published
  * rather than reconciled here. /CLAUDE.md §3.

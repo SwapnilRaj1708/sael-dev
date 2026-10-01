@@ -449,3 +449,94 @@
     text-underline-offset: 0.2em;
   }
 }
+
+/*
+ * A Newsroom article's body — the "second surface" the note above asks for,
+ * so a utility of its own rather than `rich-text` widened: an article has
+ * headings, a figure and links that must be visible as links, and a
+ * biography has none of them. Its tags are exactly `sanitize-article.ts`'s
+ * allowlist; widen the two together.
+ *
+ * Dark ground only — every Newsroom page sits on the investor template's
+ * black. The body text's own size and colour stay on the element, as with
+ * `rich-text`; what is here is rhythm, the headings' scale, and the link
+ * treatment the legacy articles had (accent-coloured and underlined).
+ *
+ * The headings take the site's own h2/h3 sizes, so an article's sections sit
+ * under its title at the step the rest of the site uses. A heading gets the
+ * larger gap above it and the smaller below, which is what ties it to the
+ * paragraph it introduces.
+ */
+@utility article-prose {
+  & > * + * {
+    margin-top: var(--spacing-stack);
+  }
+
+  & > * + :is(h2, h3, h4) {
+    margin-top: var(--spacing-flow);
+  }
+
+  h2,
+  h3,
+  h4 {
+    color: var(--color-white);
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+
+  h4 {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  ul,
+  ol {
+    padding-left: var(--spacing-inset);
+    list-style: revert;
+  }
+
+  li + li {
+    margin-top: var(--spacing-tight);
+  }
+
+  strong,
+  b {
+    font-weight: 700;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  a {
+    color: var(--color-brand-red-bright);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
+  }
+
+  a:hover {
+    color: var(--color-white);
+  }
+
+  /* The global ring is --color-brand-blue, 1.84:1 on this ground. */
+  a:focus-visible {
+    outline-color: var(--color-white);
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}

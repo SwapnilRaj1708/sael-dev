@@ -3,7 +3,6 @@ import {
   investorContactBlocks,
   investorContactPage as page,
 } from '@/app/_content/investor-contact';
-import { jumpLinksLabel } from '@/app/_content/investors';
 import { ContactBlocks } from '@/components/sections/contact-blocks';
 import { SubPage } from '@/components/sections/sub-page';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -30,7 +29,7 @@ export const metadata: Metadata = buildMetadata({
 export default function InvestorContactPage() {
   return (
     <SubPage masthead="ripple" title={page.name}>
-      <ContactBlocks blocks={investorContactBlocks} jumpLabel={jumpLinksLabel} />
+      <ContactBlocks blocks={investorContactBlocks} />
     </SubPage>
   );
 }

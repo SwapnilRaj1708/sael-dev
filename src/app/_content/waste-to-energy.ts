@@ -12,7 +12,7 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
 import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
 
 /**
- * The Waste To Energy page's static content.
+ * The Agri Waste-to-Energy page's static content.
  *
  * **Every string here is transcribed verbatim from the live
  * https://www.sael.co/waste-to-energy/**, read from its HTML on 2026-09-19
@@ -65,22 +65,25 @@ export type BenefitCopy = Omit<ValueGridItem, 'mark'>;
 
 const PENDING: StaticImageData | null = null;
 
-/** Describe one asset in the Waste To Energy folder of the blob container. */
+/** Describe one asset in the Agri Waste-to-Energy folder of the blob container. */
 const wteAsset = (file: string, width: number, height: number): StaticImageData | null =>
   cdnImage(`web-assets/media/waste-to-energy/${file}`, width, height);
 
 export const wasteToEnergyMeta = {
   /** The live page's own `<title>`, verbatim. */
-  title: 'Waste To Energy | SAEL',
+  title: 'Agri Waste-to-Energy | SAEL',
   /** The live page ships an empty description. Nothing invented. */
   description: TODO_CONTENT,
 } as const;
 
 export const wasteToEnergyHero: PageHeroProps = {
-  title: 'Waste To Energy',
+  title: 'Agri Waste-to-Energy',
   intro:
     'Converting Agricultural Waste Into Clean Energy – Contributing Towards Building a Sustainable Energy Ecosystem And Environment',
   align: 'center',
+  // One line wherever it fits, not the 15ch hero measure — the client's call
+  // of 2026-10-01, for this page only.
+  titleMeasure: 'none',
   // Supplied 2026-09-21, as on Solar Energy: a video rather than a
   // photograph. `null` when the container is unconfigured, and the hero then
   // shows its poster.

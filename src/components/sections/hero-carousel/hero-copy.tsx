@@ -65,7 +65,7 @@ export function HeroCopy({ slides, activeIndex }: HeroCopyProps) {
             `w-auto` is all it takes.
 
             The height is shared, which is what matters for the stack: all four
-            are `h-hero-icon`, so the cross-fade never changes the column's
+            are `h-hero-mark` over a two-line caption, so the cross-fade never changes the column's
             height. `justify-items-start` puts every left edge on the same
             line, and they are stacked in one grid area. */}
         <div aria-hidden="true" className="mb-stack grid justify-items-start">
@@ -76,24 +76,36 @@ export function HeroCopy({ slides, activeIndex }: HeroCopyProps) {
               index === activeIndex ? 'opacity-100' : 'opacity-0',
             );
 
-            // No artwork, so no intrinsic shape to draw at. The placeholder
-            // falls back to a square — the frame's own behaviour — because a
-            // stand-in for an unsupplied asset has no proportions of its own
-            // to honour. docs/asset-inventory.md §9.
-            return slide.symbol.image === null ? (
-              <span
-                key={slide.id}
-                data-pending={slide.symbol.pending}
-                className={cn('aspect-square h-hero-icon bg-inert/10', stacked)}
-              />
-            ) : (
-              <Image
-                key={slide.id}
-                src={slide.symbol.image}
-                alt=""
-                sizes={SIZES_HERO_SYMBOL}
-                className={cn('h-hero-icon w-auto', stacked)}
-              />
+            const caption = (
+              <span className="mt-hero-mark-gap block text-hero-mark-label text-white uppercase">
+                {slide.symbol.label.map((line) => (
+                  <span key={line} className="block whitespace-nowrap">
+                    {line}
+                  </span>
+                ))}
+              </span>
+            );
+
+            return (
+              <div key={slide.id} className={cn('flex flex-col items-center text-center', stacked)}>
+                {slide.symbol.image === null ? (
+                  // No artwork, so no intrinsic shape to draw at. The
+                  // placeholder falls back to a square — the frame's own
+                  // behaviour. docs/asset-inventory.md §9.
+                  <span
+                    data-pending={slide.symbol.pending}
+                    className="aspect-square h-hero-mark bg-inert/10"
+                  />
+                ) : (
+                  <Image
+                    src={slide.symbol.image}
+                    alt=""
+                    sizes={SIZES_HERO_SYMBOL}
+                    className="h-hero-mark w-auto"
+                  />
+                )}
+                {caption}
+              </div>
             );
           })}
         </div>

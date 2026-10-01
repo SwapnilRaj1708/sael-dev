@@ -1,6 +1,7 @@
 import { env } from '@/lib/config/env';
 import { tryBlobUrl } from '@/lib/utils/blob-url';
-import type { ContentRepository } from '../repository';
+import { newsItemHref, newsVideoThumbnail } from '../news-links';
+import type { ContentRepository, NewsItemsQuery } from '../repository';
 import type {
   BlobFile,
   BoardCommittee,
@@ -11,6 +12,9 @@ import type {
   InvestorDocumentCategory,
   InvestorListing,
   InvestorVideo,
+  NewsArticle,
+  NewsArticleCategory,
+  NewsCategory,
   NewsItem,
   TeamMember,
 } from '../types';
@@ -20,6 +24,7 @@ import capacityStats from './data/capacity-stats.json';
 import investorDocuments from './data/investor-documents.json';
 import investorVideos from './data/investor-videos.json';
 import newsItems from './data/news-items.json';
+import newsroomItems from './data/newsroom-items.json';
 import teamMembers from './data/team-members.json';
 
 /**
@@ -79,6 +84,71 @@ function blobFile({ path, ...file }: FixtureFile, legacyPath: string | null): Bl
   return url === null ? null : { ...file, url };
 }
 
+/**
+ * A homepage carousel row, as `news-items.json` has stored it since FE-04 —
+ * the card fields only, `href` written out. Read as it is so the homepage's
+ * call returns exactly what it always has; the fields it does not carry are
+ * the same in all six rows and are filled in on read.
+ */
+interface HomepageNewsFixture {
+  id: string;
+  title: string;
+  publishedAt: string;
+  href: string;
+  imageUrl: string | null;
+}
+
+/**
+ * A Newsroom row: the domain fields, with the image as a path pair rather
+ * than a URL, and the body for an article. Generated from the legacy pages'
+ * HTML — see `getNewsItems()`.
+ */
+interface NewsroomFixture extends Omit<NewsItem, 'category' | 'href' | 'imageUrl'> {
+  category: NewsCategory;
+  image: { path: string; legacyPath: string } | null;
+  body: string | null;
+}
+
+/**
+ * A body's own images: each `src` is stored as the root-relative legacy path
+ * — the legacy CMS wrote them absolute, on a development host — and is
+ * resolved exactly as a card's image is, by `fixtureUrl()` with the blob path
+ * `web-assets` + legacy path. An image that cannot be resolved loses its
+ * `src`, and the sanitiser then drops the element.
+ */
+function resolveBodyImages(body: string): string {
+  return body.replace(
+    /(<img\b[^>]*?\ssrc=")(\/[^"]*)(")/g,
+    (_match, open: string, path: string, close: string) => {
+      const url = fixtureUrl(`web-assets${path}`, path);
+      return url === null ? `${open}${close}` : `${open}${url}${close}`;
+    },
+  );
+}
+
+/** A Newsroom row as a card needs it, or `null` if it has nowhere to go. */
+function toNewsItem(row: NewsroomFixture): NewsItem | null {
+  const href = newsItemHref(row);
+  if (href === null) return null;
+
+  return {
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    publishedAt: row.publishedAt,
+    href,
+    imageUrl:
+      row.image === null
+        ? newsVideoThumbnail(row.videoId)
+        : fixtureUrl(row.image.path, row.image.legacyPath),
+    imageAlt: row.imageAlt,
+    slug: row.slug,
+    externalUrl: row.externalUrl,
+    videoId: row.videoId,
+    publication: row.publication,
+  };
+}
+
 function inListing(listing: InvestorListing) {
   return (row: { category: InvestorDocumentCategory; section: string | null }) =>
     row.category === listing.category && row.section === listing.section;
@@ -115,16 +185,74 @@ export class MockContentRepository implements ContentRepository {
     return this.settle(stats);
   }
 
-  getNewsItems(options?: { limit?: number }): Promise<NewsItem[]> {
-    // Sorted here rather than trusted from the file, for the same reason as
-    // above: "most recent first" is the contract, not a property of the
-    // fixture's line order.
-    const items = [...(newsItems as NewsItem[])].sort((a, b) =>
-      b.publishedAt.localeCompare(a.publishedAt),
+  /**
+   * **Two fixtures, on purpose.** With no `category` this is the homepage's
+   * call, and it reads `news-items.json` exactly as it always has: six
+   * press releases, newest first, with the client's own stills from
+   * `public/news/` and every card linking to `/newsroom/`. That set is a
+   * snapshot from before the Newsroom existed, and it is kept rather than
+   * re-derived so the homepage does not change under this work. Against the
+   * API the same call is the newest items across every category — see
+   * docs/api-contracts.md §2 — and the homepage should choose a category
+   * before cutover.
+   *
+   * With a `category` it reads `newsroom-items.json`, which is the legacy
+   * https://www.sael.co/newsroom/ listings transcribed from their raw HTML
+   * on 2026-10-01 by script, not by hand: every title, date, image `alt`,
+   * outbound URL, video id and article body exactly as published. The file's
+   * line order is each legacy listing's order, which for the dated sections
+   * is also newest first — the sort below is stable, so it changes nothing
+   * there and leaves Our Views and Multimedia, which carry no date, in the
+   * order the company published them.
+   *
+   * Images resolve like the investor files do: the legacy copy while
+   * `LEGACY_ASSET_BASE_URL` is set, the blob path (`web-assets` + legacy
+   * path) otherwise. docs/asset-inventory.md §8 lists every one for upload.
+   */
+  getNewsItems(options?: NewsItemsQuery): Promise<NewsItem[]> {
+    const category = options?.category;
+    const items =
+      category === undefined
+        ? (newsItems as HomepageNewsFixture[]).map((row): NewsItem => ({
+            ...row,
+            category: 'press-release',
+            imageAlt: null,
+            slug: null,
+            externalUrl: null,
+            videoId: null,
+            publication: null,
+          }))
+        : (newsroomItems as NewsroomFixture[])
+            .filter((row) => row.category === category)
+            .flatMap((row) => toNewsItem(row) ?? []);
+
+    // Sorted here rather than trusted from the file: "most recent first" is
+    // the contract, not a property of the fixture's line order. Undated items
+    // compare equal and keep their place.
+    const sorted = items.sort((a, b) =>
+      a.publishedAt === null || b.publishedAt === null
+        ? 0
+        : b.publishedAt.localeCompare(a.publishedAt),
     );
 
     const limit = options?.limit;
-    return this.settle(limit === undefined ? items : items.slice(0, limit));
+    return this.settle(limit === undefined ? sorted : sorted.slice(0, limit));
+  }
+
+  getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null> {
+    const row = (newsroomItems as NewsroomFixture[]).find(
+      (candidate) => candidate.category === category && candidate.slug === slug,
+    );
+    const item = row === undefined ? null : toNewsItem(row);
+
+    if (row === undefined || item === null || row.body === null) return this.settle(null);
+
+    return this.settle({
+      ...item,
+      category,
+      slug,
+      body: resolveBodyImages(row.body),
+    });
   }
 
   getTeamMembers(): Promise<TeamMember[]> {

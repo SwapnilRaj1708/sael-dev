@@ -39,10 +39,10 @@ export const FOOTER_GROUPS: readonly FooterGroup[] = [
   {
     title: 'Solutions',
     links: [
-      { label: 'Solar Energy', href: '/solar-energy/' },
-      { label: 'Waste To Energy', href: '/waste-to-energy/' },
-      { label: 'Module Manufacturing', href: '/module-manufacturing/' },
+      { label: 'Solar Energy Generation', href: '/solar-energy/' },
+      { label: 'Solar Module Manufacturing', href: '/module-manufacturing/' },
       { label: 'Solar Cell Manufacturing', href: '/solar-cell-manufacturing/' },
+      { label: 'Agri Waste-to-Energy', href: '/waste-to-energy/' },
     ],
   },
   {

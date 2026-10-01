@@ -50,17 +50,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Businesses',
     children: [
       {
-        label: 'Solar Energy',
+        label: 'Solar Energy Generation',
         href: '/solar-energy/',
         image: { src: solarEnergy, alt: 'A SAEL engineer at a solar generation site' },
       },
       {
-        label: 'Waste To Energy',
-        href: '/waste-to-energy/',
-        image: { src: wasteToEnergy, alt: 'Paddy straw on the conveyor at a SAEL biomass plant' },
-      },
-      {
-        label: 'Module Manufacturing',
+        label: 'Solar Module Manufacturing',
         href: '/module-manufacturing/',
         image: { src: moduleManufacturing, alt: 'A robotic arm placing a solar module' },
       },
@@ -71,6 +66,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
           src: solarCellManufacturing,
           alt: 'The production line at a SAEL solar cell facility',
         },
+      },
+      {
+        label: 'Agri Waste-To-Energy',
+        href: '/waste-to-energy/',
+        image: { src: wasteToEnergy, alt: 'Paddy straw on the conveyor at a SAEL biomass plant' },
       },
     ],
   },

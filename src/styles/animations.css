@@ -844,7 +844,9 @@
    * hover lifts it to --bg-gradient-intensity and sets --bg-gradient-play.
    */
   .anim-bg-gradient {
-    --bg-gradient-radius: var(--radius-card-outlined);
+    /* The ring's corner. A card whose corner is not the outlined card's own
+     * sets --card-radius and rounds itself with it, so the two agree. */
+    --bg-gradient-radius: var(--card-radius, var(--radius-card-outlined));
     --bg-gradient-reach: calc(var(--bg-gradient-ring) + var(--bg-gradient-bloom));
     position: absolute;
     inset: 0;

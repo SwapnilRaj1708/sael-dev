@@ -2,10 +2,10 @@ import { cn } from '@/lib/utils/cn';
 
 /**
  * Marks for the three remaining business pages — Solar Cell Manufacturing,
- * Module Manufacturing and Waste To Energy — drawn on 2026-09-19 in the same
+ * Module Manufacturing and Agri Waste-to-Energy — drawn on 2026-09-19 in the same
  * idiom as `solar-marks.tsx` and for the same reason: the client asked for
  * appropriate marks to be chosen rather than waiting on artwork. The live
- * pages carry raster icons on the Waste To Energy benefit cards and nothing
+ * pages carry raster icons on the Agri Waste-to-Energy benefit cards and nothing
  * on the rest; the reference screenshots draw one on every entry.
  *
  * A 56×56 box, `stroke="currentColor"`, no literal colour anywhere. Every
@@ -115,7 +115,7 @@ export function InspectionMark({ className }: MarkProps) {
   );
 }
 
-/* ------------------------------------------------------------ Waste to energy */
+/* ------------------------------------------------------------ Agri Waste-to-Energy */
 
 /** Best available technology — a boiler with a flame. */
 export function BoilerMark({ className }: MarkProps) {

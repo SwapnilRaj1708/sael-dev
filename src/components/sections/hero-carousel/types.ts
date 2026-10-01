@@ -50,6 +50,12 @@ export interface HeroSlide {
     image: StaticImageData | null;
     /** Name in docs/asset-inventory.md, for the pending-asset placeholder. */
     pending: string;
+    /**
+     * The business name set beneath the mark, one entry per line. Broken by
+     * hand rather than left to wrap so every mark carries a two-line caption
+     * and the stacked column never changes height between slides.
+     */
+    label: readonly [string, string];
   };
   headline: string;
   /**

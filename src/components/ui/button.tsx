@@ -61,6 +61,14 @@ const button = cva(
          * a card and should not shout over the headline above it.
          */
         quiet: 'rounded-none text-ink hover:text-brand-red hover:underline underline-offset-4',
+        /**
+         * `quiet` on a dark ground — the Newsroom's cards sit on black. The
+         * hover red is the `-bright` one, which is tuned to clear 4.5:1 on
+         * --color-surface-black where the flat red does not, and the ring is
+         * white for the reason `onDark`'s is.
+         */
+        quietOnDark:
+          'rounded-none text-white hover:text-brand-red-bright hover:underline underline-offset-4 focus-visible:outline-white',
         /* On a dark background the shared blue focus ring has almost no
          * contrast against the surface, so this variant brings its own. */
         onDark:

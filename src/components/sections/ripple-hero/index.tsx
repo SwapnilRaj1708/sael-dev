@@ -3,12 +3,20 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Container } from '@/components/ui/container';
 import { Section } from '@/components/ui/section';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
+import { cn } from '@/lib/utils/cn';
 
 export interface RippleHeroProps {
   /** The page title. Rendered as the page's single `<h1>`, centred. */
   title: string;
   /** Root first, current page last. See `<Breadcrumb>`. */
   breadcrumb?: readonly BreadcrumbTrailItem[];
+  /**
+   * `hero`, the default, is display type for a page's name — two words to
+   * seven. `article` is `--text-h2` at the article measure, for a Newsroom
+   * article whose title *is* its `<h1>` and runs to thirty-five words: at
+   * hero size that is a screen of headline on a phone.
+   */
+  titleSize?: 'hero' | 'article';
 }
 
 /**
@@ -48,7 +56,7 @@ export interface RippleHeroProps {
  *
  * A Server Component; `<BackgroundRipple>` is the client leaf.
  */
-export function RippleHero({ title, breadcrumb }: RippleHeroProps) {
+export function RippleHero({ title, breadcrumb, titleSize = 'hero' }: RippleHeroProps) {
   return (
     <Section background="black-dots" spacing="none" fullBleed>
       <div className="relative flex min-h-(--ripple-hero-h) w-full items-center overflow-hidden lg:min-h-(--ripple-hero-h-lg)">
@@ -67,7 +75,19 @@ export function RippleHero({ title, breadcrumb }: RippleHeroProps) {
             <Breadcrumb items={breadcrumb} className="pointer-events-auto" />
           )}
 
-          <h1 className="max-w-(--measure) text-hero text-balance text-white">{title}</h1>
+          <h1
+            className={cn(
+              'text-balance text-white',
+              // An article's title takes the pointer back, so a reader can
+              // select and copy a headline worth quoting; the grid still
+              // lights around it.
+              titleSize === 'article'
+                ? 'pointer-events-auto max-w-(--measure-article) text-h2'
+                : 'max-w-(--measure) text-hero',
+            )}
+          >
+            {title}
+          </h1>
         </Container>
       </div>
     </Section>

@@ -87,6 +87,26 @@ export const SIZES_GOAL_CARD = '(min-width: 48rem) 32vw, 92vw';
 export const SIZES_NEWS_CARD = '(min-width: 64rem) 330px, 238px';
 
 /**
+ * A news card in a Newsroom grid — sections/news-grid. While the grid is one
+ * column the card is a row and its thumbnail is `--news-row-thumb-w`, 160px
+ * at most; the grid has two columns from a 42rem container, which a screen
+ * reaches at about 44rem once the gutters are off. From there a card is at
+ * most ~560px (two across a 72rem index), and from 90rem it is at most ~440px
+ * (four across). The grid's breakpoints are container queries and these are
+ * media queries, so the hinges are the nearest viewport widths, rounded
+ * outward.
+ */
+export const SIZES_NEWS_GRID = '(min-width: 90rem) 28rem, (min-width: 44rem) 36rem, 10rem';
+
+/**
+ * A Newsroom article's lead image — the reading column's full width, which is
+ * `--measure-article` (68ch, ~720px at --text-body's 20px) once the screen is
+ * wide enough, and the content width inside the gutter below that. The
+ * legacy files are 700–800px wide, so the cap is never short of the source.
+ */
+export const SIZES_ARTICLE_LEAD = '(min-width: 50rem) 720px, 92vw';
+
+/**
  * An "Our Goals" mark — `--spacing-goal-icon` wide, 60 → 126px.
  */
 export const SIZES_GOAL_ICON = '126px';

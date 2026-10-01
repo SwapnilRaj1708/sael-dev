@@ -4,7 +4,8 @@ import { MockContentRepository } from './mock';
 import type { ContentRepository } from './repository';
 
 export { ContentUnavailableError, NotImplementedError } from './repository';
-export type { ContentRepository } from './repository';
+export type { ContentRepository, NewsItemsQuery } from './repository';
+export { NEWSROOM_PATH, newsArticlePath, newsListingPath } from './news-links';
 export type {
   BlobFile,
   BoardCommittee,
@@ -16,6 +17,9 @@ export type {
   InvestorDocumentCategory,
   InvestorListing,
   InvestorVideo,
+  NewsArticle,
+  NewsArticleCategory,
+  NewsCategory,
   NewsItem,
   TeamGroup,
   TeamMember,

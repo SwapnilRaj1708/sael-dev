@@ -201,6 +201,10 @@
   /* The unfilled part of a hero progress segment. */
   --color-hero-track: rgb(255 255 255 / 0.16);
 
+  /* The hero's slide dots: the resting dot, and the one for the slide on screen. */
+  --color-hero-dot: rgb(255 255 255 / 0.45);
+  --color-hero-dot-active: rgb(255 255 255 / 1);
+
   /* The "upcoming" business card.
    *
    * Solar Cell Manufacturing is the one block in the ledger that is not yet
@@ -411,6 +415,13 @@
   --text-tile-note--font-weight: 400;
 
   /* The asterisk marking an upcoming facility. */
+  /* The business name under the hero's mark: DIN bold capitals, matching
+   * the lettering in the client's original artwork. 10 → 20. */
+  --text-hero-mark-label: clamp(0.625rem, 0.4808rem + 0.641vw, 1.25rem);
+  --text-hero-mark-label--line-height: 1.1;
+  --text-hero-mark-label--letter-spacing: 0.02em;
+  --text-hero-mark-label--font-weight: 700;
+
   --text-tile-marker: clamp(0.75rem, 0.7212rem + 0.1282vw, 0.875rem);
   --text-tile-marker--font-weight: 700;
 
@@ -461,12 +472,8 @@
   --text-ledger-figure--letter-spacing: -0.04em;
   --text-ledger-figure--font-weight: 700;
 
-  /* 28 → 58 for the same slot, where the figure runs long enough that the
-   * size above would break the row. "3625 MW + 5 GW" is the case. */
-  --text-ledger-figure-long: clamp(1.75rem, 1.3462rem + 1.7949vw, 3.625rem);
-  --text-ledger-figure-long--line-height: 0.9;
-  --text-ledger-figure-long--letter-spacing: -0.04em;
-  --text-ledger-figure-long--font-weight: 700;
+  /* A trailing asterisk on a ledger figure, at half the figure's size. */
+  --text-ledger-figure-marker: 0.5em;
 
   /* 22 → 34. The name on an "Our Goals" card. Regular weight and tight, where
    * --text-goal-title was bold and tracked — the design resets it. */
@@ -665,13 +672,20 @@
    * wide screen, as the design has them. */
   --spacing-news-card: clamp(14.875rem, 13.5481rem + 5.8974vw, 20.625rem); /* 238 → 330 */
 
+  /* The play mark centred on a Multimedia card's thumbnail. 44 at 360 so it
+   * still reads on the compact row card's 112px thumbnail, 64 at 1920. */
+  --spacing-play-mark: clamp(2.75rem, 2.4615rem + 1.2821vw, 4rem); /* 44 → 64 */
+
   /* ------------------------------------------------------------------
    * `SAEL Home v2` measurements.
    * ---------------------------------------------------------------- */
 
-  /* The hero's per-slide mark, stacked above the headline rather than set
-   * loose in the frame as a watermark. */
-  --spacing-hero-icon: clamp(4.625rem, 3.1538rem + 6.5385vw, 11rem); /* 74 → 176 */
+  /* The hero's per-slide mark, stacked above the headline. Since 2026-10-01 it is the business ledger's unlettered icon with
+   * the name typed beneath it, in proportion to the client's lettered
+   * artwork (74 → 176 overall): the mark ~70% of it, and a gap of ~8%
+   * of the mark above two lines of caption. */
+  --spacing-hero-mark: clamp(3.25rem, 2.2115rem + 4.6154vw, 7.75rem); /* 52 → 124 */
+  --spacing-hero-mark-gap: clamp(0.25rem, 0.1923rem + 0.2564vw, 0.5rem); /* 4 → 8 */
 
   /* The hero's block padding. The top clears the fixed masthead with room to
    * spare; the bottom keeps the content column clear of the progress bar
@@ -689,6 +703,12 @@
    * clearance plus its own padding and the two never meet. */
   --spacing-hero-progress: 2.75rem; /* 44 */
   --spacing-hero-track: 0.1875rem; /* 3 */
+
+  /* The hero's slide dots, centred in the progress row: the dot, the pill the
+   * active one stretches to, and the gap between hit areas. */
+  --spacing-hero-dot: 0.5rem; /* 8 */
+  --spacing-hero-dot-active: 1.5rem; /* 24 */
+  --spacing-hero-dot-gap: 0.25rem; /* 4 */
 
   /* A business ledger row: the mark set at the row's right edge, the padding
    * that keeps the copy clear of it, and the gutter between the two columns. */
@@ -1235,6 +1255,31 @@
 
   --consent-dialog-w: min(52rem, calc(100% - var(--spacing-flow) * 2)); /* 832 cap */
   --consent-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
+
+  /* The Newsroom — ui/news-card.tsx, sections/news-grid/, the article page.
+   *
+   * A news card in a single-column grid is a row, not a tower: the thumbnail
+   * at this width on the left, the date, title and action beside it. 112 at
+   * 360 leaves the headline ~190px; 160 by 720, past which the grid has two
+   * columns and the card stands up again. It is what keeps the 42-item In
+   * The News listing a list on a phone rather than 42 screens of photograph. */
+  --news-row-thumb-w: clamp(7rem, 4rem + 13.3333vw, 10rem); /* 112 → 160, 360 → 720 */
+  --news-row-cols: var(--news-row-thumb-w) minmax(0, 1fr);
+
+  /* An article's reading measure. --measure (90ch) is a cap for copy that
+   * shares a row with something; an article is nothing but running text,
+   * and 68ch at --text-body is the classic 60–75 character line. */
+  --measure-article: 68ch;
+
+  /* The video dialog. As wide as the consent dialog's arithmetic allows,
+   * capped at 1152 — and capped again by the screen's *height*, so a 16:9
+   * player plus the close bar always fits a landscape phone without
+   * scrolling: the height left after the margins and the bar, times 16/9. */
+  --video-dialog-w: min(
+    72rem,
+    calc(100% - var(--spacing-flow) * 2),
+    calc((100dvh - var(--spacing-flow) * 2 - var(--spacing-touch) - var(--spacing-tight)) * 16 / 9)
+  ); /* 1152 cap */
 
   /* The pixel strip's six ramp stops, left to right. Separate values rather
    * than one gradient because the scattered squares are painted to a canvas,

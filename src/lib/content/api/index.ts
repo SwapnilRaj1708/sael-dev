@@ -1,4 +1,4 @@
-import { NotImplementedError, type ContentRepository } from '../repository';
+import { NotImplementedError, type ContentRepository, type NewsItemsQuery } from '../repository';
 import type {
   BoardCommittee,
   BoardMember,
@@ -6,6 +6,8 @@ import type {
   InvestorDocument,
   InvestorListing,
   InvestorVideo,
+  NewsArticle,
+  NewsArticleCategory,
   NewsItem,
   TeamMember,
 } from '../types';
@@ -39,9 +41,32 @@ export class ApiContentRepository implements ContentRepository {
     return Promise.reject(new NotImplementedError('ApiContentRepository.getCapacityStats'));
   }
 
-  getNewsItems(options?: { limit?: number }): Promise<NewsItem[]> {
+  /**
+   * `GET /api/v1/news?category=…&limit=…`, `category` omitted for the
+   * homepage's call. docs/api-contracts.md §2. Mapped: `href` resolved with
+   * `newsItemHref()` — the same function the mock calls — and a row it
+   * returns `null` for (an article without a slug, a video without an id) is
+   * dropped rather than rendered as a card that goes nowhere; `imageUrl`
+   * read through, falling back to `newsVideoThumbnail(videoId)` for a video
+   * that arrives without one; `imageAlt`, `slug`, `externalUrl`, `videoId`,
+   * `source` → `publication` and `publishedAt` read through. The backend's
+   * sort is trusted. FE-23 wires the body.
+   */
+  getNewsItems(options?: NewsItemsQuery): Promise<NewsItem[]> {
     void options;
     return Promise.reject(new NotImplementedError('ApiContentRepository.getNewsItems'));
+  }
+
+  /**
+   * `GET /api/v1/news/{category}/{slug}` — a 404 maps to `null`, anything
+   * else non-2xx to `ContentUnavailableError`. Mapped as above, plus `body`
+   * read through as HTML; the page sanitises it again, as Our Team does a
+   * biography. FE-23 wires the body.
+   */
+  getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null> {
+    void category;
+    void slug;
+    return Promise.reject(new NotImplementedError('ApiContentRepository.getNewsArticle'));
   }
 
   /**

@@ -52,7 +52,7 @@ const METRIC_LABEL: Record<SiteMetric, string> = {
   'solar-ipp': 'Solar Energy Generation',
   'module-assembly': 'Solar Module Manufacturing',
   'solar-cell': 'Solar Cell Manufacturing',
-  'agri-waste': 'Agri Waste to Energy',
+  'agri-waste': 'Agri Waste-to-Energy',
 };
 
 /**
@@ -72,7 +72,7 @@ const METRIC_CLASS: Record<SiteMetric, string> = {
 };
 
 /**
- * "298 MW Solar Energy Generation; 89.4 MW Agri Waste to Energy" — or, with
+ * "298 MW Solar Energy Generation; 89.4 MW Agri Waste-to-Energy" — or, with
  * the legend off, just "298 MW".
  */
 function describeSite(site: PresenceSite, legend: boolean): string {

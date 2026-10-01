@@ -6,7 +6,8 @@ import { NewsCarousel } from '@/components/sections/news-carousel';
 import { HeroCarousel } from '@/components/sections/hero-carousel';
 import { IntroSplit } from '@/components/sections/intro-split';
 import { PresenceMap } from '@/components/sections/presence-map';
-import { SolutionsCarousel } from '@/components/sections/solutions-carousel';
+// Solutions is withdrawn at the client's request (2026-10-01) but expected back.
+// import { SolutionsCarousel } from '@/components/sections/solutions-carousel';
 import { TODO_CONTENT } from '@/lib/config/site';
 import { getContentRepository, type CapacityStat, type NewsItem } from '@/lib/content';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -18,7 +19,7 @@ import {
   ourEndeavour,
   ourGoals,
   presenceSummary,
-  solutions,
+  // solutions,
 } from './_content/homepage';
 
 /**
@@ -117,7 +118,8 @@ export default async function HomePage() {
       <BusinessTiles eyebrow="Business Portfolio" tiles={tiles} snap />
       <PresenceMap {...presenceSummary} sites={presenceSites} snap />
       <EndeavourSplit {...ourEndeavour} snap />
-      <SolutionsCarousel {...solutions} snap />
+      {/* Withdrawn 2026-10-01 at the client's request; expected back.
+      <SolutionsCarousel {...solutions} snap /> */}
       <GoalsGrid {...ourGoals} snap />
       <NewsCarousel title="In the News" items={news} snap />
     </div>

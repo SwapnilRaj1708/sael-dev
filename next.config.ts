@@ -1,5 +1,32 @@
 import type { NextConfig } from 'next';
 
+type RemotePattern = NonNullable<NonNullable<NextConfig['images']>['remotePatterns']>[number];
+
+/**
+ * The legacy site's origin as an image source, while `LEGACY_ASSET_BASE_URL`
+ * is set — the Newsroom's card and article images are served from there
+ * until the client uploads them to the blob container (see .env.example).
+ * Read from the environment, not written here, so no hostname is committed
+ * (/CLAUDE.md §7), and confined to `/img/`, the only legacy path an image
+ * comes from. Unset the variable and the pattern goes with it.
+ *
+ * **Read at build time**: `remotePatterns` is compiled into the build, so the
+ * build must see the same value the server runs with.
+ */
+function legacyImagePattern(): RemotePattern[] {
+  const base = process.env.LEGACY_ASSET_BASE_URL;
+  if (base === undefined || base === '') return [];
+
+  const { protocol, hostname } = new URL(base);
+  return [
+    {
+      protocol: protocol === 'http:' ? 'http' : 'https',
+      hostname,
+      pathname: '/img/**',
+    },
+  ];
+}
+
 const nextConfig: NextConfig = {
   // `next dev` only — the LAN address a phone on the same network uses to
   // reach the dev server, which Next otherwise refuses as a cross-origin
@@ -28,7 +55,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [{ protocol: 'https', hostname: '*.blob.core.windows.net' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.blob.core.windows.net' },
+      // YouTube's thumbnail host, for the Newsroom's Multimedia cards — a
+      // fixed public endpoint, not configuration. Optimised like any other
+      // image rather than served `unoptimized`. lib/utils/youtube.ts.
+      { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
+      ...legacyImagePattern(),
+    ],
   },
   turbopack: {
     rules: {

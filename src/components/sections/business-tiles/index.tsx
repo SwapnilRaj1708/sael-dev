@@ -11,16 +11,6 @@ import { SIZES_BUSINESS_ICON } from '@/lib/utils/image-sizes';
 import { cn } from '@/lib/utils/cn';
 
 /**
- * Above this many characters a capacity figure is set one step down the scale.
- *
- * "3625 MW + 5 GW" is the case the design itself makes an exception for. A
- * length test rather than a flag on the data because the figures come from the
- * repository — a plant commissioning could lengthen any of them, and the row
- * should not break when it does.
- */
-const LONG_FIGURE_CHARS = 9;
-
-/**
  * The two title treatments the client asked to compare on 2026-08-27. Both are
  * live code; **switching between them is the one word below.**
  *
@@ -164,8 +154,6 @@ export function BusinessTiles({ eyebrow, tiles, snap = false }: BusinessTilesPro
             rather than as four detached blocks. */}
         <div className="grid gap-x-ledger-col-gap md:grid-cols-2">
           {tiles.map((tile, index) => {
-            const isLongFigure = (tile.value?.length ?? 0) > LONG_FIGURE_CHARS;
-
             return (
               <Reveal
                 key={tile.id}
@@ -232,13 +220,16 @@ export function BusinessTiles({ eyebrow, tiles, snap = false }: BusinessTilesPro
                       it rather than all four sharing brand red. */}
                     {tile.value !== null && (
                       <p
-                        className={cn(
-                          'mt-4 tabular-nums',
-                          isLongFigure ? 'text-ledger-figure-long' : 'text-ledger-figure',
-                          tile.figureClassName,
-                        )}
+                        className={cn('mt-4 text-ledger-figure tabular-nums', tile.figureClassName)}
                       >
-                        <CountUp value={tile.value} />
+                        {/* One size for all four figures, at the client's
+                          request on 2026-10-01 — "3.6 GWp + 5 GW" no longer
+                          steps down. A trailing asterisk is split off and set
+                          at half size so it reads as a marker, not a digit. */}
+                        <CountUp value={tile.value.replace(/\*$/, '')} />
+                        {tile.value.endsWith('*') && (
+                          <span className="align-super text-ledger-figure-marker">*</span>
+                        )}
                       </p>
                     )}
 

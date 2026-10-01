@@ -433,6 +433,75 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
 
 ---
 
+- **The Newsroom's images (60) are not uploaded yet** — inventoried 2026-10-01 from the legacy listing and article pages, every URL checked (all 200), with the pixel size and byte count read from the files the same day. Same mechanical rule as the investor files: **the blob path is the legacy path with `web-assets` in front** — `/img/media/<file>` → `web-assets/img/media/<file>`, file name unchanged. 59 are card images, each also its article's lead image and `og:image` where it has an article; one is inside an article body. While `LEGACY_ASSET_BASE_URL` is set the mock serves each from the legacy site, and `next.config.ts` derives a `remotePatterns` entry for that origin's `/img/` from the same variable, so no hostname is committed. The paths are in `src/lib/content/mock/data/newsroom-items.json` (`image.legacyPath` / `image.path`; the body image as a root-relative `src` in its `body`).
+
+  The legacy CMS wrote the body image's `src` on a development host (`dev1024.sael.co`); the same path serves the same file on www.sael.co, and only the path is kept. It had no `alt` either; the one it has now is a neutral description pending the client's caption.
+
+  Multimedia thumbnails are not files of ours: they are YouTube's (`i.ytimg.com`), built from each video's id, and that host is in `remotePatterns` so `next/image` optimises them. The legacy site's play-button image (`/img/site/play-icon.png`) is not migrated; the cards draw their own.
+
+  | Section | Item id | File under `/img/media/` (legacy) and `web-assets/img/media/` (blob) | Pixels | Bytes |
+  |---|---|---|---|---|
+  | Press Release | `renewable-energy-company-sael-secures-supply-orders-for-1-gwp-of-solar-pv-modules-ntpc-rels-chitrakoot-project-accounts-for-5858-mwp` | `renewable-energy-company-sael-secures-supply-orders-for-1-gwp-of-solar-pv-modules-ntpc-rels-chitrakoot-project-accounts-for-5858-mwp-1788339326.webp` | 700 × 394 | 52,214 |
+  | Press Release | `sael-commissions-its-11th-agri-waste-to-energy-plant-in-india` | `sael-commissions-its-11th-agri-waste-to-energy-plant-in-india-1781155767.webp` | 700 × 394 | 42,392 |
+  | Press Release | `sael-commissions-600-mw-solar-power-projects-in-kurnool-andhra-pradesh` | `sael-commissions-600-mw-solar-power-projects-in-kurnool-andhra-pradesh-1777194516.webp` | 700 × 391 | 57,994 |
+  | Press Release | `sael-commissions-1-gwp-solar-project-at-worlds-largest-re-park-groups-total-operational-capacity-crosses-2-gwp` | `sael-commissions-1-gwp-solar-project-at-worlds-largest-re-park-groups-total-operational-capacity-crosses-2-gwp-1769688561.webp` | 700 × 431 | 24,854 |
+  | Press Release | `sael-to-procure-20-lakh-tonnes-of-paddy-stubble-this-season-via-aggregator-aims-to-convert-waste-into-clean-energy-and-curb-pollution-from-stubble-burning` | `sael-to-procure-20-lakh-tonnes-of-paddy-stubble-this-season-via-aggregator-aims-to-convert-waste-into-clean-energy-and-curb-pollution-from-stubble-burning-1761379345.webp` | 700 × 394 | 38,188 |
+  | Press Release | `sael-industries-ltd-commissions-298-mw-dc-solar-project-in-jalore-rajasthan` | `sael-industries-ltd-commissions-298-mw-dc-solar-project-in-jalore-rajasthan-1756645833.webp` | 700 × 394 | 77,466 |
+  | Press Release | `sael-signs-ppas-for-880-mw-solar-projects-in-gujarat-and-punjab` | `sael-signs-ppas-for-880-mw-solar-projects-in-gujarat-and-punjab-1756649533.webp` | 700 × 392 | 78,930 |
+  | Press Release | `sael-conducts-awareness-drive-on-climate-smart-agricultural-practices-for-farmers-in-punjab-haryana-and-rajasthan` | `sael-conducts-awareness-drive-on-climate-smart-agricultural-practices-for-farmers-in-punjab-haryana-and-rajasthan-1753862988.webp` | 700 × 394 | 24,784 |
+  | Press Release | `sael-commissions-50-mw-solar-power-plant-in-beed-maharashtra` | `sael-commissions-50-mw-solar-power-plant-in-beed-maharashtra-1761716452.webp` | 700 × 394 | 120,514 |
+  | Press Release | `sael-to-set-up-rs8200-crore-integrated-solar-facility-in-uttar-pradesh` | `sael-to-set-up-rs8200-crore-integrated-solar-facility-in-uttar-pradesh-1753361161.webp` | 700 × 394 | 22,952 |
+  | Press Release | `sael-secures-480-mw-solar-power-agreement-with-guvnl-in-gujarat` | `sael-secures-480-mw-solar-power-agreement-with-guvnl-in-gujarat-1753360901.webp` | 700 × 394 | 56,342 |
+  | Press Release | `sael-signs-400-mw-solar-power-purchase-agreement-with-pspcl-in-punjab` | `sael-signs-400-mw-solar-power-purchase-agreement-with-pspcl-in-punjab-1753361318.webp` | 700 × 394 | 44,328 |
+  | Press Release | `sael-secures-us132-million-investment-from-ndb-aiib-societe-generale-for-solar-project-in-andhra-pradesh` | `sael-secures-us132-million-investment-from-ndb-aiib-societe-generale-for-solar-project-in-andhra-pradesh-1753361416.webp` | 700 × 394 | 28,262 |
+  | Our Views | `bridging-the-talent-divide-empowering-rural-talent-to-power-india39s-green-future` | `bridging-the-talent-divide-empowering-rural-talent-to-power-india39s-green-future-1756649255.webp` | 700 × 467 | 47,938 |
+  | Our Views | `indias-solar-manufacturing-growth-moving-towards-energy-independence` | `indias-solar-supply-chain-evolution-from-dependency-to-domestic-strength-1744197119.webp` | 700 × 394 | 16,490 |
+  | Our Views | `transforming-renewable-energy-bridging-gaps-in-the-digital-journey` | `transforming-renewable-energy-bridging-gaps-in-the-digital-journey-1744279942.webp` | 700 × 394 | 20,792 |
+  | Our Views | `beyond-the-rs-20000-crore-boost-the-path-to-faster-green-energy-progress` | `the-path-to-faster-green-energy-progress.jpg` | 800 × 450 | 42,023 |
+  | In The News | `sael-secures-1-gwp-solar-module-orders-in-six-months-ntpc-project-accounts-for-5858-mwp` | `sael-secures-1-gwp-solar-module-orders-in-six-months-ntpc-project-accounts-for-5858-mwp-1788798411.webp` | 700 × 381 | 41,050 |
+  | In The News | `sael-unveils-integrated-5gw-solar-cell-module-manufacturing-facility-at-jewar` | `sael-unveils-integrated-5gw-solar-cell-module-manufacturing-facility-at-jewar-1783420907.webp` | 700 × 480 | 26,612 |
+  | In The News | `sael-industries-commissions-149-mw-agri-waste-to-energy-plant-in-rajasthans-bhadra` | `sael-industries-commissions-149-mw-agri-waste-to-energy-plant-in-rajasthans-bhadra-1781155849.webp` | 700 × 394 | 42,392 |
+  | In The News | `nara-lokesh-inaugurates-600-mw-sael-solar-projects-in-andhra-pradesh` | `nara-lokesh-inaugurates-600-mw-sael-solar-projects-in-andhra-pradesh-1781159381.webp` | 700 × 412 | 17,050 |
+  | In The News | `sael-commissions-rs-3000-crore-solar-projects-in-kadapa-kurnool` | `sael-commissions-rs-3000-crore-solar-projects-in-kadapa-kurnool-1781159715.webp` | 700 × 396 | 32,190 |
+  | In The News | `crisil-ratings-assigns-a-stable-long-term-and-a2-short-term-ratings-to-sael-industries` | `crisil-ratings-assigns-a-stable-long-term-and-a2-short-term-ratings-to-sael-industries-1781159151.webp` | 700 × 532 | 19,076 |
+  | In The News | `iran-war-has-fuelled-15-20-spike-in-solar-module-prices-sael-ceo` | `iran-war-has-fuelled-15-20-spike-in-solar-module-prices-sael-ceo-1781157743.webp` | 700 × 394 | 25,138 |
+  | In The News | `india-emerges-as-third-largest-renewable-energy-market-in-2025-irena` | `india-emerges-as-third-largest-renewable-energy-market-in-2025-irena-1781161307.webp` | 700 × 427 | 14,672 |
+  | In The News | `ipo-bound-sael-industries-begins-1-gigawatt-solar-plant-at-khavda-renewable-energy-park` | `ipo-bound-sael-industries-begins-1-gigawatt-solar-plant-at-khavda-renewable-energy-park-1769690287.webp` | 700 × 394 | 20,788 |
+  | In The News | `pb-har-saw-marked-decline-in-stubble-burning-cases-this-year` | `pb-har-saw-marked-decline-in-stubble-burning-cases-this-year-1765731011.webp` | 700 × 394 | 42,614 |
+  | In The News | `yeida-allots-200-acres-land-to-build-rs8200-crore-solar-hub` | `yeida-allots-200-acres-land-to-build-rs8200-crore-solar-hub-1765730414.webp` | 700 × 394 | 36,296 |
+  | In The News | `sael-industries-to-invest-rs22000-crore-in-ap` | `sael-industries-to-invest-rs22000-crore-in-ap-1765730191.webp` | 700 × 394 | 62,452 |
+  | In The News | `clean-energy-firm-to-procure-2-million-tonnes-of-paddy-stubble` | `clean-energy-firm-to-procure-2-million-tonnes-of-paddy-stubble-1765729093.webp` | 700 × 394 | 28,448 |
+  | In The News | `et-energy-leadership-summit-2025-maps-indias-clean-energy-transition` | `et-energy-leadership-summit-2025-maps-indias-clean-energy-transition-1765728748.webp` | 700 × 394 | 12,874 |
+  | In The News | `agri-waste-power-can-generate-28-gw-needs-solar-like-policy-push-sael-ceo` | `agri-waste-power-can-generate-28-gw-needs-solar-like-policy-push-sael-ceo-1765728181.webp` | 700 × 394 | 20,614 |
+  | In The News | `sael-industries-commissions-first-300-mw-solar-power-project-in-rajasthan` | `sael-industries-commissions-first-300-mw-solar-power-project-in-rajasthan-1761716516.webp` | 700 × 394 | 48,642 |
+  | In The News | `sael-signs-ppas-with-guvnl-pspcl-for-880-mw-solar-projects` | `sael-signs-ppas-with-guvnl-pspcl-for-880-mw-solar-projects-1761716532.webp` | 700 × 394 | 55,614 |
+  | In The News | `can-straw-fired-power-plants-help-end-stubble-burning` | `can-straw-fired-power-plants-help-end-stubble-burning-1755669502.webp` | 700 × 394 | 52,762 |
+  | In The News | `100-gw-of-solar-again-and-amendments-to-almm` | `100-gw-of-solar-again-and-amendments-to-almm-1755669343.webp` | 700 × 394 | 49,894 |
+  | In The News | `laxit-awla-on-saels-role-in-accelerating-indias-clean-energy-future` | `laxit-awla-on-saels-role-in-accelerating-indias-clean-energy-future-1755669231.webp` | 700 × 394 | 6,004 |
+  | In The News | `sael-lights-beed-with-new-50-mw-solar-plant-installation` | `sael-lights-beed-with-new-50-mw-solar-plant-installation-1755668875.webp` | 700 × 394 | 57,830 |
+  | In The News | `interview-sael-ceo-laxit-awla-on-closing-indias-solar-storage-gaps-and-navigating-us-tariffs` | `interview-sael-ceo-laxit-awla-on-closing-indias-solar-storage-gaps-and-navigating-us-tariffs-1755669084.webp` | 700 × 394 | 14,866 |
+  | In The News | `sael-conducts-climate-smart-farming-awareness-drive-for-over-200-farmers-in-north-india` | `sael-conducts-climate-smart-farming-awareness-drive-for-over-200-farmers-in-north-india-1755668732.webp` | 700 × 394 | 24,526 |
+  | In The News | `sael-industries-to-invest-rs8200-crore-in-greater-noida-solar-unit` | `sael-industries-to-invest-rs8200-crore-in-greater-noida-solar-unit-1755668648.webp` | 700 × 394 | 48,344 |
+  | In The News | `indian-clean-energy-firm-sael-to-invest-954-mln-in-solar-manufacturing-plant` | `indian-clean-energy-firm-sael-to-invest-954-mln-in-solar-manufacturing-plant-1755668493.webp` | 700 × 394 | 16,820 |
+  | In The News | `chandigarh-sael-signs-400-mw-solar-ppa-with-pspcl` | `chandigarh-sael-signs-400-mw-solar-ppa-with-pspcl-1755668316.webp` | 700 × 394 | 41,716 |
+  | In The News | `green-fuels-clean-tech-and-climate-finance-on-agenda-as-india-gathers-for-et-india-net-zero-forum-2025` | `green-fuels-clean-tech-and-climate-finance-on-agenda-as-india-gathers-for-et-india-net-zero-forum-2025-1755668225.webp` | 700 × 394 | 13,710 |
+  | In The News | `sael-to-commission-25-gw-solar-capacity-by-fy26-eyes-ipo-amid-limited-waste-to-energy-pipeline` | `sael-to-commission-25-gw-solar-capacity-by-fy26-eyes-ipo-amid-limited-waste-to-energy-pipeline-1755667987.webp` | 700 × 394 | 51,334 |
+  | In The News | `ipo-bound-sael-to-venture-into-solar-cells-with-a-rs5000-crore-plant-in-up` | `ipo-bound-sael-to-venture-into-solar-cells-with-a-rs5000-crore-plant-in-up-1755667786.webp` | 700 × 394 | 73,732 |
+  | In The News | `reliance-sael-jindal-sembcorp-jbm-and-fastnote-win-big-in-sjvns-1200-mw-solar-integrated-with-600-mw-2400-mwh-ess-auction` | `reliance-sael-jindal-sembcorp-jbm-and-fastnote-win-big-in-sjvns-1200-mw-solar-integrated-with-600-mw-2400-mwh-ess-auction-1753357195.webp` | 700 × 394 | 37,044 |
+  | In The News | `from-intermittency-to-reliability-the-role-of-energy-storage-in-scaling-indian-solar-pv` | `from-intermittency-to-reliability-the-role-of-energy-storage-in-scaling-indian-solar-pv-1753357150.webp` | 700 × 394 | 26,218 |
+  | In The News | `bridging-the-digital-divide-the-reality-of-transformation-in-renewable-energy` | `bridging-the-digital-divide-the-reality-of-transformation-in-renewable-energy-1753356848.webp` | 700 × 468 | 22,054 |
+  | In The News | `solar-manufacturing-in-india-paving-the-way-for-a-self-reliant-renewable-future` | `solar-manufacturing-in-india-paving-the-way-for-a-self-reliant-renewable-future-1753356814.webp` | 700 × 394 | 18,444 |
+  | In The News | `delegates-of-norfund-societe-generale-ndb-bank-and-sael-ltd-meet-andhra-pradesh-cm-naidu` | `delegates-of-norfund-societe-generale-ndb-bank-and-sael-ltd-meet-andhra-pradesh-cm-naidu-1753356782.webp` | 700 × 395 | 29,426 |
+  | In The News | `sael-ntpc-blupine-win-secis-12-gw-solar-auction` | `sael-ntpc-blupine-win-secis-12-gw-solar-auction-1753356720.webp` | 700 × 394 | 53,020 |
+  | In The News | `sael-raises-305-m-via-green-bond-issue-overseas` | `sael-raises-305-m-via-green-bond-issue-overseas-1753356645.webp` | 700 × 394 | 57,696 |
+  | In The News | `sael-invests-rs35000-crore-in-renewable-expansion` | `sael-invests-rs35000-crore-in-renewable-expansion-1753356924.webp` | 700 × 394 | 36,322 |
+  | In The News | `sael-to-invest-rs-350-billion-in-renewable-expansion` | `sael-to-invest-rs-350-billion-in-renewable-expansion-1753356465.webp` | 700 × 394 | 22,204 |
+  | In The News | `sael-to-redefine-the-energy-landscape-by-delivering-sustainable-solutions` | `sael-to-redefine-the-energy-landscape-by-delivering-sustainable-solutions-1753356584.webp` | 700 × 394 | 56,116 |
+  | In The News | `sael-to-invest-rs35000-crore-in-renewable-expansion-eyes-10-gw-capacity` | `sael-to-invest-rs35000-crore-in-renewable-expansion-eyes-10-gw-capacity-1753356323.webp` | 700 × 394 | 48,642 |
+  | In The News | `100-bustards-and-the-challenge-to-indias-solar-flight-path` | `100-bustards-and-the-challenge-to-indias-solar-flight-path-1753356267.webp` | 700 × 394 | 120,514 |
+  | In The News | `sael-set-to-close-1-billion-fundraise-from-foreign-domestic-investors` | `sael-set-to-close-1-billion-fundraise-from-foreign-domestic-investors-1753357070.webp` | 700 × 465 | 41,692 |
+  | Press Release body image | `sael-to-set-up-rs8200-crore-integrated-solar-facility-in-uttar-pradesh` | `image-1png_1753361154.webp` | 700 × 676 | 34,682 |
+
 ## 9. Handover checklist
 
 Items the client must supply before the relevant tracker item can complete:

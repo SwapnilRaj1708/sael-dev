@@ -27,6 +27,14 @@ export interface PageHeroProps {
    * and centres the text within it.
    */
   align?: 'start' | 'center';
+  /**
+   * `hero`, the default, caps the title at `--hero-measure` (15ch), which
+   * suits a two- or three-word name. `none` lifts the cap, so the title holds
+   * to one line wherever the band is wide enough and wraps only where it is
+   * not. Agri Waste-to-Energy alone takes it, at the client's request of
+   * 2026-10-01: at 15ch its name broke at a hyphen on every screen.
+   */
+  titleMeasure?: 'hero' | 'none';
   /** The banner photograph. `null` until the client supplies it. */
   image: StaticImageData | null;
   /** Meaningful description of the banner, or `''` if it is decorative. */
@@ -93,6 +101,7 @@ export function PageHero({
   pending,
   video,
   align = 'start',
+  titleMeasure = 'hero',
 }: PageHeroProps) {
   return (
     <Section
@@ -154,7 +163,14 @@ export function PageHero({
 
             {eyebrow !== undefined && <Eyebrow tone="bright">{eyebrow}</Eyebrow>}
 
-            <h1 className="max-w-(--hero-measure) text-hero text-white">{title}</h1>
+            <h1
+              className={cn(
+                'text-hero text-white',
+                titleMeasure === 'hero' && 'max-w-(--hero-measure)',
+              )}
+            >
+              {title}
+            </h1>
 
             {intro !== undefined && (
               <p className="max-w-(--measure) text-body text-pretty text-body-on-dark">{intro}</p>

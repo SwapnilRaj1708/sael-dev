@@ -5,9 +5,19 @@ import type {
   InvestorDocument,
   InvestorListing,
   InvestorVideo,
+  NewsArticle,
+  NewsArticleCategory,
+  NewsCategory,
   NewsItem,
   TeamMember,
 } from './types';
+
+/** {@link ContentRepository.getNewsItems}'s options. */
+export interface NewsItemsQuery {
+  /** One Newsroom section. Omit for the homepage's feed. */
+  category?: NewsCategory;
+  limit?: number;
+}
 
 /**
  * The entire boundary between the application and its content. **Adding a
@@ -35,10 +45,25 @@ import type {
 export interface ContentRepository {
   getCapacityStats(): Promise<CapacityStat[]>;
   /**
-   * Most recent first. `limit` is a hint the adapter may satisfy by asking the
-   * backend for a page, so callers must not rely on getting exactly that many.
+   * News items, in the order the listing shows them: newest first, and for
+   * the undated categories (Our Views, Multimedia) the business's own order.
+   *
+   * `category` selects one Newsroom section — filtered by the adapter, never
+   * by a page fetching everything and discarding most of it. **Omitted, it
+   * is the homepage's call**, and returns what the homepage carousel has
+   * always shown; see docs/api-contracts.md §2 for what that means against
+   * the API, and the mock for why it is a separate fixture there.
+   *
+   * `limit` is a hint the adapter may satisfy by asking the backend for a
+   * page, so callers must not rely on getting exactly that many.
    */
-  getNewsItems(options?: { limit?: number }): Promise<NewsItem[]>;
+  getNewsItems(options?: NewsItemsQuery): Promise<NewsItem[]>;
+  /**
+   * One Press Release or Our Views article, body included, by its slug.
+   * `null` when there is no such article — the page 404s — and a throw only
+   * when the source itself failed.
+   */
+  getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null>;
   /**
    * The whole roster, both groups, ascending by `order`.
    *

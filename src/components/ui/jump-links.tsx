@@ -11,6 +11,12 @@ export interface JumpLinksProps {
   /** The nav's accessible name — functional copy, e.g. "On this page". */
   label: string;
   links: readonly JumpLink[];
+  /**
+   * `start`, the default, sets the row flush with the content under it, as
+   * the investor pages have it. `center` centres it — and each wrapped line
+   * of it — for a page whose title is centred above, the Newsroom index.
+   */
+  align?: 'start' | 'center';
   className?: string;
 }
 
@@ -33,10 +39,10 @@ export interface JumpLinksProps {
  *
  * Dark ground only. A Server Component.
  */
-export function JumpLinks({ label, links, className }: JumpLinksProps) {
+export function JumpLinks({ label, links, align = 'start', className }: JumpLinksProps) {
   return (
     <nav aria-label={label} className={className}>
-      <ul className="flex flex-wrap gap-tight">
+      <ul className={cn('flex flex-wrap gap-tight', align === 'center' && 'justify-center')}>
         {links.map((link) => (
           <li key={link.href}>
             <a

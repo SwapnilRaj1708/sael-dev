@@ -37,34 +37,72 @@ Collections that do not paginate return a bare JSON array.
 
 ## 2. Newsroom
 
+Revised 2026-10-01, when the Newsroom was built. The legacy site has four sections, and two of them host articles on SAEL's own site, which settles this section's old open question: **yes, SAEL hosts article bodies.** That applies to Press Release and Our Views, which need a `slug` and a detail endpoint; In The News still links out.
+
+| `category` | What an item is | Has a date | Destination |
+|---|---|---|---|
+| `press-release` | A release, hosted here | yes | `/newsroom/press-release/{slug}/` |
+| `in-the-news` | Coverage elsewhere | yes | `externalUrl`, opened in a new tab |
+| `our-views` | An opinion piece, hosted here | **no** | `/newsroom/our-views/{slug}/` |
+| `multimedia` | A YouTube video | **no** | the video, played in a dialog |
+
 ### `GET /api/v1/news`
 
 | Param | Type | Default | Notes |
 |---|---|---|---|
-| `page` | int | 1 | 1-based |
-| `pageSize` | int | 9 | max 50 |
-| `limit` | int | — | When present, returns a bare array of the N most recent and ignores paging. Used by the homepage. |
+| `category` | enum | — | One of the four above. **Omitted, it means every category** — the homepage's call (see below). |
+| `limit` | int | — | When present, the first N of the result. |
+
+Returns a **bare array**, no envelope and no paging: the legacy listings put every item on one page (42 is the largest today), and paged listing URLs would be new URLs. If a category ever outgrows the payload ceiling in §6 we will paginate it then, as a deliberate URL decision.
+
+**Order is the backend's**, and the frontend does not re-sort: dated categories newest first, ties in the business's own order; undated categories (Our Views, Multimedia) in the business's own order. A `displayOrder` field is the obvious way to carry that, and the frontend does not need it in the response.
 
 Response item:
 
 ```json
 {
-  "id": "1783420907",
+  "id": "sael-unveils-integrated-5gw-solar-cell-module-manufacturing-facility-at-jewar",
+  "category": "in-the-news",
   "title": "SAEL unveils integrated 5GW solar cell, module manufacturing facility at Jewar",
   "publishedAt": "2026-06-29",
-  "imageUrl": "https://<account>.blob.core.windows.net/public/media/jewar-facility.webp",
-  "imageAlt": null,
-  "externalUrl": "https://www.thehindubusinessline.com/companies/…",
-  "source": "The Hindu BusinessLine",
-  "excerpt": null
+  "imageUrl": "https://<account>.blob.core.windows.net/<container>/web-assets/img/media/sael-unveils-integrated-5gw-solar-cell-module-manufacturing-facility-at-jewar-1783420907.webp",
+  "imageAlt": "SAEL unveils integrated 5GW solar cell, module manufacturing facility at Jewar",
+  "slug": null,
+  "externalUrl": "https://www.thehindubusinessline.com/companies/sael-unveils-integrated-5gw-solar-cell-module-manufacturing-facility-at-jewar/article71157439.ece",
+  "videoId": null,
+  "source": null
 }
 ```
 
-Sorted `publishedAt` descending.
+Which fields are set follows `category`, and the others are `null`, not omitted:
 
-**Open question for backend:** does SAEL intend to host article bodies eventually, or continue linking to external publishers? If the former, we need a `slug` and a `GET /api/v1/news/{slug}` and the frontend gains a detail route. Currently assumed: link-out only.
+- `publishedAt`: set for `press-release` and `in-the-news`, `null` for the other two. ISO 8601 date.
+- `slug`: set for `press-release` and `our-views`. The URL segment, **verbatim from the legacy site, artefacts included**: one Our Views slug contains `india39s`, a mangled apostrophe, and it is a live URL with search equity. Slugs must never be regenerated from titles.
+- `externalUrl`: set for `in-the-news`.
+- `videoId`: set for `multimedia` — the YouTube id, not a URL. The frontend builds the thumbnail, watch and embed URLs.
+- `imageUrl`: absolute. May be `null` for `multimedia`, where the frontend uses YouTube's thumbnail.
+- `imageAlt`: `null` when none was entered; the frontend falls back to the title.
+- `source`: the publication's name. The legacy cards do not show one, so it is `null` today and the frontend shows it only when set.
 
----
+An item missing the field its category needs (an article with no `slug`, say) is dropped by the frontend rather than rendered as a card that goes nowhere.
+
+**The homepage's call, `category` omitted.** The homepage carousel calls `limit=9` with no category. Against this contract that is the newest items across every category, Multimedia and Our Views included, though they have no date. Decide before cutover which category the homepage should show and pass it. The mock does not follow this: it returns the homepage's original six-item fixture unchanged, so the homepage does not change before that decision. `src/lib/content/mock/index.ts`.
+
+### `GET /api/v1/news/{category}/{slug}`
+
+One Press Release or Our Views article. `category` is `press-release` or `our-views`; anything else is a `404`. The response is the item above plus:
+
+```json
+{
+  "body": "<p><strong>Rajasthan: </strong>SAEL Industries Ltd. (SIL), …</p><p>…</p>"
+}
+```
+
+- `body` is HTML, sanitised server-side. The frontend sanitises it again (`src/lib/utils/sanitize-article.ts`) to this allowlist, which is what the legacy articles use: `p br h2 h3 h4 ul ol li strong b em i u a blockquote figure figcaption img`; on `a` only `href`, on `img` only `src alt width height`, and `https:` images only. The article's `<h1>` is its title, so a body starts at `h2`.
+- Images in a body are absolute URLs in the container, like `imageUrl`. **Every body image needs `alt`**: the legacy CMS saved none.
+- `404` for an unknown slug. The frontend renders its not-found page. Any other non-2xx is treated as unavailable.
+
+The frontend builds every article page at build time from the list endpoint's slugs, and a slug not in that list is a 404 until the next build. There is no on-demand rendering (/CLAUDE.md §7), so **a new article appears on the site at the next deploy**, as do new list items.
 
 ## 3. Investor documents
 

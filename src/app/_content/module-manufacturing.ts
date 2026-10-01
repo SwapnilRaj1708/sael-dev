@@ -90,7 +90,7 @@ export const moduleHero: PageHeroProps = {
   intro:
     "Modules: Building Blocks of Innovation, Engineered for Excellence, Shaping Tomorrow's Technology Landscape",
   align: 'center',
-  // Supplied 2026-09-21, as on Solar Energy and Waste To Energy: a video
+  // Supplied 2026-09-21, as on Solar Energy and Agri Waste-to-Energy: a video
   // rather than a photograph. `null` when the container is unconfigured, and
   // the hero then shows its poster.
   video: tryBlobUrl('web-assets/media/module-manufacturing/module-manufacturing.mp4'),

@@ -1,12 +1,15 @@
 import { siteConfig, TODO_CONTENT } from '@/lib/config/site';
 
 /**
- * Structured data. Emitted from the root layout as `application/ld+json`.
+ * Structured data. `Organization` and `WebSite` are emitted from the root
+ * layout as `application/ld+json`; `BreadcrumbList` and `NewsArticle` are
+ * per page, beside what they describe.
  *
- * `Organization` and `WebSite` only — `docs/accessibility-and-seo.md` §3 is
- * explicit that `NewsArticle` is **not** emitted, because SAEL links out to
- * articles it does not host, and marking up someone else's article as your own
- * is misrepresentation, not SEO.
+ * **`NewsArticle` only for an article SAEL hosts** — a Press Release or an
+ * Our Views piece, at its own URL on this site. It is never emitted for an
+ * In The News item: that is a link out to an article another publication
+ * wrote and hosts, and marking up someone else's article as your own is
+ * misrepresentation, not SEO. docs/accessibility-and-seo.md §3.
  *
  * Nothing here is invented. Every value comes from `site.ts`, and anything the
  * client has not supplied is omitted rather than guessed — a wrong `sameAs` or
@@ -86,5 +89,51 @@ export function breadcrumbJsonLd(items: readonly BreadcrumbTrailItem[]): JsonLd 
       name: item.name,
       ...(item.href === undefined ? {} : { item: `${siteConfig.url}${item.href}` }),
     })),
+  };
+}
+
+export interface NewsArticleJsonLdInput {
+  /** The article's title, verbatim — its `<h1>`. */
+  headline: string;
+  /** Root-relative, e.g. `/newsroom/press-release/…/`. */
+  path: string;
+  /** Absolute, or `null` when the article has no image. */
+  imageUrl: string | null;
+  /** ISO 8601, or `null` — Our Views carry no date. */
+  datePublished: string | null;
+}
+
+/**
+ * `NewsArticle` for a Press Release or Our Views page. Rendered by the
+ * article page beside the article it describes, from the same record, so
+ * the headline and date in the markup cannot disagree with the visible ones.
+ *
+ * Author and publisher are SAEL itself: these are the company's own releases
+ * and opinion pieces, published on its own site. The publisher is the
+ * `Organization` the root layout already emits, referenced by `@id` rather
+ * than restated.
+ *
+ * A field with no value is **omitted**, as everywhere in this file: an Our
+ * Views piece shows no date, so it claims none here. No `dateModified` — the
+ * repository does not carry one, and an invented one is a false claim.
+ */
+export function newsArticleJsonLd({
+  headline,
+  path,
+  imageUrl,
+  datePublished,
+}: NewsArticleJsonLdInput): JsonLd {
+  const url = `${siteConfig.url}${path}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(imageUrl === null ? {} : { image: [imageUrl] }),
+    ...(datePublished === null ? {} : { datePublished }),
+    author: { '@type': 'Organization', name: siteConfig.name, url: siteConfig.url },
+    publisher: { '@id': `${siteConfig.url}/#organization` },
   };
 }

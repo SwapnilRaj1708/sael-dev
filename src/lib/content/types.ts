@@ -43,25 +43,91 @@ export interface CapacityStat {
 }
 
 /**
- * A press item on the homepage carousel and the Newsroom page.
+ * The Newsroom's four sections, each one listing at `/newsroom/<category>/`.
+ * The values are those URL segments, so the value a page asks for is the
+ * value in its address bar.
+ *
+ *  - `press-release` and `our-views` are articles **hosted here**, each at
+ *    `/newsroom/<category>/<slug>/`, with a body.
+ *  - `in-the-news` links **out** to the publication that ran the piece.
+ *  - `multimedia` is a YouTube video.
+ */
+export type NewsCategory = 'press-release' | 'in-the-news' | 'our-views' | 'multimedia';
+
+/** The two categories whose items are articles on this site. */
+export type NewsArticleCategory = Extract<NewsCategory, 'press-release' | 'our-views'>;
+
+/**
+ * An item on the homepage carousel or in a Newsroom listing — everything a
+ * card needs, and no article body. docs/content-model.md §2.
  *
  * `imageUrl` is a URL and not a bundled import on purpose: these images come
- * from the CMS, so the frontend cannot know them at build time. The mock
- * serves the client's supplied stills from `public/news/` — root-relative
- * paths that `next/image` optimises exactly as it will optimise the absolute
- * Azure Blob URLs the API returns. docs/content-model.md §2.
+ * from the CMS, so the frontend cannot know them at build time. The homepage
+ * fixture serves the client's supplied stills from `public/news/` —
+ * root-relative paths that `next/image` optimises exactly as it optimises the
+ * absolute URLs the API returns. A Multimedia item's image is the video's
+ * YouTube thumbnail.
  *
- * `href` is where "Read More" goes: an article on this site, or an outbound
- * link to wherever the piece was published. `<Button>` tells the two apart.
+ * `href` is where the card goes, resolved by the repository from the fields
+ * below it: the article page, the publication, or the video on YouTube.
+ * `<Button>` tells internal from external. One field per destination rather
+ * than one overloaded URL, so a card can tell an outbound link from a video
+ * without parsing it.
+ *
+ * Which fields are set follows the category — nullable rather than a union,
+ * the same trade `InvestorDocument.section` makes:
+ *
+ * | category        | publishedAt | slug | externalUrl | videoId |
+ * |-----------------|-------------|------|-------------|---------|
+ * | `press-release` | set         | set  | `null`      | `null`  |
+ * | `in-the-news`   | set         | `null` | set       | `null`  |
+ * | `our-views`     | `null`      | set  | `null`      | `null`  |
+ * | `multimedia`    | `null`      | `null` | `null`    | set     |
  */
 export interface NewsItem {
   id: string;
+  category: NewsCategory;
+  /** Verbatim, as the legacy card reads. */
   title: string;
-  /** ISO 8601. Rendered by `<DateBadge>`, which also emits `datetime`. */
-  publishedAt: string;
+  /**
+   * ISO 8601, or `null` for an item that shows no date — Our Views and
+   * Multimedia, whose legacy cards carry none. Rendered by `formatDate()`,
+   * and the `<time>` is omitted outright when this is `null`.
+   */
+  publishedAt: string | null;
   href: string;
-  /** `null` when the item has no artwork; the card then shows its placeholder. */
+  /** `null` when the item has no artwork; the card then shows its empty frame. */
   imageUrl: string | null;
+  /**
+   * The image's alternative text, verbatim from the legacy `alt`, or `null`
+   * when the source has none. A card falls back to the title.
+   */
+  imageAlt: string | null;
+  /** The article's URL segment, verbatim — legacy artefacts and all. */
+  slug: string | null;
+  /** In The News: the publication's own URL. */
+  externalUrl: string | null;
+  /** Multimedia: the YouTube video id. */
+  videoId: string | null;
+  /**
+   * The publication's name — "The Hindu BusinessLine". `null` in every
+   * current row: the legacy In The News cards do not show one, so none is
+   * transcribed. The field exists for when the business decides to.
+   */
+  publication: string | null;
+}
+
+/**
+ * A Press Release or Our Views article: its card fields, plus the body.
+ *
+ * `body` is HTML from the CMS — paragraphs, headings from `h2` down, lists,
+ * links and the odd figure. The article page sanitises it again before
+ * rendering, as Our Team sanitises a biography: `lib/utils/sanitize-article.ts`.
+ */
+export interface NewsArticle extends NewsItem {
+  category: NewsArticleCategory;
+  slug: string;
+  body: string;
 }
 
 /**

@@ -1,17 +1,13 @@
-import Image from 'next/image';
 import type { NewsItem } from '@/lib/content';
-import { ArrowGlyph } from '@/components/ui/arrow-glyph';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/eyebrow';
+import { NewsCard, NewsCardLink } from '@/components/ui/news-card';
 import { Rail } from '@/components/ui/rail/rail';
 import { RailArrows } from '@/components/ui/rail/rail-arrows';
 import { RailTrack } from '@/components/ui/rail/rail-track';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
-import { formatDate, toDateTimeAttribute } from '@/lib/utils/format-date';
 import { SIZES_NEWS_CARD } from '@/lib/utils/image-sizes';
 
 export interface NewsCarouselProps {
@@ -30,6 +26,8 @@ export interface NewsCarouselProps {
  * and the action at the base — the card is defined by the rule it hangs from
  * and by its own alignment, not by an outline. The accent fills across that
  * rule on hover, which is the same gesture the Business Portfolio's rows make.
+ * The card itself is `<NewsCard>` since 2026-10-01, shared with the Newsroom;
+ * this rail takes its defaults — paper ground, always standing, 5:4.
  *
  * The items come from the repository, never from this file and never from the
  * page's static content: they are the one surface on the homepage that changes
@@ -76,75 +74,25 @@ export function NewsCarousel({ title, items, snap = false }: NewsCarouselProps) 
                 {/* 2, 3, 4 … — the label is 0 and 1 is skipped, so the cards
                     cascade in after it rather than alongside it. */}
                 <Reveal order={index + 2} className="flex w-full">
-                  {/* The hairline, the inset under it and the accent that
-                      fills across it on hover all come from <Card> — the same
-                      three the ledger rows take. Only the column direction is
-                      this section's own. */}
-                  <Card
-                    as="article"
-                    ground="paper"
-                    inset="top"
-                    accentClassName="bg-brand-red"
-                    className="flex-col"
-                  >
-                    {/* The machine-readable instant and the human one come
-                        from the same helper, so they cannot disagree — and the
-                        display string is pinned to IST, which is what keeps
-                        the server and the browser rendering the same date. */}
-                    <time
-                      dateTime={toDateTimeAttribute(item.publishedAt)}
-                      className="text-meta text-meta-paper uppercase"
-                    >
-                      {formatDate(item.publishedAt)}
-                    </time>
-
-                    <div className="relative mt-3.5 aspect-news-thumb w-full overflow-hidden bg-surface-alt">
-                      {item.imageUrl !== null && (
-                        <Image
-                          // A CMS URL, not a bundled import — hence the plain
-                          // <Image> rather than <MediaFrame>, which takes a
-                          // StaticImageData. The card keeps its box either way.
-                          src={item.imageUrl}
-                          alt=""
-                          fill
-                          sizes={SIZES_NEWS_CARD}
-                          className={cn(
-                            'object-cover transition duration-(--duration-card)',
-                            'group-hover:scale-105',
-                            'motion-reduce:transition-none motion-reduce:group-hover:scale-100',
-                          )}
-                        />
-                      )}
-                    </div>
-
-                    {/* `line-clamp-3` needs no `overflow-hidden` of its own —
-                        it is `-webkit-box` clamping, which already hides the
-                        overflow, and adding one would clip the focus ring on
-                        the action below. */}
-                    <h3 className="mt-4 line-clamp-3 text-card-title [text-wrap:pretty] text-ink">
-                      {item.title}
-                    </h3>
-
-                    <Button
-                      href={item.href}
-                      variant="quiet"
-                      size="micro"
-                      className={cn(
-                        'mt-auto pt-card-flow hover:no-underline',
-                        "after:absolute after:inset-0 after:content-['']",
-                      )}
-                    >
-                      {/* The visible label is generic, so the accessible name
-                          carries the headline. "Read More" repeated six times
-                          is a list of identical links to a screen-reader
-                          user. */}
-                      <span className="sr-only">Read more: {item.title}</span>
-                      <span aria-hidden="true" className="inline-flex items-center gap-tight">
-                        Read More
-                        <ArrowGlyph />
-                      </span>
-                    </Button>
-                  </Card>
+                  <NewsCard
+                    title={item.title}
+                    publishedAt={item.publishedAt}
+                    imageUrl={item.imageUrl}
+                    // Decorative here, as it has been since FE-04: the
+                    // headline under it is the card's subject.
+                    imageAlt=""
+                    sizes={SIZES_NEWS_CARD}
+                    action={
+                      // The visible label is generic, so the accessible name
+                      // carries the headline. "Read More" repeated six times is
+                      // a list of identical links to a screen-reader user.
+                      <NewsCardLink
+                        href={item.href}
+                        label="Read More"
+                        accessibleLabel={`Read more: ${item.title}`}
+                      />
+                    }
+                  />
                 </Reveal>
               </li>
             ))}

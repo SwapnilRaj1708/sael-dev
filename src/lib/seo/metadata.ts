@@ -12,6 +12,17 @@ export interface BuildMetadataOptions {
   description?: string;
   /** Site-relative, with the trailing slash the legacy URLs carry. */
   path: string;
+  /**
+   * An article page's Open Graph: `og:type` `article`, its image and its
+   * publication date — what the legacy article pages emit. Omit for every
+   * other page, which stays `website`.
+   */
+  article?: {
+    /** Absolute. `null` when the article has none. */
+    image: string | null;
+    /** ISO 8601, or `null` for an article with no date (Our Views). */
+    publishedTime: string | null;
+  };
 }
 
 /**
@@ -30,18 +41,27 @@ export interface BuildMetadataOptions {
  * This is the minimum FE-04 needs. The full metadata pass — Open Graph
  * imagery, per-route Twitter cards, the sitemap — is FE-22.
  */
-export function buildMetadata({ title, description, path }: BuildMetadataOptions): Metadata {
+export function buildMetadata({
+  title,
+  description,
+  path,
+  article,
+}: BuildMetadataOptions): Metadata {
   const isSupplied = description !== undefined && description !== TODO_CONTENT;
+  const shared = { title, ...(isSupplied ? { description } : {}), url: path };
 
   return {
     title: { absolute: title },
     ...(isSupplied ? { description } : {}),
     alternates: { canonical: path },
-    openGraph: {
-      title,
-      ...(isSupplied ? { description } : {}),
-      url: path,
-      type: 'website',
-    },
+    openGraph:
+      article === undefined
+        ? { ...shared, type: 'website' }
+        : {
+            ...shared,
+            type: 'article',
+            ...(article.image === null ? {} : { images: [article.image] }),
+            ...(article.publishedTime === null ? {} : { publishedTime: article.publishedTime }),
+          },
   };
 }

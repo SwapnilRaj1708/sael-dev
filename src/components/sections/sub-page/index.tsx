@@ -31,6 +31,15 @@ export interface SubPageProps {
    * investor page can take it with this one prop.
    */
   masthead?: 'plain' | 'ripple';
+  /**
+   * `default` gives the body the full content width. `article` is a reading
+   * layout, for a Newsroom article: the body in one centred column at
+   * `--measure-article`, and the `<h1>` at `--text-h2` rather than display
+   * size, because an article's title is a headline of up to thirty-five
+   * words and not a page name. Pass no `nav` with it — an article is read,
+   * not navigated beside.
+   */
+  layout?: 'default' | 'article';
   /** The page's body — a document list, a notice, a table. */
   children: ReactNode;
 }
@@ -82,7 +91,16 @@ export interface SubPageProps {
  * A Server Component. What is interactive inside `children` brings its own
  * client leaf.
  */
-export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }: SubPageProps) {
+export function SubPage({
+  title,
+  breadcrumb,
+  nav,
+  masthead = 'plain',
+  layout = 'default',
+  children,
+}: SubPageProps) {
+  const article = layout === 'article';
+
   const body = (
     <div
       className={cn(
@@ -93,7 +111,13 @@ export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }
     >
       {/* Placed in the grid's second column from `lg`: the list takes the
           first, on the left. See the note on order above. */}
-      <Reveal order={2} className="min-w-0 lg:col-start-2 lg:row-start-1">
+      <Reveal
+        order={2}
+        className={cn(
+          'min-w-0 lg:col-start-2 lg:row-start-1',
+          article && 'mx-auto w-full max-w-(--measure-article)',
+        )}
+      >
         {children}
       </Reveal>
 
@@ -108,7 +132,11 @@ export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }
   if (masthead === 'ripple') {
     return (
       <>
-        <RippleHero title={title} breadcrumb={breadcrumb} />
+        <RippleHero
+          title={title}
+          breadcrumb={breadcrumb}
+          titleSize={article ? 'article' : 'hero'}
+        />
         <Section background="black-dots" spacing="closing" className="overflow-x-clip">
           {body}
         </Section>
@@ -130,7 +158,14 @@ export function SubPage({ title, breadcrumb, nav, masthead = 'plain', children }
             {/* The measure, not --hero-measure: that 15ch cap is sized for a
                 two-word title, and "Information with respect to Group
                 Companies" would break into four lines under it. */}
-            <h1 className="max-w-(--measure) text-hero text-balance text-white">{title}</h1>
+            <h1
+              className={cn(
+                'text-balance text-white',
+                article ? 'max-w-(--measure-article) text-h2' : 'max-w-(--measure) text-hero',
+              )}
+            >
+              {title}
+            </h1>
           </Reveal>
         </div>
 

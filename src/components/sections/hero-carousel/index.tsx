@@ -9,6 +9,7 @@ import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
 import { HeroBackdrop } from './hero-backdrop';
 import { HeroCopy } from './hero-copy';
+import { HeroDots } from './hero-dots';
 import { HeroProgress } from './hero-progress';
 import { useHeroCarousel } from './use-hero-carousel';
 import { usePointerParallax } from './use-pointer-parallax';
@@ -215,12 +216,12 @@ export function HeroCarousel({ slides, intervalMs = 6000 }: HeroCarouselProps) {
 
       <HeroCopy slides={slides} activeIndex={index} />
 
-      <HeroProgress
+      <HeroProgress activeIndex={index} isPlaying={isPlaying} intervalMs={intervalMs} />
+
+      <HeroDots
         labels={slides.map((slide) => slide.headline)}
         activeIndex={index}
         onSelect={goTo}
-        isPlaying={isPlaying}
-        intervalMs={intervalMs}
       />
     </Section>
   );

@@ -44,7 +44,7 @@ Every route below must exist and 200. Verified against the live site on 2026-08-
 | `…/investor-downloads/` | *(same slug)* | FE-17 |
 | `/newsroom/` | `app/newsroom/page.tsx` | FE-18 |
 | `/newsroom/press-release/`, `/in-the-news/`, `/our-views/`, `/multimedia/` | `app/newsroom/<section>/page.tsx` — every item on one page, as on the legacy site; no paging | FE-18 |
-| `/newsroom/press-release/<slug>/`, `/newsroom/our-views/<slug>/` | `app/newsroom/<section>/[slug]/page.tsx` — `generateStaticParams`, `dynamicParams = false`, slugs verbatim (including `…-india39s-green-future`) | FE-18 |
+| `/newsroom/press-release/<slug>/`, `/newsroom/our-views/<slug>/` | `app/newsroom/<section>/[slug]/page.tsx` — `generateStaticParams` for a head start, `dynamicParams = true` so an article published after the build is served at once, slugs verbatim (including `…-india39s-green-future`) | FE-18 |
 | `/contact-us/` | `app/contact-us/page.tsx` | FE-19 |
 | `/career/` | `app/career/page.tsx` — a page since 2026-09-22; it was a 308 to Oracle before that, and browsers cache a 308 | FE-20 |
 | `/privacy-policy/` | `app/privacy-policy/page.tsx` | FE-21 |
@@ -113,6 +113,18 @@ Validate with Google's Rich Results Test before launch.
 - `src/app/sitemap.ts` generates from the same route array that drives the nav config, so a new page cannot be forgotten. Include `lastModified`.
 - `public/robots.txt`: allow all, point to `https://www.sael.co/sitemap.xml`.
 - **Any staging/preview environment must serve `noindex`.** Gate on `NEXT_PUBLIC_SITE_URL` — if it is not the production host, emit `robots: { index: false, follow: false }` from the root layout. A staging site indexed under the client's brand is a launch-day incident.
+- **The gate is announced, never silent.** `PRODUCTION_URL` and the comparison live in `src/lib/config/production-origin.ts`. The root layout reads it through `isPublicSite`, and `next.config.ts` prints the result in every `next build`'s output: one `Search indexing ON` line for `PRODUCTION_URL`, and a boxed `SEARCH INDEXING OFF` banner for any other origin. For an origin that is the production site under another name (the apex for `www`, `http:`, another port), the banner also says not to ship that build as the public site. It warns and does not fail, because preview builds are meant to be `noindex`.
+
+### 4.1 If SAEL choose the apex (`https://sael.co`) as canonical
+
+`www` is the recommendation (it matches the legacy site, §1 rule 2), and it is not yet confirmed. If the answer is the apex, this is the whole change. Nothing else in `src/` names the host. The other occurrences of `https://www.sael.co` are provenance comments citing the legacy site, and they stay as they are.
+
+1. **`src/lib/config/production-origin.ts`:** `PRODUCTION_URL = 'https://sael.co'`. That one line moves the `noindex` gate, the build banner, and the product-download links in `src/app/_content/module-manufacturing.ts`, which are composed on it. Those links point at the legacy site's `/documents/product-downloads/` files and need a new home at DNS cutover whichever host wins.
+2. **Build with `NEXT_PUBLIC_SITE_URL=https://sael.co`.** `metadataBase`, canonicals and JSON-LD all derive from it. Confirm that the build prints `Search indexing ON`.
+3. **`deploy/nginx.conf.sample`:** the apex block serves, and `www` 301s to it. This is the reverse of rule 2 above, which must be rewritten too.
+4. **Backend (its `docs/tenant-cutover-checklist.md`):** `publish.revalidation.url` must be `https://sael.co/api/revalidate/` (§1.10). The backend does not follow redirects, so a URL on the redirecting host fails every publish. `SAEL_INTAKE_CORS_ALLOWED_ORIGINS` must list the canonical origin. §1.7 already records the apex for `sael.admin.base-url`, and §1.11 is the open conflict this resolves.
+5. **Search Console:** the verification token in `src/app/layout.tsx` verifies a property. If that property is the URL-prefix property for `https://www.sael.co/`, the apex needs its own property, or a Domain property covering both.
+6. **Prose:** rule 2 above, §4's robots/sitemap line, `/CLAUDE.md` §1, `README.md`, and `.env.example`'s `NEXT_PUBLIC_SITE_URL` example.
 
 ---
 

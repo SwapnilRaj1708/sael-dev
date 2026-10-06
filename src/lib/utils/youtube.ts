@@ -30,7 +30,7 @@ export function youtubeThumbnailUrl(videoId: string): string {
  * The player, on the privacy-enhanced host: `youtube-nocookie.com` sets no
  * cookies until the visitor plays, where `youtube.com/embed` sets them on
  * load. It is only ever loaded after a deliberate press — see
- * `<YouTubeDialog>` — so in practice that difference is the visitor's
+ * `<VideoDialog>` — so in practice that difference is the visitor's
  * own choice.
  *
  * `autoplay` is the caller's decision: true only when the visitor has just

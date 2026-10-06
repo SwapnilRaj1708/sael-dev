@@ -1,6 +1,6 @@
 import type { StaticImageData } from 'next/image';
 import type { ReactNode } from 'react';
-import { DisplayHeading } from '@/components/ui/display-heading';
+import { DisplayHeading, type BusinessGradient } from '@/components/ui/display-heading';
 import { Eyebrow, type EyebrowTone } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
@@ -53,6 +53,11 @@ export interface ProseSplitProps {
   /** The small uppercase label above the heading. Omit for a section without one. */
   eyebrow?: string;
   title: string;
+  /**
+   * Sets the heading in a business's mark ramp instead of the ground's — the
+   * four business pages. See BUSINESS_GRADIENT_CLASS.
+   */
+  titleGradient?: BusinessGradient;
   /** One entry per paragraph, in order. */
   body: string[];
   /** Omit for a section that is copy only — then it is a prose *block*. */
@@ -77,6 +82,14 @@ export interface ProseSplitProps {
    */
   measure?: 'default' | 'narrow';
   /**
+   * With neither `media` nor `aside`, set the copy *beside* the heading from
+   * `lg` — heading 5, copy 7 — instead of under it. Our Key ESG Metrics'
+   * Reporting Framework (FE-13): one paragraph under a short heading leaves
+   * half the row empty, and the design fills it. Ignored when the section
+   * has something in its second column already.
+   */
+  copyBeside?: boolean;
+  /**
    * `dark` is the site's default and needs no instruction
    * (docs/design-guidelines.md §8). `paper` is for a page that alternates its
    * grounds deliberately, and picks the eyebrow ramp, the heading ramp and the
@@ -84,6 +97,12 @@ export interface ProseSplitProps {
    * simply painted lighter.
    */
   ground?: ProseSplitGround;
+  /**
+   * Opt into the page's section snapping — a screen tall, content centred.
+   * See `data-snap-sections` in globals.css. Ignored by `<ProseSplitLayout>`,
+   * which has no section of its own.
+   */
+  snap?: boolean;
 }
 
 const MEASURE_CLASS: Record<'default' | 'narrow', string> = {
@@ -149,6 +168,10 @@ const GROUND: Record<
  * copy; and `aside`, for something that is not a photograph in the second
  * column. None of the six earlier call sites changes.
  *
+ * One more on 2026-10-06 for Our Key ESG Metrics, opt-in like the rest:
+ * `copyBeside`, for a copy-only section whose heading and paragraph sit side
+ * by side from `lg`.
+ *
  * A Server Component. Nothing here is interactive.
  */
 /**
@@ -161,14 +184,17 @@ const GROUND: Record<
 export function ProseSplitLayout({
   eyebrow,
   title,
+  titleGradient,
   body,
   media,
   aside,
   action,
   measure = 'default',
+  copyBeside = false,
   ground = 'dark',
 }: ProseSplitProps) {
   const tone = GROUND[ground];
+  const beside = copyBeside && media === undefined && (aside === undefined || aside === null);
   const headingOrder = eyebrow === undefined ? 0 : 1;
   const actionOrder = body.length + headingOrder + 1;
   const asideOrder = action === undefined ? actionOrder : actionOrder + 1;
@@ -190,7 +216,12 @@ export function ProseSplitLayout({
         'grid-cols-[repeat(auto-fit,minmax(min(100%,var(--prose-split-col-min)),1fr))]',
       )}
     >
-      <div className="flex flex-col gap-flow">
+      <div
+        className={cn(
+          'flex flex-col gap-flow',
+          beside && 'lg:grid lg:grid-cols-(--prose-beside-cols) lg:items-start lg:gap-x-split-wide',
+        )}
+      >
         <div className="flex flex-col gap-stack">
           {eyebrow !== undefined && (
             <Reveal order={0}>
@@ -199,11 +230,21 @@ export function ProseSplitLayout({
           )}
 
           <Reveal order={headingOrder}>
-            <DisplayHeading ground={ground}>{title}</DisplayHeading>
+            <DisplayHeading ground={ground} business={titleGradient}>
+              {title}
+            </DisplayHeading>
           </Reveal>
         </div>
 
-        <div className={cn('flex flex-col gap-stack', MEASURE_CLASS[measure])}>
+        <div
+          className={cn(
+            'flex flex-col gap-stack',
+            MEASURE_CLASS[measure],
+            // Beside the heading, the copy starts level with the heading
+            // rather than the eyebrow above it.
+            beside && 'lg:mt-flow',
+          )}
+        >
           {body.map((paragraph, index) => (
             <Reveal key={paragraph} order={index + headingOrder + 1}>
               <p className={cn('text-body text-pretty', tone.body)}>{paragraph}</p>
@@ -211,7 +252,11 @@ export function ProseSplitLayout({
           ))}
         </div>
 
-        {action !== undefined && action !== null && <Reveal order={actionOrder}>{action}</Reveal>}
+        {action !== undefined && action !== null && (
+          <Reveal order={actionOrder} className={cn(beside && 'lg:col-start-2')}>
+            {action}
+          </Reveal>
+        )}
       </div>
 
       {media !== undefined ? (
@@ -248,7 +293,11 @@ export function ProseSplit(props: ProseSplitProps) {
       // gradient, which reaches past the viewport's edge on a phone — see
       // ui/background-gradient.tsx. `clip`, not `hidden`: the vertical
       // bloom is left alone.
-      className={cn(props.aside != null && 'overflow-x-clip')}
+      data-snap-section
+      className={cn(
+        props.aside != null && 'overflow-x-clip',
+        props.snap === true && 'flex min-h-viewport snap-start items-center',
+      )}
     >
       <ProseSplitLayout {...props} />
     </Section>

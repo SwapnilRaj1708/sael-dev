@@ -5,7 +5,7 @@ import {
   type SiteMetric,
 } from '@/components/sections/presence-map/map-figure';
 import { CountUp } from '@/components/ui/count-up';
-import { DisplayHeading } from '@/components/ui/display-heading';
+import { DisplayHeading, type BusinessGradient } from '@/components/ui/display-heading';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
@@ -22,6 +22,11 @@ export interface ProjectsMapProps {
   /** The small uppercase label — "Projects". */
   eyebrow: string;
   title: string;
+  /**
+   * Sets the heading in a business's mark ramp instead of the ground's — the
+   * four business pages. See BUSINESS_GRADIENT_CLASS.
+   */
+  titleGradient?: BusinessGradient;
   /** One entry per paragraph, in order. */
   body: string[];
   /**
@@ -79,6 +84,7 @@ const FIGURE_CLASS: Record<SiteMetric, string> = {
 export function ProjectsMap({
   eyebrow,
   title,
+  titleGradient,
   body,
   figure,
   map,
@@ -95,7 +101,9 @@ export function ProjectsMap({
           </Reveal>
 
           <Reveal order={1}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
+            <DisplayHeading ground="dark" business={titleGradient}>
+              {title}
+            </DisplayHeading>
           </Reveal>
         </div>
 
@@ -114,7 +122,7 @@ export function ProjectsMap({
 
             {figure !== undefined && (
               <Reveal order={body.length + 2} className="mt-stack flex flex-col gap-tight">
-                <p className={cn('text-stat-large tabular-nums', FIGURE_CLASS[business])}>
+                <p className={cn('text-business-figure tabular-nums', FIGURE_CLASS[business])}>
                   <CountUp value={figure.value} />
                 </p>
                 <p className="text-h3 text-white">{figure.label}</p>
@@ -122,13 +130,7 @@ export function ProjectsMap({
             )}
           </div>
 
-          <PresenceMapFigure
-            order={body.length + 3}
-            map={map}
-            sites={sites}
-            label={mapLabel}
-            legend={false}
-          />
+          <PresenceMapFigure order={body.length + 3} map={map} sites={sites} label={mapLabel} />
         </div>
       </div>
     </Section>

@@ -53,3 +53,24 @@ export function tryBlobUrl(path: string | null | undefined): string | null {
     return null;
   }
 }
+
+/**
+ * An asset that is still on the legacy site and not yet in the container:
+ * its legacy copy while `LEGACY_ASSET_BASE_URL` is set, its blob path
+ * otherwise — `null` if neither can be composed.
+ *
+ * **The legacy branch is temporary**, the client's instruction of 2026-09-29
+ * for the Offer Documents files, since used for the Newsroom's images and
+ * Contact Us's hero video. The origin comes from the environment, not from a
+ * call site (/CLAUDE.md §7). Unset the variable once the files are uploaded —
+ * and before cutover at the latest, when that origin becomes this site and the
+ * legacy paths stop existing — and every asset falls back to its blob path
+ * with no code change.
+ */
+export function legacyOrBlobUrl(blobPath: string | null, legacyPath: string | null): string | null {
+  const legacyBase = env.LEGACY_ASSET_BASE_URL;
+  if (legacyBase !== undefined && legacyPath !== null) {
+    return `${legacyBase.replace(/\/+$/, '')}${legacyPath}`;
+  }
+  return tryBlobUrl(blobPath);
+}

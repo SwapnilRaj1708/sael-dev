@@ -7,6 +7,14 @@ import { sanitizeArticle } from '@/lib/utils/sanitize-article';
 
 export interface NewsArticlePageProps {
   article: NewsArticle;
+  /**
+   * Where the section's name above the body goes. The live listing by
+   * default; a preview passes its own listing, so the way back stays inside
+   * the preview.
+   */
+  listingHref?: string;
+  /** Bypass the image optimiser. Every preview page sets it; no live page does. */
+  unoptimizedImages?: boolean;
 }
 
 /**
@@ -22,9 +30,16 @@ export interface NewsArticlePageProps {
  * `NewsArticle` JSON-LD beside it, from the same record, in the style of the
  * breadcrumb's `BreadcrumbList`.
  *
+ * **The article's preview renders this too**, with the draft in `article`
+ * — never a copy of it. See `<NewsListing>` for why.
+ *
  * A Server Component; the ripple grid is the one client leaf.
  */
-export function NewsArticlePage({ article }: NewsArticlePageProps) {
+export function NewsArticlePage({
+  article,
+  listingHref,
+  unoptimizedImages = false,
+}: NewsArticlePageProps) {
   const section = newsroomSections[article.category];
   const jsonLd = newsArticleJsonLd({
     headline: article.title,
@@ -43,11 +58,12 @@ export function NewsArticlePage({ article }: NewsArticlePageProps) {
       />
 
       <NewsArticleBody
-        section={{ name: section.name, href: section.path }}
+        section={{ name: section.name, href: listingHref ?? section.path }}
         publishedAt={article.publishedAt}
         publishedOnLabel={publishedOnLabel}
         imageUrl={article.imageUrl}
         html={sanitizeArticle(article.body) ?? ''}
+        unoptimizedImages={unoptimizedImages}
       />
     </SubPage>
   );

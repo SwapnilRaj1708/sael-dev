@@ -1,7 +1,7 @@
 import Image, { type StaticImageData } from 'next/image';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
-import { DisplayHeading } from '@/components/ui/display-heading';
+import { DisplayHeading, type BusinessGradient } from '@/components/ui/display-heading';
 import { Eyebrow, type EyebrowTone } from '@/components/ui/eyebrow';
 import { Reveal } from '@/components/ui/reveal';
 import { Section, type SectionProps } from '@/components/ui/section';
@@ -31,6 +31,11 @@ export type ValueGridGround = 'dark' | 'paper';
 export interface ValueGridProps {
   eyebrow?: string;
   title: string;
+  /**
+   * Sets the heading in a business's mark ramp instead of the ground's — the
+   * four business pages. See BUSINESS_GRADIENT_CLASS.
+   */
+  titleGradient?: BusinessGradient;
   items: readonly ValueGridItem[];
   /**
    * The grid's column floor. `default` is 260px, for short cards;
@@ -182,6 +187,7 @@ export function ValueMark({ image, pending }: { image: StaticImageData | null; p
 export function ValueGrid({
   eyebrow,
   title,
+  titleGradient,
   items,
   columns = 'default',
   spacing = 'default',
@@ -212,7 +218,9 @@ export function ValueGrid({
           )}
 
           <Reveal order={eyebrow === undefined ? 0 : 1}>
-            <DisplayHeading ground={ground}>{title}</DisplayHeading>
+            <DisplayHeading ground={ground} business={titleGradient}>
+              {title}
+            </DisplayHeading>
           </Reveal>
         </div>
 

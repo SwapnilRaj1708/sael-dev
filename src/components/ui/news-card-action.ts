@@ -2,7 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 /**
  * What a news card's action shares, whichever kind it is — `<NewsCardLink>`
- * on the server, `<YouTubeDialog>` on the client. In a module of its own so
+ * on the server, `<VideoDialog>` on the client. In a module of its own so
  * the client leaf can take these classes without pulling `<NewsCard>`, and
  * `<Card>` and `next/image` behind it, into the browser bundle.
  */

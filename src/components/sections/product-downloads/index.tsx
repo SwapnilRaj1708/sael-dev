@@ -1,4 +1,4 @@
-import { DisplayHeading } from '@/components/ui/display-heading';
+import { DisplayHeading, type BusinessGradient } from '@/components/ui/display-heading';
 import { DocumentLink } from '@/components/ui/document-link';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Reveal } from '@/components/ui/reveal';
@@ -17,6 +17,11 @@ export interface ProductDownload {
 export interface ProductDownloadsProps {
   eyebrow?: string;
   title: string;
+  /**
+   * Sets the heading in a business's mark ramp instead of the ground's — the
+   * four business pages. See BUSINESS_GRADIENT_CLASS.
+   */
+  titleGradient?: BusinessGradient;
   items: readonly ProductDownload[];
   /** `tight` for a block between two taller sections. */
   spacing?: 'default' | 'tight';
@@ -55,6 +60,7 @@ export interface ProductDownloadsProps {
 export function ProductDownloads({
   eyebrow,
   title,
+  titleGradient,
   items,
   spacing = 'default',
 }: ProductDownloadsProps) {
@@ -74,7 +80,9 @@ export function ProductDownloads({
           )}
 
           <Reveal order={eyebrow === undefined ? 0 : 1}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
+            <DisplayHeading ground="dark" business={titleGradient}>
+              {title}
+            </DisplayHeading>
           </Reveal>
         </div>
 

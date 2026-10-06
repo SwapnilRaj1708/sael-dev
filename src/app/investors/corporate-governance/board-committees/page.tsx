@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import {
+  boardCommittees,
   committeeColumns,
-  governanceNav,
   governancePages,
 } from '@/app/_content/corporate-governance';
-import { governanceEmpty, jumpLinksLabel } from '@/app/_content/investors';
-import { loadBoardCommittees } from '@/app/investors/_lib/governance';
+import { jumpLinksLabel } from '@/app/_content/investors';
+import { loadAreaTiles } from '@/app/investors/_lib/documents';
+import { areaNavFor } from '@/app/investors/_lib/tile-page';
 import { SubPage } from '@/components/sections/sub-page';
 import { DataTable } from '@/components/ui/data-table';
-import { EmptyState } from '@/components/ui/empty-state';
 import { JumpLinks } from '@/components/ui/jump-links';
 import { buildMetadata } from '@/lib/seo/metadata';
 
@@ -25,9 +25,10 @@ export const metadata: Metadata = buildMetadata({
  * Board Committees — six tables, one per committee: each member's name,
  * category and role on the committee. **Not gated**, as on the legacy page.
  *
- * From the repository (`getBoardCommittees`) for the reason the board is: a
- * committee's membership changes by resolution, not by design review. Every
- * cell is this page's own wording — including where it spells a director
+ * Static content (`boardCommittees` in `_content/corporate-governance.ts`),
+ * for the reason the board is: SAEL descoped the endpoint (backend row 5.24),
+ * so a change of membership — which happens by resolution — is a release.
+ * Every cell is this page's own wording — including where it spells a director
  * differently from the Board of Directors page ("Bjornar", "Kewal Kundanlal
  * Handa"); neither page corrects the other.
  *
@@ -38,43 +39,41 @@ export const metadata: Metadata = buildMetadata({
  * A Server Component; the ripple band is the one client leaf.
  */
 export default async function BoardCommitteesPage() {
-  const committees = await loadBoardCommittees();
+  // The side list is the area's: these two pages, then the live tiles. The
+  // tiles are the one thing on this page the backend serves.
+  const tiles = await loadAreaTiles('corporate-governance');
 
   return (
-    <SubPage masthead="ripple" title={page.name} nav={governanceNav(page)}>
-      {committees.length === 0 ? (
-        <EmptyState
-          ground="dark"
-          title={governanceEmpty.title}
-          description={governanceEmpty.description}
+    <SubPage
+      masthead="ripple"
+      title={page.name}
+      nav={areaNavFor('corporate-governance', tiles, page.path)}
+    >
+      <div className="flex flex-col gap-flow">
+        <JumpLinks
+          label={jumpLinksLabel}
+          links={boardCommittees.map((committee) => ({
+            label: committee.name,
+            href: `#${committee.id}`,
+          }))}
         />
-      ) : (
-        <div className="flex flex-col gap-flow">
-          <JumpLinks
-            label={jumpLinksLabel}
-            links={committees.map((committee) => ({
-              label: committee.name,
-              href: `#${committee.id}`,
-            }))}
-          />
 
-          <div className="flex flex-col gap-section-y-tight">
-            {committees.map((committee) => (
-              <DataTable
-                key={committee.id}
-                id={committee.id}
-                heading={committee.name}
-                columns={committeeColumns}
-                rows={committee.members.map((member) => [
-                  member.name,
-                  member.category,
-                  member.position,
-                ])}
-              />
-            ))}
-          </div>
+        <div className="flex flex-col gap-section-y-tight">
+          {boardCommittees.map((committee) => (
+            <DataTable
+              key={committee.id}
+              id={committee.id}
+              heading={committee.name}
+              columns={committeeColumns}
+              rows={committee.members.map((member) => [
+                member.name,
+                member.category,
+                member.position,
+              ])}
+            />
+          ))}
         </div>
-      )}
+      </div>
     </SubPage>
   );
 }

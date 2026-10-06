@@ -1,5 +1,5 @@
 import type { StaticImageData } from 'next/image';
-import { tryBlobUrl } from '@/lib/utils/blob-url';
+import { legacyOrBlobUrl, tryBlobUrl } from '@/lib/utils/blob-url';
 
 /**
  * Describe an image that lives in Azure Blob Storage so `next/image` can lay
@@ -57,6 +57,33 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  */
 export function cdnImage(path: string, width: number, height: number): StaticImageData | null {
   const src = tryBlobUrl(path);
+
+  if (src === null) return null;
+
+  return { src, width, height };
+}
+
+/**
+ * `cdnImage()` for an image that is still on the legacy site and not yet in
+ * the container: its legacy copy while `LEGACY_ASSET_BASE_URL` is set, its
+ * blob path otherwise. The rule, and when to retire it, are
+ * `legacyOrBlobUrl()`'s; `next.config.ts` admits the legacy origin's `/img/`
+ * to the optimizer for exactly as long as the variable is set.
+ *
+ * The dimensions are the legacy file's, read from the file itself. Upload it
+ * to `blobPath` byte for byte and they stay true.
+ *
+ * @param blobPath Where the file belongs in the container, e.g.
+ *   `web-assets/media/our-core-beliefs/obf-1.webp`.
+ * @param legacyPath Its path on the legacy site, e.g. `/img/site/obf-1.webp`.
+ */
+export function legacyOrCdnImage(
+  blobPath: string,
+  legacyPath: string,
+  width: number,
+  height: number,
+): StaticImageData | null {
+  const src = legacyOrBlobUrl(blobPath, legacyPath);
 
   if (src === null) return null;
 

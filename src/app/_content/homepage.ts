@@ -2,6 +2,7 @@ import iconAgriWaste from '@/assets/images/business/icon-agri-waste.png';
 import iconCellManufacturing from '@/assets/images/business/icon-solar-cell.png';
 import iconModuleManufacturing from '@/assets/images/business/icon-solar-module.png';
 import iconSolarGeneration from '@/assets/images/business/icon-solar-energy.png';
+import type { StaticImageData } from 'next/image';
 import aboutCutout from '@/assets/images/aboutSael/sardar-kid-cropped.png';
 import aboutPhoto from '@/assets/images/aboutSael/burning-crop.png';
 import heroImageMobile1 from '@/assets/images/hero/hero-image-mobile-1.jpg';
@@ -21,16 +22,16 @@ import goalMission from '@/assets/images/goals/green.jpg';
 import goalVision from '@/assets/images/goals/panel-closeup.jpg';
 import endeavourGirl from '@/assets/images/endeavour/endeavour-girl.png';
 import endeavourPanel from '@/assets/images/endeavour/solar-panel.png';
-import dottedMap from '@/assets/images/dotted-map.svg';
-// import dottedMap from '@/assets/images/map.svg';
+import dottedMap from '@/assets/images/map.svg';
 import markEthos from '@/assets/images/ethos-icon.svg';
 import markMission from '@/assets/images/mission-icon.svg';
 import markVision from '@/assets/images/vision-icon.svg';
+import type { BusinessTile } from '@/components/sections/business-tiles';
 import type { EndeavourSplitProps } from '@/components/sections/endeavour-split';
 import type { GoalsGridProps } from '@/components/sections/goals-grid';
 import type { HeroSlide } from '@/components/sections/hero-carousel';
 import type { IntroSplitProps } from '@/components/sections/intro-split';
-import type { PresenceSite } from '@/components/sections/presence-map';
+import type { PresenceSite, SiteMetric } from '@/components/sections/presence-map';
 import type { SolutionsCarouselProps } from '@/components/sections/solutions-carousel';
 import { TODO_CONTENT } from '@/lib/config/site';
 
@@ -39,9 +40,10 @@ import { TODO_CONTENT } from '@/lib/config/site';
  *
  * Static, not dynamic: this is marketing copy that changes with a design
  * review and a deploy, so it lives in typed TypeScript rather than behind the
- * content repository. The homepage's *dynamic* surfaces — the capacity
- * figures and the news items — come from `getContentRepository()` instead.
- * docs/content-model.md §1.
+ * content repository. The homepage's one *dynamic* surface — the In the News
+ * rail — comes from `getContentRepository()` instead. The capacity figures
+ * are here too: the backend never had an endpoint for them
+ * (docs/api-contracts.md §9). docs/content-model.md §1.
  *
  * Section components never import this file. The page reads it and passes it
  * down, which is what keeps every section reusable on the pages that follow.
@@ -172,10 +174,25 @@ export const aboutSael: Omit<IntroSplitProps, 'snap'> = {
 /**
  * "Business Portfolio" — section 3.
  *
- * The **static** half of each card: mark, name, copy and destination. The
- * capacity figure and its qualifier are dynamic and arrive from
- * `getCapacityStats()`; the page joins the two on `id`.
- * docs/content-model.md §1.
+ * Each row: mark, name, copy, destination — and its capacity figure.
+ *
+ * **The figures and their qualifiers are SAEL's, as reviewed for the new
+ * site**, set on 2026-10-01 in `5494e70` and shown on sael-dev.vercel.app.
+ * They are static because the backend has no endpoint for them
+ * (docs/api-contracts.md §9), so a change is a release, and they are on SAEL's
+ * sign-off list (the backend's `docs/client/static-content-sign-off.md`).
+ *
+ * **https://www.sael.co/ is not their source, and does not agree with them.**
+ * That is SAEL's previous website. Its Business Portfolio block reads
+ * 8299.5 MWp, 5000 MW+ (proposed), 3625 MW + 5000 MW (proposed) and
+ * 164.9 MW, with no qualifiers. On 2026-10-02 these rows were changed to
+ * those values on the reasoning that the live site was authoritative; that
+ * reverted SAEL's reviewed figures to their old site's, and it was undone on
+ * 2026-10-04. "The live site says X" is not grounds for changing a figure
+ * here — docs/content-model.md §1.1.
+ *
+ * A trailing `*` on a value is the marker its qualifier explains; the section
+ * sets it as a superscript.
  *
  * `upcoming` is the only per-row adjustment — see the note beside it. There
  * was a second, `iconScale`, which scaled one mark against the other three;
@@ -189,13 +206,15 @@ export const aboutSael: Omit<IntroSplitProps, 'snap'> = {
  * forbids. Where the two sources disagree on *layout* the PDF wins; where the
  * PDF simply has no content, the prototype does.
  */
-export const businessTiles = [
+export const businessTiles: BusinessTile[] = [
   {
     id: 'solar-generation',
     icon: iconSolarGeneration,
     title: 'Solar Energy Generation',
     description:
       'SAEL develops and operates large-scale solar power plants, generating clean, affordable energy across India and advancing the nation’s renewable transition.',
+    value: '8.3 GWp',
+    footnote: 'Contracted & Awarded (Solar IPP & BESS)',
     href: '/solar-energy/',
     ctaLabel: 'Know more about solar energy generation',
     figureClassName: 'text-figure-solar-bright',
@@ -208,6 +227,8 @@ export const businessTiles = [
     title: 'Solar Cell Manufacturing',
     description:
       'Our facilities manufacture high-efficiency solar cells using advanced bifacial TOPCon technology, delivering superior output and reliability.',
+    value: '5 GW*',
+    footnote: '*Upcoming',
     href: '/solar-cell-manufacturing/',
     ctaLabel: 'Know more about solar cell manufacturing',
     figureClassName: 'text-figure-cell-bright',
@@ -223,6 +244,8 @@ export const businessTiles = [
     title: 'Solar Module Manufacturing',
     description:
       'We produce bifacial solar modules engineered for performance, durability, and long-term reliability across diverse operating environments.',
+    value: '3.6 GWp + 5 GW*',
+    footnote: 'Operational · *Upcoming',
     href: '/module-manufacturing/',
     ctaLabel: 'Know more about solar module manufacturing',
     figureClassName: 'text-figure-module-bright',
@@ -235,6 +258,8 @@ export const businessTiles = [
     title: 'Agri Waste-to-Energy',
     description:
       'We convert agricultural residue into clean energy, reducing stubble burning and emissions while creating value for farming communities.',
+    value: '164.9 MW',
+    footnote: 'Operational',
     href: '/waste-to-energy/',
     ctaLabel: 'Know more about agri waste to energy',
     figureClassName: 'text-figure-agri-bright',
@@ -249,44 +274,18 @@ export const businessTiles = [
 /**
  * "SAEL Pan India Green Footprint" — section 4.
  *
- * **Rebuilt from `SAEL-Numbers and data.pdf` page 2 on 2026-08-27**, which the
- * client supplied as this section's data template. It replaces six *site*
- * pins — Bhadra, Greater Noida, Kishangarh, Jalore, Mizoram, Kurnool — with
- * the eleven **states** the client's own map labels, each carrying between one
- * and three figures. Kurnool's `{{TODO: content}}` goes with them; it was the
- * one pin the handover never corroborated.
+ * **The figures are the client's updated map of 2026-10-06** ("11 States |
+ * 50+ Projects"), which marks each figure with its business's icon, legibly —
+ * so each figure's business is read off the map, not derived. Two kinds of
+ * row are new there: a figure carrying two icons joined by "+" (Uttar
+ * Pradesh's module and cell capacity together) and a solar figure paired with
+ * a battery (Maharashtra and Andhra Pradesh). Both are `plus` on the figure.
+ * Within a state the figures keep the map's order.
  *
- * ---------------------------------------------------------------------------
- * **The figures are the PDF's. Which legend each belongs to is derived, and
- * wants the client's confirmation.**
- *
- * The PDF marks every figure with an icon and decodes the four in a legend
- * strip under the map. Those icons do not survive at the resolution the file
- * gives us, so the assignment below was worked out from the totals the *same
- * document* prints on page 1, which is a stronger check than reading a 12px
- * glyph:
- *
- *  - **Agri waste-to-energy — exact.** 89.4 (Rajasthan) + 60.5 (Punjab) + 15
- *    (Haryana) = **164.9 MW**, page 1's figure to the decimal. Three values,
- *    one total, no slack: this is the assignment that fixes the other two.
- *  - **In-house module assembly — rounds.** 3400 (Rajasthan) + 225 (Punjab) +
- *    5000 (Uttar Pradesh) = 8625 MW → page 1's **8.6 GW**.
- *  - **Solar cell — named.** Page 1 puts the 5 GW cell capacity at *Jewar,
- *    Uttar Pradesh*, and Uttar Pradesh is the only state carrying a second
- *    5 GW here.
- *  - Everything left over is Solar IPP, which is also every single-figure
- *    state.
- *
- * **One thing does not reconcile, and it is the client's to answer, not ours.**
- * The Solar IPP figures sum to **9090 MW**, where page 1 of the same PDF says
- * **8.3 GWp** and `getCapacityStats()` returned 8299 MWp until 2026-10-01 (it reads 8.3 GWp now). No single value
- * accounts for the 791 MW gap, so it is not one misread icon — the map and the
- * headline look like different as-of dates. Both are reproduced as published
- * rather than reconciled here. /CLAUDE.md §3.
- *
- * Within a state the figures keep the order the PDF's own callout prints them
- * in. Uttar Pradesh's two are both "5 GW", so their order carries nothing.
- * ---------------------------------------------------------------------------
+ * It replaces the figures taken from `SAEL-Numbers and data.pdf` page 2 on
+ * 2026-08-27, whose businesses had to be derived from page 1's totals because
+ * that file's icons were illegible. The business pages' own maps
+ * (`solar-energy.ts` and the rest) still carry those earlier figures.
  *
  * Coordinates are points in the artwork's own 311.33 × 337.45 viewBox —
  * `src/assets/images/dotted-map.svg`, supplied by the client on 2026-08-21.
@@ -309,96 +308,112 @@ export const presenceSites: PresenceSite[] = [
   {
     id: 'punjab',
     name: 'Punjab',
-    x: 83.4,
-    y: 60.4,
+    x: 87.4,
+    y: 65.4,
     figures: [
-      { metric: 'solar-ipp', value: '1061 MW' },
-      { metric: 'agri-waste', value: '60.5 MW' },
       { metric: 'module-assembly', value: '225 MW' },
+      { metric: 'solar-ipp', value: '685.6 MW' },
+      { metric: 'agri-waste', value: '60.5 MW' },
     ],
   },
   {
     id: 'haryana',
     name: 'Haryana',
-    x: 76,
-    y: 76.5,
+    x: 80,
+    y: 81.5,
     figures: [
-      { metric: 'solar-ipp', value: '285 MW' },
+      { metric: 'solar-ipp', value: '5.3 MW' },
       { metric: 'agri-waste', value: '15 MW' },
     ],
   },
   {
     id: 'delhi',
     name: 'Delhi',
-    x: 91.4,
-    y: 84.6,
+    x: 95.2,
+    y: 89.6,
     figures: [{ metric: 'solar-ipp', value: '1 MW' }],
   },
   {
     id: 'uttar-pradesh',
     name: 'Uttar Pradesh',
-    x: 121.4,
-    y: 116.4,
+    x: 125,
+    y: 121,
     figures: [
-      { metric: 'solar-ipp', value: '196 MW' },
-      { metric: 'module-assembly', value: '5 GW' },
-      { metric: 'solar-cell', value: '5 GW' },
+      { metric: 'solar-ipp', value: '196.2 MW' },
+      { metric: 'module-assembly', plus: 'solar-cell', value: '10000 MW' },
     ],
   },
   {
     id: 'rajasthan',
     name: 'Rajasthan',
-    x: 45.4,
-    y: 124.4,
+    x: 50,
+    y: 128.4,
     figures: [
+      { metric: 'module-assembly', value: '3400 MW' },
       { metric: 'solar-ipp', value: '298 MW' },
       { metric: 'agri-waste', value: '89.4 MW' },
-      { metric: 'module-assembly', value: '3400 MW' },
     ],
   },
   {
     id: 'assam',
     name: 'Assam',
-    x: 265.2,
-    y: 124.4,
+    x: 268,
+    y: 129,
     figures: [{ metric: 'solar-ipp', value: '1 MW' }],
   },
   {
     id: 'mizoram',
     name: 'Mizoram',
-    x: 257.6,
-    y: 164.5,
+    x: 260.5,
+    y: 168.5,
     figures: [{ metric: 'solar-ipp', value: '21 MW' }],
   },
   {
     id: 'gujarat',
     name: 'Gujarat',
-    x: 30.4,
-    y: 172.4,
-    figures: [{ metric: 'solar-ipp', value: '2406 MW' }],
+    x: 34.6,
+    y: 176.4,
+    figures: [{ metric: 'solar-ipp', value: '2620 MW' }],
   },
   {
     id: 'maharashtra',
     name: 'Maharashtra',
-    x: 60.4,
-    y: 204.4,
-    figures: [{ metric: 'solar-ipp', value: '408 MW' }],
+    x: 65.2,
+    y: 208.1,
+    figures: [
+      { metric: 'solar-ipp', value: '133.4 MW' },
+      { metric: 'solar-ipp', plus: 'storage', value: '275 MW' },
+    ],
   },
   {
     id: 'andhra-pradesh',
     name: 'Andhra Pradesh',
-    x: 106.4,
-    y: 252,
-    figures: [{ metric: 'solar-ipp', value: '3165 MW' }],
+    x: 110.4,
+    y: 255.4,
+    figures: [
+      { metric: 'solar-ipp', value: '1599 MW' },
+      { metric: 'solar-ipp', plus: 'storage', value: '1646 MW' },
+    ],
   },
   {
     id: 'karnataka',
     name: 'Karnataka',
-    x: 68.4,
-    y: 244,
-    figures: [{ metric: 'solar-ipp', value: '1248 MW' }],
+    x: 72.4,
+    y: 248,
+    figures: [{ metric: 'solar-ipp', value: '1356 MW' }],
   },
 ];
+
+/**
+ * The mark each business takes beside its figures in the map's callouts —
+ * the Business Portfolio's own icons, at the client's request of 2026-10-06.
+ */
+export const presenceMarks: Record<SiteMetric, StaticImageData | null> = {
+  'solar-ipp': iconSolarGeneration,
+  'solar-cell': iconCellManufacturing,
+  'module-assembly': iconModuleManufacturing,
+  'agri-waste': iconAgriWaste,
+};
 
 /**
  * The counts beside the map, exactly as the PDF sets them.

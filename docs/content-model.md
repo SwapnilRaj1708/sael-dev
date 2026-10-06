@@ -10,12 +10,45 @@ Be deliberate about which bucket a piece of content falls into. Putting static m
 
 | | Static content | Dynamic content |
 |---|---|---|
-| **Examples** | Hero slide copy, Mission/Vision/Ethos, business descriptions, SDG list, nav structure, legal pages | News items, investor documents, notifications, team members, ESG metrics, capacity figures |
+| **Examples** | Hero slide copy, Mission/Vision/Ethos, business descriptions, SDG list, nav structure, legal pages — **and the capacity figures, the board, its committees and the team** (below) | News items, investor documents, notifications |
 | **Changes** | With a design/copy review, i.e. a deploy | Independently, by the business |
-| **Lives in** | `src/lib/content/static/*.ts` — typed TS constants | The `ContentRepository` |
+| **Lives in** | `src/app/_content/*.ts` (a page's content) and `src/lib/content/static/*.ts` (shared) — typed TS constants | The `ContentRepository` |
 | **Rendered** | Prerendered at build | Server-fetched with a 5-minute cache |
 
-**Capacity figures are dynamic**, despite looking static. The homepage stats band (8299 MWp, 5 GW, 3625 MW + 5 GW, 164.9 MW) changes as plants commission and appears in three places. It goes through the repository.
+**The test is whether the backend serves it, not whether the business would like to change it.** Capacity figures, the board, its committees and the team change independently of a design review, and were repository surfaces until 2026-10-02. None has a backend endpoint: SAEL descoped the team and board on 20 Sep 2026 (backend row 5.24) and the figures were never specified (`api-contracts.md` §9). In the repository they could only throw `NotImplementedError` under `CONTENT_SOURCE=api` and render empty, so they are static content now:
+
+| Content | File |
+|---|---|
+| Capacity figures | `businessTiles` in `src/app/_content/homepage.ts` |
+| Board of Directors | `boardMembers` in `src/app/_content/corporate-governance.ts` |
+| Board Committees | `boardCommittees` in the same file |
+| Our Team | `ourTeamMembers` in `src/app/_content/our-team.ts` |
+
+**The consequence is that SAEL cannot change any of them in the panel**; each change is a release by us. For the board and committees that matters beyond convenience — board composition is a continuing disclosure under SEBI LODR Reg. 46. SAEL's sign-off list is the backend's `docs/client/static-content-sign-off.md`. If the backend ever serves one of them, it comes back through the repository: type, interface method, both implementations, then the page.
+
+### 1.1 Where display copy comes from — not sael.co
+
+**Rule.** For display copy — headings, labels, figures, section names, and body text on static pages — the authority is the content SAEL have reviewed for the new site. That is what this repository holds, and what https://sael-dev.vercel.app/ shows them. It is **not** https://www.sael.co/.
+
+**Reason.** sael.co is SAEL's *previous* website. It is the site this one replaces, and nobody at SAEL keeps it current. When SAEL review the new site, they correct copy and figures there, not on the old one. So when the two disagree, the likeliest explanation is that the old site is out of date, not that our copy is wrong. Treating sael.co as the truth reverses that: it puts the copy SAEL rejected back over the copy they approved.
+
+That has already happened once. On 2026-10-02 the homepage capacity figures were "corrected" to sael.co's (8299.5 MWp, 5000 MW+ (proposed), and so on). In fact they were the figures SAEL had supplied after their own review, set on 2026-10-01 (`5494e70`): 8.3 GWp, 5 GW\*, and so on. The change was undone on 2026-10-04 (backend row 5.24).
+
+**"The live site says X" is not grounds for changing display copy.** If sael.co disagrees with what we hold:
+
+1. Keep our copy.
+2. Record the difference where it is visible to SAEL: the sign-off list, which is the backend's `docs/client/static-content-sign-off.md`, or a question to them. They may want their old site corrected.
+
+Our copy changes when SAEL say so, not when the old site disagrees.
+
+**sael.co *is* the source for exactly two things:**
+
+| What | Why |
+|---|---|
+| **Migrated content records** — investor documents, news items: titles, dates, files, article bodies | They are records SAEL published there, and the new site carries them over unchanged. They are not copy that SAEL rewrite for the new design |
+| **Tile and page slugs** | They must match the existing URLs (`/CLAUDE.md` §2 rule 6). SEO equity and inbound links depend on it |
+
+URL parity, redirects and the canonical host follow sael.co for the same reason as slugs (`accessibility-and-seo.md`). Everything else — a page's headings, a section's name, a figure, a qualifier, a paragraph of marketing copy — comes from SAEL's reviewed content for the new site. If none exists yet, write `{{TODO: content}}` (`/CLAUDE.md` §2 rule 3). Transcribing it from sael.co as a stand-in is a choice to flag, never one to make silently. The flag records that the copy is the old site's and that SAEL have not yet reviewed it for the new one.
 
 ---
 
@@ -46,149 +79,120 @@ export interface ImageAsset {
 export type NewsCategory = 'press-release' | 'in-the-news' | 'our-views' | 'multimedia';
 export type NewsArticleCategory = 'press-release' | 'our-views';
 
+/* A Multimedia item's video, by where it plays from. Mapped from the backend's
+   mediaKind; mediaVideoId is read only as the id of the provider mediaKind names. */
+export type NewsVideo =
+  | { provider: 'youtube'; id: string }
+  | { provider: 'vimeo'; id: string; pageUrl: string }   // pageUrl: the URL the maker entered
+  | { provider: 'hosted'; fileUrl: string };             // mediaFileUrl
+
+/* Lists of these are in the source's order — featured first, then the panel's
+   position, then newest first. Never re-sorted. */
 export interface NewsItem {
-  id: string;
-  category: NewsCategory;
+  id: string;                 // publicId
+  category: NewsCategory;     // type, PRESS_RELEASE ↔ press-release
   title: string;              // verbatim, as the legacy card reads
-  publishedAt: string | null; // ISO 8601 date; null for Our Views and Multimedia, which show none
-  href: string;               // resolved by the repository: article page, publication, or YouTube watch URL
-  imageUrl: string | null;    // a Multimedia item's is its YouTube thumbnail
-  imageAlt: string | null;    // legacy alt; a card falls back to the title
+  publishedAt: string | null; // publishDate, yyyy-MM-dd; may be null for Our Views and Multimedia
+  href: string;               // resolved by the repository: article page, publication, or the video's own page
+  imageUrl: string | null;    // heroImage.url; for a YouTube video without one, its thumbnail
+  imageAlt: string | null;    // heroImage.altText; a card falls back to the title
   slug: string | null;        // press-release, our-views — verbatim legacy URL segment
   externalUrl: string | null; // in-the-news
-  videoId: string | null;     // multimedia
-  publication: string | null; // null in every row: the legacy cards show none
+  video: NewsVideo | null;    // multimedia
+  publication: string | null; // sourcePublication; null in every mock row
 }
 
 export interface NewsArticle extends NewsItem {
   category: NewsArticleCategory;
   slug: string;
-  body: string;               // CMS HTML; sanitised again on render (lib/utils/sanitize-article.ts)
+  body: string;               // bodyHtml; sanitised again on render (lib/utils/sanitize-article.ts)
+  summary: string | null;
+  seoTitle: string | null;    // the panel's; the page falls back to title
+  seoDescription: string | null; // the panel's; falls back to summary, then the legacy body derivation
+  ogImageUrl: string | null;  // ogImage.url; falls back to imageUrl
 }
 
 /* ---------- Investors ---------- */
-/* Built 2026-09-29 with Offer Documents — see the note after this block. */
+/* Rebuilt 2026-10-02 on the backend's sections → tiles → documents — see the note after this block. */
 
-export interface BlobFile {
-  url: string;              // absolute, Azure Blob — composed from a path by the repository
-  fileName: string;
-  mimeType: string;
-  sizeBytes: number | null; // carried; whether a page shows it is the page's call
+export type InvestorSection =     // the URL segment under /investors/
+  | 'offer-documents' | 'corporate-governance' | 'financials-and-reports' | 'notifications';
+
+export type InvestorGate = { enabled: false } | { enabled: true; disclaimerHtml: string };
+
+export interface InvestorTile {   // the API's "category"
+  id: string;
+  section: InvestorSection;
+  title: string;                  // verbatim — the <h1>
+  slug: string;                   // must equal a route segment — app/investors/_lib/tile-routes.ts
+  path: string;                   // backend basePath + slug + "/" — what the webhook names
+  sectionPath: string;            // backend basePath
+  displayMode: 'single-document' | 'document-list' | 'media-list' | 'fy-grouped-list' | 'external-link';
+  descriptionHtml: string | null;
+  gate: InvestorGate;
+  documentCount: number;          // itemCount; 0 is real
+  seoTitle: string | null;
+  seoDescription: string | null;
 }
 
-export type InvestorDocumentCategory =
-  | 'offer-documents'
-  | 'corporate-governance'
-  | 'annual-return'
-  | 'consolidated-financials'
-  | 'standalone-financials'
-  | 'subsidiary-financials'
-  | 'investor-downloads'
-  | 'notifications';          // its own paginated endpoint, same item shape
-
-/** One listing: a category, and the sub-page within it (its URL slug), or null. */
-export interface InvestorListing {
-  category: InvestorDocumentCategory;
-  section: string | null;
+export interface BlobFile {
+  url: string;                    // absolute
+  mimeType: string;               // the backend's contentType — also the type label's basis
+  sizeBytes: number | null;
 }
 
 export interface InvestorDocument {
   id: string;
-  title: string;            // verbatim — the published link text
-  category: InvestorDocumentCategory;
-  section: string | null;
-  /** Heading label within a listing, verbatim: "FY 2025", "Statutory Policies". */
-  group: string | null;
-  /** A second tier under `group` — General Meeting's EGM years. Else null. */
-  subgroup: string | null;
-  publishedAt: string | null;
-  file: BlobFile;
-  order: number;            // across the listing; headings follow their first document
+  title: string;                  // verbatim — the published link text
+  kind: 'file' | 'external-link' | 'video' | 'audio';
+  publishedAt: string | null;     // documentDate
+  financialYear: string | null;   // metadata; headings come from the groups
+  file: BlobFile | null;          // null: an external link, or a file never promoted
+  externalUrl: string | null;
 }
 
-export interface CaptionTrack {
-  url: string;              // WebVTT
-  srcLang: string;          // BCP 47
-  label: string;
+export interface InvestorDocumentGroup {
+  label: string | null;           // null together with anchor: documents under no heading
+  anchor: string | null;          // the backend's, used as given — never derived here
+  documents: InvestorDocument[];
+  subgroups: { label: string; anchor: string; documents: InvestorDocument[] }[];  // one level
 }
 
-export interface InvestorVideo {
-  id: string;
-  title: string;
-  category: InvestorDocumentCategory;
-  section: string | null;
-  file: BlobFile;
-  posterUrl: string | null;
-  captions: CaptionTrack[]; // [] when none exist
+export interface InvestorTilePage {
+  tile: InvestorTile;
+  groups: InvestorDocumentGroup[];  // in the backend's order; [] = nothing published
 }
 
-/* ---------- Governance (2026-09-30) ---------- */
 
-export interface BoardMember {
-  id: string;
-  name: string;             // verbatim — "Øistein Magnar Andresen"
-  designation: string;
-  bio: string | null;       // sanitised HTML, as TeamMember.bio
-  order: number;
-}
+**The investor types were rebuilt on 2026-10-02**, when the pages moved from
+mock data to `documents-live`. The earlier model — a flat list of documents
+with a free-text `group` and `subgroup`, one `order` across the listing, a
+listing addressed by `category` plus `section`, and videos as their own type
+— was the frontend's own invention, and the site derived its headings and
+their anchors from it. The backend now serves the grouping (backend row
+3.52): each tile page's documents arrive under headings with stored anchors,
+one optional level of subheadings, empty headings kept and documents under no
+heading in a trailing unlabelled group. So the domain carries that, mapped one
+for one, and nothing on the site groups, sorts or derives an anchor. Videos
+are documents of kind `video` on a `media-list` tile; the backend has no
+poster or caption track. A document's `file` is nullable, and a document with
+neither file nor link is shown as unavailable, never dropped.
+`api-contracts.md` §4.
 
-export interface CommitteeMember {
-  name: string;             // as the committee page writes it
-  category: string;         // "Non-Executive Independent Director"
-  position: string;         // "Chairman" | "Member" | "Invitee", verbatim
-}
+**`BoardMember`, `BoardCommittee`, `CommitteeMember`, `TeamMember`,
+`TeamGroup` and `CapacityStat` left this file on 2026-10-02** with the
+content they typed (§1). The board types live beside the board in
+`src/app/_content/corporate-governance.ts`; `TeamMember` and `TeamGroup` in
+`src/components/sections/team-grid/types.ts`, the section that renders them;
+a capacity figure is `value` and `footnote` on `BusinessTile`. The board stays
+a separate record from `TeamMember` even for the same person, because the
+governance page words them differently. The notes on `TeamMember` below still
+hold, for the type in its new place.
 
-export interface BoardCommittee {
-  id: string;
-  name: string;             // "Audit Committee"
-  members: CommitteeMember[];
-  order: number;
-}
-
-/* ---------- Company ---------- */
-
-export type TeamGroup = 'leadership' | 'management';
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  designation: string;
-  group: TeamGroup;         // which tab on /our-team/ this person appears under
-  photoUrl: string | null;
-  bio: string | null;       // may contain sanitised HTML
-  linkedinUrl: string | null;
-  portraitZoom: number | null;  // dialog zoom into the passport crop; null = 1.5
-  order: number;
-}
-
-**The investor types changed when Offer Documents was built (2026-09-29).**
-Offer Documents is eight sub-pages, not one listing, so a listing is addressed
-by `InvestorListing` — `category` plus `section`, the sub-page's own slug —
-rather than by category alone. `BlobAsset`'s optional `sizeBytes` became
-`BlobFile`'s nullable one, per the conventions below. Documents gained `order`,
-because none of the offer documents is dated and the company's own order is
-part of what it published. Videos became their own type, `InvestorVideo`,
-rather than a document with two fields no PDF would ever fill. `notifications`
-left the category enum: it has its own paginated endpoint. The API contract
-matches — `api-contracts.md` §3.
-
-**The rest of the investor area (2026-09-30)** added `subgroup` — General
-Meeting nests financial years under "Extra-Ordinary General Meeting" — and
-made `order` run across the whole listing rather than within a group, because
-the order of the headings is the company's to set and no sort on the labels
-gives it (CSR runs oldest year first; named groups have no natural order). It
-also added the board and its committees as repository surfaces rather than
-copy: a board changes by resolution and must be current on the site within
-days (SEBI LODR Reg. 46), and it is a separate record from `TeamMember` even
-for the same person, because the governance page words them differently.
-`api-contracts.md` §3–4.
-
-`portraitZoom` was added on 2026-09-17. The biography dialog shows the card's
-photograph zoomed to a head-and-shoulders crop, and the client wants to set
-that zoom by eye per person — `1` is the card's own framing, `2` a tight head
-shot. `null` takes the default, `--scale-team-passport` in theme.css. It is
-data, not presentation, because which value is right depends on how each
-photograph happens to be framed.
+`portraitZoom` was added on 2026-09-17 and removed on 2026-10-06. The
+biography dialog zoomed the card's photograph to a head-and-shoulders crop;
+the portraits have since been replaced, and the dialog now shows each one
+exactly as the card does.
 
 **Two fields changed in FE-07**, which built `/our-team/` and is the only
 consumer of this type.
@@ -211,14 +215,6 @@ right alternative text for a portrait is the name of the person in it, which
 the seventeen publish a profile and ten do not. It is genuinely sparse rather
 than merely unfilled — whether someone publishes a profile is their decision —
 so a consumer omits the link entirely rather than rendering a disabled one.
-
-export interface CapacityStat {
-  id: string;
-  label: string;            // "Solar Energy Generation"
-  value: string;            // "8299 MWp" — pre-formatted by the backend
-  footnote: string | null;  // "*proposed"
-  order: number;
-}
 
 export interface EsgMetric {
   id: string;
@@ -244,7 +240,7 @@ export interface Paginated<T> {
 ### Conventions
 
 - **Dates are ISO 8601 strings**, never `Date` objects. `Date` does not survive the server→client boundary and forces every consumer to re-parse. Format at render with `formatDate()`.
-- **Pre-formatted display values.** `CapacityStat.value` is `"3625 MW + 5 GW"`, not a number plus a unit. The business owns that string; the frontend must not attempt to compose it.
+- **Pre-formatted display values.** A figure is the string SAEL supply — `"3.6 GWp + 5 GW*"`, not a number plus a unit. The frontend must not attempt to compose it.
 - **Nullable, not optional.** `foo: string | null` rather than `foo?: string`. Makes "the backend sent nothing" explicit and distinguishable from "we forgot to map it".
 - **No `id` invention.** If the backend does not supply a stable id, the adapter derives one deterministically (e.g. slug of title + date) and documents it. Never `Math.random()` or array index — both break React reconciliation and pagination.
 
@@ -256,21 +252,23 @@ export interface Paginated<T> {
 
 ```ts
 export interface ContentRepository {
-  // Newsroom — built 2026-10-01. No paging: the legacy listings have none,
-  // and paged URLs would be new URLs. `category` omitted is the homepage's call.
-  getNewsItems(options?: { category?: NewsCategory; limit?: number }): Promise<NewsItem[]>;
+  // Newsroom — built 2026-10-01, wired to the API the same day. No paging on
+  // the site: the legacy listings have none, and paged URLs would be new URLs.
+  // The adapter reads every backend page instead. `category` is required: the
+  // backend refuses a news call without a type.
+  getNewsItems(options: { category: NewsCategory; limit?: number }): Promise<NewsItem[]>;
+  // The homepage's In the News rail. The backend may return fewer than `limit`.
+  getInTheNewsRail(limit: number): Promise<NewsItem[]>;
   getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null>;
 
-  // Investors
-  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;
-  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
-  getBoardMembers(): Promise<BoardMember[]>;
-  getBoardCommittees(): Promise<BoardCommittee[]>;
-  getNotifications(params: { page: number; pageSize: number }): Promise<Paginated<InvestorDocument>>;
+  // Investors — wired to documents-live on 2026-10-02. Notifications is the
+  // NOTIFICATIONS section's one tile, not an endpoint of its own.
+  getInvestorTiles(section: InvestorSection): Promise<InvestorTile[]>;
+  getInvestorTilePage(section: InvestorSection, slug: string): Promise<InvestorTilePage | null>;
+  hasInvestorTile(section: InvestorSection, slug: string): Promise<boolean>;  // for src/proxy.ts
 
-  // Company
-  getTeamMembers(): Promise<TeamMember[]>;
-  getCapacityStats(): Promise<CapacityStat[]>;
+  // Company. The team, the board, its committees and the capacity figures were
+  // methods here until 2026-10-02; they are static content now (§1).
   getEsgMetrics(): Promise<EsgMetric[]>;
 }
 ```
@@ -311,10 +309,9 @@ src/lib/content/mock/
 ├── index.ts              MockContentRepository
 └── data/
     ├── news.json
-    ├── investor-documents.json
+    ├── investor-tiles.json      (tiles, their headings and stored anchors)
+    ├── investor-documents.json  (documents, filed by tile and heading)
     ├── notifications.json
-    ├── team.json
-    ├── capacity-stats.json
     └── esg-metrics.json
 ```
 
@@ -322,7 +319,7 @@ The mock must be a realistic stand-in, not a happy path:
 
 - **Realistic volume.** 25+ news items so pagination is genuinely exercised. 40+ investor documents across all categories and several financial years.
 - **Realistic content.** Seed from the live site — real headlines, real dates, real document titles. Placeholder Lorem hides layout failures that real copy exposes.
-- **Edge cases included.** At least one news item with no image, one with a 140-character headline, one document with no date, one team member with no photo. These are the cases that break in production.
+- **Edge cases included.** At least one news item with no image, one with a 140-character headline, one document with no date. These are the cases that break in production.
 - **Pagination implemented properly.** `getNewsPage` slices and returns correct `totalItems`/`totalPages`. Do not return everything and let the UI slice.
 - **Optional latency.** Honour `MOCK_LATENCY_MS` (default `0`) so loading and error states can be exercised locally.
 - **Blob URLs are plausible.** `https://<account>.blob.core.windows.net/public/investors/annual-return-fy2024-25.pdf` — composed via `blobUrl()`, so switching to the real account is one env change. Mock PDFs may 404; that is acceptable and should be noted in the mock's file header.

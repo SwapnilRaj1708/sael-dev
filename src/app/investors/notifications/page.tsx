@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { investorDocumentsEmpty, jumpLinksLabel } from '@/app/_content/investors';
 import { notificationsPage as page } from '@/app/_content/notifications';
-import { loadInvestorDocuments, toDocumentGroups } from '@/app/investors/_lib/documents';
-import { SubPage } from '@/components/sections/sub-page';
-import { DocumentGroups } from '@/components/ui/document-groups';
+import { loadAreaTiles, loadTilePage } from '@/app/investors/_lib/documents';
+import { NotificationsPageBody } from '@/app/investors/_lib/tile-page';
+import { INVESTOR_AREAS } from '@/app/investors/_lib/tile-routes';
 import { buildMetadata } from '@/lib/seo/metadata';
+
+const AREA = INVESTOR_AREAS.notifications;
 
 export const metadata: Metadata = buildMetadata({
   title: page.meta.title,
@@ -16,30 +17,26 @@ export const metadata: Metadata = buildMetadata({
 /**
  * Notifications — the company's notices to investors, by financial year.
  *
- * On the investor template with the ripple band, but **no side list**: the
- * legacy page is a page on its own, not part of an area. **Not gated**, as
- * on the legacy page.
+ * **The section's one tile, `notifications`, is this page**: its documents
+ * under the headings the backend gives — one per financial year, newest
+ * first, with anchors (`#fy2026`) that are the legacy tab ids. On the
+ * investor template with the ripple band, but **no side list**: the legacy
+ * page is a page on its own, not part of an area. **Not gated**, as on the
+ * legacy page — unless the backend gates the tile.
  *
- * The years are `<DocumentGroups>`, the one year-group pattern, and the
- * legacy tab ids (`#fy2026`, `#fy2025`) are their anchors.
- *
- * Read through `getInvestorDocuments` with `category: 'notifications'`: two
- * notices do not need the paginated endpoint the contract proposes for when
- * the list is long (docs/api-contracts.md §3).
+ * The section's tiles are listed too, though only the one is shown, so that
+ * a second tile — which would have no page — is reported by
+ * `loadAreaTiles` rather than sitting unseen. With the tile not live, the
+ * page says nothing is published rather than 404ing at a legacy URL. The
+ * page is `<NotificationsPageBody>`, which its Live Preview renders too.
  *
  * A Server Component; the ripple band is the one client leaf.
  */
 export default async function NotificationsPage() {
-  const groups = toDocumentGroups(await loadInvestorDocuments(page.listing));
+  const [tilePage] = await Promise.all([
+    loadTilePage(AREA.section, AREA.sectionTile),
+    loadAreaTiles(AREA.section),
+  ]);
 
-  return (
-    <SubPage masthead="ripple" title={page.name}>
-      <DocumentGroups
-        groups={groups}
-        jumpLabel={jumpLinksLabel}
-        emptyTitle={investorDocumentsEmpty.title}
-        emptyDescription={investorDocumentsEmpty.description}
-      />
-    </SubPage>
-  );
+  return <NotificationsPageBody tilePage={tilePage} />;
 }

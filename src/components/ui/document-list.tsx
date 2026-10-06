@@ -1,3 +1,4 @@
+import { FileX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { ConsentCopy } from '@/components/ui/consent-actions';
 import { DocumentLink } from '@/components/ui/document-link';
@@ -22,6 +23,18 @@ export interface DocumentListGatedItem {
   fileType?: string;
 }
 
+/**
+ * A published document with nothing to open — a hosted file the backend
+ * never promoted to public storage. **Shown, never left out**: a statutory
+ * disclosure must not vanish from its page because its file is missing.
+ */
+export interface DocumentListUnavailableItem {
+  id: string;
+  title: string;
+  /** What the row says in place of a link — functional copy. */
+  unavailable: string;
+}
+
 /** What every row in a gated list shares. */
 export interface DocumentListGate {
   copy: ConsentCopy;
@@ -39,10 +52,12 @@ interface DocumentListBaseProps {
    */
   heading?: string;
   /**
-   * The section's anchor, and the root of its heading's id. Stable across
-   * builds because a legacy deep link may point at it — `#fy2025`.
+   * The section's anchor, and the root of its heading's id — the backend's
+   * anchor, as given, because a published deep link points at it:
+   * `#fy2025`. Omitted only for the documents under no heading, which have
+   * no heading to link to.
    */
-  id: string;
+  id?: string;
   /**
    * `h2` under the page title; `h3` for a list inside another section — a
    * year inside General Meeting's "Extra-Ordinary General Meeting" — which
@@ -60,42 +75,78 @@ interface DocumentListBaseProps {
 
 export type DocumentListProps = DocumentListBaseProps &
   (
-    | { items: readonly DocumentListLink[]; gate?: undefined }
-    | { items: readonly DocumentListGatedItem[]; gate: DocumentListGate }
+    | { items: readonly (DocumentListLink | DocumentListUnavailableItem)[]; gate?: undefined }
+    | {
+        items: readonly (DocumentListGatedItem | DocumentListUnavailableItem)[];
+        gate: DocumentListGate;
+      }
   );
 
-/** One `<li>` per document — a plain link, or a gated row. */
+/**
+ * The row for a document with nothing to open: the title, and a line saying
+ * so, with no link and no hover. Muted so it does not read as a link, and
+ * the note is visible text rather than a tooltip, so it is announced too.
+ */
+function UnavailableRow({ item }: { item: DocumentListUnavailableItem }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-hairline-dark py-4">
+      <span className="flex flex-1 flex-col gap-1">
+        <span className="text-h3 text-on-dark-soft">{item.title}</span>
+        <span className="text-body-sm text-on-dark-muted">{item.unavailable}</span>
+      </span>
+      <FileX
+        className="mt-1 size-5 shrink-0 text-on-dark-muted"
+        aria-hidden="true"
+        focusable="false"
+      />
+    </div>
+  );
+}
+
+/** One `<li>` per document — a plain link, a gated row, or an unavailable one. */
 function rows(props: DocumentListProps): ReactNode {
   if (props.gate === undefined) {
-    return props.items.map((item) => (
-      <li key={item.id}>
-        <DocumentLink
-          ground="dark"
-          href={item.href}
-          title={item.title}
-          fileType={item.fileType}
-          fileSize={item.fileSize}
-          // The investor pages' PDF mark — `<DocumentRowBody>`.
-          typeMark
-        />
-      </li>
-    ));
+    return props.items.map((item) =>
+      'unavailable' in item ? (
+        <li key={item.id}>
+          <UnavailableRow item={item} />
+        </li>
+      ) : (
+        <li key={item.id}>
+          <DocumentLink
+            ground="dark"
+            href={item.href}
+            title={item.title}
+            fileType={item.fileType}
+            fileSize={item.fileSize}
+            // The investor pages' PDF mark — `<DocumentRowBody>`.
+            typeMark
+          />
+        </li>
+      ),
+    );
   }
 
   const { gate } = props;
-  return props.items.map((item) => (
-    <li key={item.id}>
-      <GatedDocumentLink
-        ground="dark"
-        id={item.id}
-        title={item.title}
-        fileType={item.fileType}
-        copy={gate.copy}
-        notice={gate.notice}
-        reveal={gate.reveal}
-      />
-    </li>
-  ));
+  return props.items.map((item) =>
+    'unavailable' in item ? (
+      <li key={item.id}>
+        <UnavailableRow item={item} />
+      </li>
+    ) : (
+      <li key={item.id}>
+        <GatedDocumentLink
+          ground="dark"
+          id={item.id}
+          title={item.title}
+          fileType={item.fileType}
+          copy={gate.copy}
+          notice={gate.notice}
+          reveal={gate.reveal}
+        />
+      </li>
+    ),
+  );
 }
 
 /**
@@ -106,25 +157,24 @@ function rows(props: DocumentListProps): ReactNode {
  * `<DocumentLink>`s, whose URLs are in the HTML like any link. Given a
  * `gate`, the items carry no URL at all — the type will not accept one — and
  * each row is a `<GatedDocumentLink>` that asks for consent and fetches its
- * URL only then. Whether a list is gated is the page's decision, taken from
- * its content file; this component cannot be persuaded to put a gated URL on
- * the page, because it is never given one.
+ * URL only then. Whether a list is gated is the tile's, from the backend's
+ * `gate`; this component cannot be persuaded to put a gated URL on the page,
+ * because it is never given one. Either kind of list can hold unavailable
+ * rows — documents with nothing to open, shown as such.
  *
- * The heading is always rendered, even where it repeats the page title — the
- * legacy pages set the listing's own heading above every list, and this
- * reproduces them. It takes `--text-h2`, under the page's `--text-hero` and
- * over the rows' `--text-h3`.
+ * The heading, when given, takes `--text-h2`, under the page's
+ * `--text-hero` and over the rows' `--text-h3`.
  *
- * Empty — a failed fetch, or a listing with nothing in it — renders
- * `<EmptyState>` under the heading, so the page still says what should be
- * here. /CLAUDE.md §6.
+ * Empty — a listing with nothing in it — renders `<EmptyState>` under the
+ * heading when the caller gives it the copy, and the heading alone when it
+ * does not. /CLAUDE.md §6.
  *
  * Dark ground only: every investor page is dark (docs/design-guidelines.md §1).
  * A Server Component; only the gated rows are client.
  */
 export function DocumentList(props: DocumentListProps) {
   const { heading, id, headingLevel: Heading = 'h2', emptyTitle, emptyDescription } = props;
-  const headingId = `${id}-heading`;
+  const headingId = id === undefined ? undefined : `${id}-heading`;
   const empty = props.items.length === 0;
 
   return (

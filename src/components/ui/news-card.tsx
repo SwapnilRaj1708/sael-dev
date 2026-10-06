@@ -68,8 +68,15 @@ export interface NewsCardProps {
   media?: keyof typeof thumbAspect;
   /** Drawn over the thumbnail's centre — a video's play mark. Decorative. */
   thumbOverlay?: ReactNode;
-  /** `<NewsCardLink>` or `<YouTubeDialog>`. */
+  /** `<NewsCardLink>` or `<VideoDialog>`. */
   action: ReactNode;
+  /**
+   * Load the image straight from its URL, bypassing `/_next/image`. **Set on
+   * every preview page.** A preview's image can be a signed URL to a draft in
+   * private storage; through the optimiser it would be stored in Next's image
+   * cache and served to anyone who asks, with no preview session at all.
+   */
+  unoptimized?: boolean;
 }
 
 /**
@@ -102,7 +109,7 @@ export interface NewsCardProps {
  *    carry none.
  *
  * The action is a slot — `<NewsCardLink>` for an article or an outbound
- * piece, `<YouTubeDialog>` for a video — and whichever fills it stretches its
+ * piece, `<VideoDialog>` for a video — and whichever fills it stretches its
  * hit area over the whole card with `after:inset-0`, so the image and the
  * headline are clickable while the accessible name stays the action's own.
  *
@@ -127,6 +134,7 @@ export function NewsCard({
   media = 'photo',
   thumbOverlay,
   action,
+  unoptimized = false,
 }: NewsCardProps) {
   return (
     // The hairline, the inset under it and the accent that fills across it
@@ -161,6 +169,7 @@ export function NewsCard({
             alt={imageAlt}
             fill
             sizes={sizes}
+            unoptimized={unoptimized}
             className={cn(
               'object-cover transition duration-(--duration-card)',
               'group-hover:scale-105',

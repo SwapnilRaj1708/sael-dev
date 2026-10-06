@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { BusinessTiles, type BusinessTile } from '@/components/sections/business-tiles';
+import { BusinessTiles } from '@/components/sections/business-tiles';
 import { EndeavourSplit } from '@/components/sections/endeavour-split';
 import { GoalsGrid } from '@/components/sections/goals-grid';
 import { NewsCarousel } from '@/components/sections/news-carousel';
@@ -8,13 +8,15 @@ import { IntroSplit } from '@/components/sections/intro-split';
 import { PresenceMap } from '@/components/sections/presence-map';
 // Solutions is withdrawn at the client's request (2026-10-01) but expected back.
 // import { SolutionsCarousel } from '@/components/sections/solutions-carousel';
+import { newsCardLabels } from '@/app/_content/newsroom';
 import { TODO_CONTENT } from '@/lib/config/site';
-import { getContentRepository, type CapacityStat, type NewsItem } from '@/lib/content';
+import { getContentRepository, type NewsItem } from '@/lib/content';
 import { buildMetadata } from '@/lib/seo/metadata';
 import {
   aboutSael,
   businessTiles,
   heroSlides,
+  presenceMarks,
   presenceSites,
   ourEndeavour,
   ourGoals,
@@ -32,59 +34,33 @@ export const metadata: Metadata = buildMetadata({
   path: '/',
 });
 
-/** How many press items the homepage rail asks for. */
+/**
+ * How many In The News items the rail asks for. The backend may return fewer:
+ * it caps this call with its own setting, `content.home.in-the-news.limit`,
+ * per environment. docs/api-contracts.md §3.3.
+ */
 const NEWS_LIMIT = 9;
 
 /**
- * Join each business card's static copy to its live capacity figure.
+ * The "In the News" rail's items. **A failure throws, in every environment.**
  *
- * Wrapped, and wrapped *here* rather than inside the section, because a
- * repository failure must cost only what it has to: the cards still render,
- * they simply render without their figures. docs/content-model.md §3 rule 2 —
- * callers handle failure locally, and one dead fetch does not take down the
- * page around it.
+ * `<NewsCarousel>` renders nothing for an empty list, so a failure absorbed
+ * here would remove the section with no visible sign, and the homepage
+ * without it would then be cached for the whole ISR window. Thrown, the
+ * failure is not cached: a regeneration keeps serving the last good homepage
+ * and tries again later, and the build fails rather than shipping a homepage
+ * without its news. The one cost is the first render with no good version
+ * yet, which goes to the error boundary. This departs from
+ * docs/content-model.md §3 rule 2 for live, ISR-cached content only.
  */
-async function resolveBusinessTiles(): Promise<BusinessTile[]> {
-  let stats: CapacityStat[];
-
-  try {
-    stats = await getContentRepository().getCapacityStats();
-  } catch (error) {
-    console.error('[homepage] capacity stats unavailable, rendering tiles without figures', error);
-    stats = [];
-  }
-
-  return businessTiles.map((tile) => {
-    const stat = stats.find((candidate) => candidate.id === tile.id);
-
-    return {
-      ...tile,
-      value: stat?.value ?? null,
-      footnote: stat?.footnote ?? null,
-    };
-  });
+function resolveNewsItems(): Promise<NewsItem[]> {
+  return getContentRepository().getInTheNewsRail(NEWS_LIMIT);
 }
 
 /**
- * The homepage's press items.
- *
- * Wrapped locally for the same reason the capacity figures are: a repository
- * failure must cost only this section. `<NewsCarousel>` renders nothing at all
- * for an empty list, so a dead fetch removes the section rather than leaving a
- * heading over an empty rail. docs/content-model.md §3 rule 2.
- */
-async function resolveNewsItems(): Promise<NewsItem[]> {
-  try {
-    return await getContentRepository().getNewsItems({ limit: NEWS_LIMIT });
-  } catch (error) {
-    console.error('[homepage] news unavailable, omitting the section', error);
-    return [];
-  }
-}
-
-/**
- * The homepage. A Server Component: it fetches, joins and passes down, and
- * only the hero carousel and the two rails' arrows opt into the client.
+ * The homepage. A Server Component: it fetches the news rail and passes it
+ * down with the static content, and only the hero carousel and the two rails'
+ * arrows opt into the client.
  *
  * Nine sections, against the twelve `docs/features/04` lists: its §2 (stats
  * band) and §4 (business tiles) are one section in the client's design, §9
@@ -109,19 +85,19 @@ async function resolveNewsItems(): Promise<NewsItem[]> {
  * globals.css.
  */
 export default async function HomePage() {
-  const [tiles, news] = await Promise.all([resolveBusinessTiles(), resolveNewsItems()]);
+  const news = await resolveNewsItems();
 
   return (
     <div data-snap-sections className="-mt-header lg:mt-0">
       <HeroCarousel slides={heroSlides} />
       <IntroSplit {...aboutSael} snap />
-      <BusinessTiles eyebrow="Business Portfolio" tiles={tiles} snap />
-      <PresenceMap {...presenceSummary} sites={presenceSites} snap />
+      <BusinessTiles eyebrow="Business Portfolio" tiles={businessTiles} snap />
+      <PresenceMap {...presenceSummary} sites={presenceSites} marks={presenceMarks} snap />
       <EndeavourSplit {...ourEndeavour} snap />
       {/* Withdrawn 2026-10-01 at the client's request; expected back.
       <SolutionsCarousel {...solutions} snap /> */}
       <GoalsGrid {...ourGoals} snap />
-      <NewsCarousel title="In the News" items={news} snap />
+      <NewsCarousel title="In the News" items={news} newTabNote={newsCardLabels.newTab} snap />
     </div>
   );
 }

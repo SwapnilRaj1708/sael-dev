@@ -29,7 +29,6 @@ export const investorContactPage: InvestorPage = investorPage(
   'contact-us',
   'Investor Contact',
   'Investor Contact - SAEL',
-  null,
 );
 
 /**

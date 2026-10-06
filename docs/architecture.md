@@ -26,7 +26,7 @@
 sael-web/
 ├── CLAUDE.md
 ├── next.config.ts
-├── ecosystem.config.cjs             # PM2 process definition, ships in the archive
+├── ecosystem.config.cjs             # throws: PM2 is not used (systemd runs server.js); ships in the archive
 ├── .env.example
 ├── deploy/
 │   └── nginx.conf.sample
@@ -176,16 +176,12 @@ import { HeroCarousel } from '@/components/sections/hero-carousel';
 import { NewsGrid } from '@/components/sections/news-grid';
 
 export default async function HomePage() {
-  const repo = getContentRepository();
-  const [news, stats] = await Promise.all([
-    repo.getLatestNews({ limit: 3 }),
-    repo.getCapacityStats(),
-  ]);
+  const news = await getContentRepository().getInTheNewsRail(9);
 
   return (
     <main>
       <HeroCarousel slides={HOMEPAGE_HERO_SLIDES} intervalMs={6000} />
-      <StatsBand stats={stats} />
+      <BusinessTiles tiles={businessTiles} />  {/* static: _content/homepage.ts */}
       {/* … */}
       <NewsGrid eyebrow="In the News" items={news} viewAllHref="/newsroom/" />
     </main>
@@ -193,7 +189,7 @@ export default async function HomePage() {
 }
 ```
 
-Static, design-owned content (hero slide copy, mission/vision/ethos text) lives in a colocated `content.ts` beside the page or in `src/lib/content/static/`. Backend-owned content comes from the repository. **Do not** route static marketing copy through the repository — it adds a network hop for text that changes once a year.
+Static, design-owned content (hero slide copy, mission/vision/ethos text) lives in a colocated `content.ts` beside the page or in `src/lib/content/static/`. Backend-owned content comes from the repository. **Do not** route static marketing copy through the repository — it adds a network hop for text that changes once a year. Nor anything the backend does not serve: the capacity figures, board, committees and team are static for that reason (`content-model.md` §1).
 
 ### Why not a JSON-driven section registry?
 
@@ -288,37 +284,44 @@ See `content-model.md` for the repository contract and `api-contracts.md` for th
 
 ## 8. Deployment
 
-**Azure VM, Nginx + PM2.** No container step. We build an archive and hand it over; the client's team extracts and runs it.
+**Azure VM, nginx + systemd.** No container step. We build an archive and hand it over; the client's team extracts and runs it. The admin panel backend runs on the same VM behind the same nginx, which routes each path to one or the other (`deploy/nginx.conf.sample`).
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build          # output: 'standalone'
+pnpm build          # output: 'standalone'. For production: CONTENT_SOURCE=api, see below
 pnpm package        # -> release/sael-web-<version>.tar.gz
 ```
 
-The archive contains the standalone server, its dependencies, `.next/static`, `public/`, `ecosystem.config.cjs` and a `DEPLOY.txt`. It runs with `pm2 start ecosystem.config.cjs` — **no install step on the VM**.
+The archive contains the standalone server, its dependencies, `.next/static`, `public/` and a `DEPLOY.txt` (plus `ecosystem.config.cjs`, which only throws). **No install step on the VM.** It is extracted with `--strip-components=1` into `/var/www/sael-web` and runs as **one systemd-managed process**, `node /var/www/sael-web/server.js`, with no flags. `server.js` sets `NODE_ENV=production` and changes to its own directory itself. Its environment file is `/etc/sael-web/sael-web.env`, which must set `HOSTNAME=127.0.0.1` and `PORT=3000`: without them `server.js` listens on `0.0.0.0`. **One process only**, because each holds its own page cache and a second would keep serving stale pages after a publish (`/CLAUDE.md` §7).
+
+### What the build bakes in
+
+- **Content.** The build prerenders pages from whatever `CONTENT_SOURCE` the build machine has. Built with the default (`mock`), it ships fixture content. So the provisioning order is: database ready, backend started, configuration entered through the panel, content import run, **then** the site built with `CONTENT_SOURCE=api`, then started. The build machine needs an `API_BASE_URL` it can reach. `http://127.0.0.1:8082` is the backend only from the VM itself.
+- **The host.** `NEXT_PUBLIC_SITE_URL` is compiled in. Moving the VM from `prod2-preview.sael.co` to the production host is a **rebuild**, not a reconfiguration. And the value must then be exactly `PRODUCTION_URL` (`https://www.sael.co`), or every page stays `noindex`.
+
+The backend's `docs/tenant-cutover-checklist.md` §0.8 and §1.11 carry both for whoever provisions.
 
 ### Why `nodeLinker: hoisted`
 
 `output: 'standalone'` copies `node_modules` verbatim. Under pnpm's default symlinked layout, those links point back into the build machine's store — on Windows as absolute paths — so the archive only runs on the machine that built it. Dereferencing the links instead breaks pnpm's nested resolution (`next` loses its own `@swc/helpers`).
 
-`nodeLinker: hoisted` in `pnpm-workspace.yaml` gives a flat `node_modules`, which makes `.next/standalone` genuinely relocatable and lets the archive be built on any OS. The cost is pnpm's protection against phantom dependencies — a package can now import something it does not declare. If that bites, the alternative is to build releases only on Linux and drop the setting.
+`nodeLinker: hoisted` in `pnpm-workspace.yaml` gives a flat `node_modules`, which makes `.next/standalone` genuinely relocatable. It does not make the archive platform-neutral: `sharp`'s native binaries are installed for the build machine's OS and CPU only. An archive built on a Mac runs on the Linux VM, but `sharp` cannot load there and Next then serves every image unoptimised, logging nothing (verified 2026-10-02). Build releases on the VM's OS and CPU. The cost is pnpm's protection against phantom dependencies — a package can now import something it does not declare. If that bites, the alternative is to build releases only on Linux and drop the setting.
 
-`scripts/package-release.mjs` refuses to produce an archive containing any unresolved link, so a regression here fails loudly rather than shipping a broken tarball.
+The standalone output contains one symlink by design: Turbopack writes `.next/node_modules/<package>-<hash> -> ../../node_modules/<package>` for each server-external package a bundle requires (today `postcss`, through `sanitize-html`), and the server chunks require it by that name. `scripts/package-release.mjs` copies with `verbatimSymlinks`, because `fs.cp`'s default rewrites a relative link into an absolute path back into the build machine. It then refuses to archive any link that is absolute, dangles, or resolves outside the archive, so a regression fails the package step rather than the first page render after a publish.
 
 ### Required of the VM
 
-- Node 25 (Node 24 LTS or newer also runs the archive)
-- `sharp` for image optimisation — bundled into the archive, no install needed
-- A writable directory for `.next/cache/images`, or accept unoptimised remote images
+- Node 24 LTS or newer
+- `sharp` for image optimisation — bundled into the archive, no install needed, **for the OS and CPU the archive was built on** (above)
+- `/var/www/sael-web/.next` writable by the service account: the page cache and the image cache are written there
 - Gzip/Brotli at the proxy layer (Next does not compress in standalone mode)
-- Long-cache headers on `/_next/static/*` (immutable, 1 year)
+- `Strict-Transport-Security` sent by nginx, for this site and the backend alike, without `includeSubDomains` or `preload`. Neither application sends it
 
-The last two, plus TLS and the health probe, are in `deploy/nginx.conf.sample`.
+The last two, plus TLS and the route table, are in `deploy/nginx.conf.sample`. Next 16 sets the long-lived `Cache-Control` on `/_next/static/*` itself, so nginx adds none.
 
 Health check: `GET /api/health/` returning `{ status: 'ok', version }` — added in FE-01.
 
-`NEXT_PUBLIC_*` values are compiled into the client bundle at build time. Changing one requires a rebuild, not a restart — which is why `ecosystem.config.cjs` and the build environment must agree.
+`NEXT_PUBLIC_*` values are compiled into the client bundle at build time. Changing one requires a rebuild, not a restart, so the value in the runtime environment file changes nothing.
 
 ---
 
@@ -328,7 +331,7 @@ Recorded so work is never blocked. Each has a working default already implemente
 
 | # | Decision | Default in force | Owner | Impact if changed |
 |---|---|---|---|---|
-| 1 | ~~Hosting model (VM vs managed)~~ **Resolved** | Azure VM, Nginx + PM2, deployed from an archive. No container. | Client | — |
+| 1 | ~~Hosting model (VM vs managed)~~ **Resolved** | Azure VM, nginx + systemd (PM2 retired 2 Oct 2026), deployed from an archive. No container. | Client | — |
 | 1a | Whether `/investors/` itself is a page | Not built — §2 lists only its children, and inventing a route would break URL parity | Client | Low — one page, no data contract |
 | 2 | DIN webfont licence | Assumed held; fonts self-hosted from client-supplied files | Client legal | High — would force a substitute typeface |
 | 3 | Oracle careers URL | `CAREER_REDIRECT_URL` env var; since 2026-09-22 it is the href of the two "Explore" CTAs on the Careers page, which are omitted while it is unset | Client | Trivial |

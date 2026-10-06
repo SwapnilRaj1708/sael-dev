@@ -64,3 +64,34 @@ export function NoticeText({ paragraphs, className, ...props }: NoticeTextProps)
     </div>
   );
 }
+
+export interface NoticeHtmlProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  /**
+   * The notice as HTML **already sanitised on the server** —
+   * `sanitizeArticle()` over the backend's `gate.disclaimerHtml`.
+   */
+  html: string;
+}
+
+/**
+ * {@link NoticeText}'s twin for a notice that arrives as HTML: a tile's SEBI
+ * disclaimer, which SAEL maintain and version in the admin panel and the
+ * backend serves already sanitised (docs/api-contracts.md §4.4). Set exactly
+ * as `<NoticeText>` sets one — paragraphs spaced, plain text on-dark, bold
+ * runs full white — so a notice reads the same whichever way it arrived.
+ *
+ * Nothing is trimmed, cased or rewritten here; the text is the company's.
+ */
+export function NoticeHtml({ html, className, ...props }: NoticeHtmlProps) {
+  return (
+    <div
+      className={cn(
+        'flex max-w-(--measure) flex-col gap-stack text-body-sm text-pretty text-body-on-dark',
+        '[&_b]:font-bold [&_b]:text-white [&_strong]:font-bold [&_strong]:text-white',
+        className,
+      )}
+      dangerouslySetInnerHTML={{ __html: html }}
+      {...props}
+    />
+  );
+}

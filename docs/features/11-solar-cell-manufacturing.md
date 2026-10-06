@@ -5,6 +5,14 @@
 
 One of the four business pages. **These four share a template.** Whichever is built first defines it; the other three should be almost entirely composition with different content. If you find yourself writing new section components on the third business page, the template was wrong — go back and generalise it.
 
+> **Copy source: SAEL's instruction of 2026-09-18 for the four business pages, which still
+> stands for them.** SAEL's reference screenshot fixes the structure and the live page,
+> https://www.sael.co/solar-cell-manufacturing/, fixes the copy. The page was built that way on 2026-09-19, not to the
+> section list below, which has not been reconciled to it (`frontend-progress.md`, "FE-09, FE-10, FE-11 — as built").
+> The instruction is SAEL's and specific to these four pages. It is not the general rule, which is
+> that SAEL's reviewed content for the new site is the authority for display copy and sael.co is
+> not (/CLAUDE.md §2 rule 8).
+
 ## Sections
 
 1. `<PageHero>` — title "Solar Cell Manufacturing", hero image, breadcrumb Home › Businesses › Solar Cell Manufacturing

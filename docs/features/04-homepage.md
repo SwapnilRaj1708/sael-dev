@@ -23,6 +23,8 @@ export const metadata = buildMetadata({
 
 Data: `getCapacityStats()` and `getLatestNews({ limit: 3 })` from the repository, in a `Promise.all`. Everything else is static and lives in `src/app/_content/homepage.ts`.
 
+> **Amended 2026-10-02, corrected 2026-10-04.** The capacity figures are static content: `value` and `footnote` on each row of `businessTiles` in `src/app/_content/homepage.ts`. The backend has no endpoint for them, so `getCapacityStats()` was removed (`content-model.md` §1). The only repository call on the homepage is the In the News rail. **The figures are SAEL's reviewed ones** (`5494e70`, 2026-10-01): `8.3 GWp` / Contracted & Awarded (Solar IPP & BESS), `5 GW*` / \*Upcoming, `3.6 GWp + 5 GW*` / Operational · \*Upcoming, `164.9 MW` / Operational. The 2026-10-02 change replaced them with sael.co's figures. sael.co is SAEL's previous website, so that was wrong, and it was undone on 2026-10-04 (`content-model.md` §1.1).
+
 Both repository calls are individually wrapped — a news failure renders `<EmptyState>` in that section and nothing else on the page is affected.
 
 ---
@@ -61,8 +63,9 @@ The grounds as actually built, in the same order: `black` · `paper-dots` · `bl
 ### Where the sequence and this document do not line up
 
 - **Step 3 absorbs §2.** The capacity figures §2 specifies as a standalone `<StatsBand>`
-  are instead the largest element on each Business Portfolio row. `page.tsx` joins
-  `getCapacityStats()` onto the tile copy; there is no separate band, and no `<StatsBand>`.
+  are instead the largest element on each Business Portfolio row. Each row carries
+  its own figure in `_content/homepage.ts` (static since 2026-10-02); there is no separate
+  band, and no `<StatsBand>`.
 - **Step 4 is §5 renamed twice.** "Our Presence" in this document, "Power Portfolio" in the
   sequence, "Our Current Power Portfolio" as the heading on the page.
 - **Step 5 is specified nowhere.** Our Endeavours is in the sequence and on the page, but
@@ -170,7 +173,7 @@ Full-bleed `--gradient-stats`. Each item: value at `--text-stat` (700, white), a
 
 - **Delete the prototype's `height: 46.44vw`.** Height is intrinsic; vertical padding is `clamp(40px, 6vw, 96px)`.
 - `footnote` renders as a superscript marker with the note below the grid.
-- Data is `getCapacityStats()`, not hardcoded. Current values: 8299 MWp / 5 GW* / 3625 MW + 5 GW* / 164.9 MW.
+- ~~Data is `getCapacityStats()`, not hardcoded.~~ Static since 2026-10-02 — see the amendment under §Route. Current values, SAEL's: 8.3 GWp / 5 GW\* / 3.6 GWp + 5 GW\* / 164.9 MW. Not sael.co's, which differ (`content-model.md` §1.1).
 - **Contrast issue:** white 16px uppercase on the red gradient end is ~4.0:1, below AA. Raise in design review — bold it, size it up, or darken the gradient start. Do not ship it unresolved.
 
 Responsive: 4 col → 2×2 at `md` → 1 col below.

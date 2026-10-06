@@ -1,6 +1,14 @@
 /**
  * The coordinate space the project sites are placed in.
  *
+ * **Since 2026-10-06 the artwork is `map.svg`** (homepage, Contact Us) and its
+ * four business recolourings (`solar-energy-map.svg`, `solar-cell-map.svg`,
+ * `solar-module-map.svg`, `agri-waste-to-energy-map.svg`), all 4195 × 4628.
+ * They frame the landmass edge to edge, where `dotted-map.svg` left a 0.7%
+ * margin, so the pins sit within that fraction of where they did; the
+ * coordinates below were not re-fitted. The history that follows is about
+ * `dotted-map.svg`.
+ *
  * It is the viewBox of `src/assets/images/dotted-map.svg`, the dotted India
  * artwork the client supplied on 2026-08-21, and it is only here so the
  * numbers in `src/app/_content/homepage.ts` have somewhere to say what they

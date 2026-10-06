@@ -273,6 +273,66 @@
 }
 
 /*
+ * A 1px border in the bright ramp, round a box of any radius, on the black
+ * ground — the ESG Report pill on Our Core Beliefs and the second group of
+ * boxes on Our Key ESG Metrics' stakeholder map.
+ *
+ * Two background layers rather than `border-image`, which ignores
+ * `border-radius` and would square the pill's ends off: the ground is painted
+ * to the padding box, the ramp to the border box, and the transparent border
+ * is the strip where only the ramp shows. Declared on the element, so the
+ * ramp is whatever --gradient-eyebrow-bright is *there* — a business page's
+ * ramp, if one is ever set round it.
+ */
+@utility gradient-outline {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--color-surface-black) 0 0) padding-box,
+    var(--gradient-eyebrow-bright) border-box;
+}
+
+/*
+ * A business page's own colour, set once on the page and inherited by every
+ * section in it (client, 2026-10-06). Each re-points the shared gradient
+ * tokens at that business's ledger ramp, so the eyebrows and their underline,
+ * the display headings, the accent bar that fills across a card's top edge,
+ * the outlined card's hover glow and the accented card's dotted glow all carry the homepage Business
+ * Portfolio colour without a prop threaded through any of them.
+ *
+ * Scoped by inheritance, so it reaches only what is inside the element that
+ * carries it: the masthead and footer are outside the page and keep the
+ * site's own ramp. The hero title is the exception that does not read these
+ * tokens — it is white elsewhere — and takes `titleGradient` instead.
+ */
+@utility business-ramp-solar {
+  --gradient-eyebrow-bright: var(--gradient-ledger-solar);
+  --gradient-heading-bright: var(--gradient-ledger-solar);
+  --gradient-bg-glow: var(--gradient-bg-glow-solar);
+  --dotted-glow-light: var(--color-figure-solar-bright);
+}
+
+@utility business-ramp-cell {
+  --gradient-eyebrow-bright: var(--gradient-ledger-cell);
+  --gradient-heading-bright: var(--gradient-ledger-cell);
+  --gradient-bg-glow: var(--gradient-bg-glow-cell);
+  --dotted-glow-light: var(--color-figure-cell-bright);
+}
+
+@utility business-ramp-module {
+  --gradient-eyebrow-bright: var(--gradient-ledger-module);
+  --gradient-heading-bright: var(--gradient-ledger-module);
+  --gradient-bg-glow: var(--gradient-bg-glow-module);
+  --dotted-glow-light: var(--color-figure-module-bright);
+}
+
+@utility business-ramp-agri {
+  --gradient-eyebrow-bright: var(--gradient-ledger-agri);
+  --gradient-heading-bright: var(--gradient-ledger-agri);
+  --gradient-bg-glow: var(--gradient-bg-glow-agri);
+  --dotted-glow-light: var(--color-figure-agri-bright);
+}
+
+/*
  * A full-bleed rail whose cards come to rest on the page gutter.
  *
  * The two spacers stand in for the padding the rail cannot have: padding on a
@@ -538,5 +598,43 @@
   img {
     width: 100%;
     height: auto;
+  }
+
+  /* An editor's highlight: the panel shows it, so the public must see it. */
+  mark {
+    background-color: var(--color-brand-yellow);
+    color: var(--color-surface-black);
+  }
+
+  /* sup and sub keep preflight's treatment, which leaves line height alone. */
+
+  /* `sanitize-article.ts` wraps each table in this, so a wide one scrolls
+     inside the article rather than widening a phone's page. */
+  .article-table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .article-table:focus-visible {
+    outline-color: var(--color-white);
+  }
+
+  table {
+    min-width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--color-hairline-dark);
+    padding: var(--spacing-tight);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--color-white);
+    font-weight: 700;
   }
 }

@@ -122,7 +122,18 @@ export function SubPage({
       </Reveal>
 
       {nav !== undefined && (
-        <Reveal order={3} className="lg:col-start-1 lg:row-start-1">
+        <Reveal
+          order={3}
+          className={cn(
+            'lg:col-start-1 lg:row-start-1',
+            // Stays in view while the right column scrolls, clear of the
+            // masthead — the same offset Contact Us's details take
+            // (client, 2026-10-06). Capped to the viewport, with its own
+            // scroll, so a long list can never run off the bottom unreached.
+            'lg:sticky lg:top-[calc(var(--spacing-header)+var(--spacing-flow))]',
+            'lg:max-h-[calc(100dvh-var(--spacing-header)-var(--spacing-flow)*2)] lg:overflow-y-auto',
+          )}
+        >
           <SubPageNav {...nav} />
         </Reveal>
       )}

@@ -1,7 +1,7 @@
 import type { StaticImageData } from 'next/image';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
-import { DisplayHeading } from '@/components/ui/display-heading';
+import { DisplayHeading, type BusinessGradient } from '@/components/ui/display-heading';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
@@ -35,6 +35,11 @@ export interface CapabilitySplitProps {
   /** The small uppercase label — "How Do We Work?". */
   eyebrow: string;
   title: string;
+  /**
+   * Sets the heading in a business's mark ramp instead of the ground's — the
+   * four business pages. See BUSINESS_GRADIENT_CLASS.
+   */
+  titleGradient?: BusinessGradient;
   items: readonly CapabilityItem[];
   /** The portrait photograph beside the list. */
   media: CapabilitySplitMedia;
@@ -68,7 +73,13 @@ export interface CapabilitySplitProps {
  * A Server Component. The rows are not links; their hover accent is CSS,
  * from <Card>.
  */
-export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySplitProps) {
+export function CapabilitySplit({
+  eyebrow,
+  title,
+  titleGradient,
+  items,
+  media,
+}: CapabilitySplitProps) {
   return (
     <Section background="black-dots">
       <div className="flex w-full flex-col gap-flow">
@@ -78,7 +89,9 @@ export function CapabilitySplit({ eyebrow, title, items, media }: CapabilitySpli
           </Reveal>
 
           <Reveal order={1}>
-            <DisplayHeading ground="dark">{title}</DisplayHeading>
+            <DisplayHeading ground="dark" business={titleGradient}>
+              {title}
+            </DisplayHeading>
           </Reveal>
         </div>
 

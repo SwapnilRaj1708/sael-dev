@@ -17,6 +17,9 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 
 | ID | Item | Feature doc | Owner | Completed |
 |---|---|---|---|---|
+| FE-12 | Story of Our Influence | `features/12-story-of-our-influence.md` | Swapnil Raj | 2026-10-06 |
+| FE-13 | Our Key ESG Metrics | `features/13-our-key-esg-metrics.md` | Swapnil Raj | 2026-10-06 |
+| FE-14 | Our Core Beliefs | `features/14-our-core-beliefs.md` | Swapnil Raj | 2026-10-06 |
 | FE-09 | Waste to Energy | `features/09-waste-to-energy.md` | Swapnil Raj | 2026-09-19 |
 | FE-10 | Module Manufacturing | `features/10-module-manufacturing.md` | Swapnil Raj | 2026-09-19 |
 | FE-11 | Solar Cell Manufacturing | `features/11-solar-cell-manufacturing.md` | Swapnil Raj | 2026-09-19 |
@@ -28,6 +31,313 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-03 | App shell — header, mobile nav, footer, layout | `features/03-app-shell-header-footer.md` | Swapnil Raj | 2026-08-04 |
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
+
+### FE-12, FE-13, FE-14 — as built, 2026-10-06
+
+The three Sustainability pages, built together to the client's Claude Design project
+`6afc516d-b81b-469a-b128-4c5c94d3ffa1` ("ESG Project Pages Setup"), read through the design
+MCP. **Worked ahead of FE-05 on the user's instruction**, the trade FE-07 and FE-09 → FE-11
+made; FE-05 stays In Progress. As with the business pages, the designs fixed the layout,
+and `features/12`, `13` and `14` were not the spec and have not been reconciled to what was
+built (differences below).
+
+| Page | Route | Design file | Sections |
+|---|---|---|---|
+| Story of Our Influence | `/story-of-our-influence/` | `Story of Our Influence.dc.html` | no hero; three `<StorySplit>` stories, one screen each, **snapping** |
+| Our Key ESG Metrics | `/our-key-esg-metrics/` | `Our Key ESG Metrics v2.dc.html` | `<EsgHero>` (the animated wheel from `ESG Animated Banner.dc.html`), `<SdgGrid>`, `<ProseSplit copyBeside>`, `<StakeholderMap>`, **snapping** |
+| Our Core Beliefs | `/our-core-beliefs/` | `Our Core Beliefs.dc.html` | `<PageHero backdrop={<CollageBackdrop>}>`, `<BeliefStack>` (one `<BeliefSection>` per belief) with the ESG Report pill, **snapping** |
+
+**New:** `sections/story-split/`, `sections/esg-hero/` (+ `esg-wheel.tsx`),
+`sections/sdg-grid/`, `sections/stakeholder-map/`, `sections/belief-stack/`
+(+ `belief-section.tsx`), `sections/page-hero/collage-backdrop.tsx`. **Opt-ins on shared
+pieces, no existing call site changed:** `<PageHero backdrop>` and `snap`, `<ProseSplit copyBeside>` and `snap`,
+`<Button variant="pill">`, the `gradient-outline` utility, `legacyOrCdnImage()` in
+`lib/assets/cdn.ts`. Tokens in `theme.css` (two masks, the ESG wheel's colours, the
+belief accents, the collage scrim); the wheel's keyframes in `animations.css`, still state
+first; `story-title` added to `cn()`'s font sizes.
+
+**Copy** is the designs', which their handoffs record as the live pages' word for word. It
+was spot-checked against the legacy HTML and matches. Two exceptions, both for SAEL:
+the story eyebrows "Community", "Biodiversity" and "Public Health" are the designer's
+suggestions, and the UN disclaimer and two links under the SDG icons are the UN's
+wording, which its icon guidelines ask for on the same page.
+
+**Assets.** The ten SDG icons are the UN's official colour files, downloaded from un.org and
+committed under `src/assets/images/sdg/`. Every photograph is the live page's own file,
+read from the legacy site while `LEGACY_ASSET_BASE_URL` is set and from
+`web-assets/media/story-of-our-influence/` or `…/our-core-beliefs/` once it is unset.
+**Neither folder is uploaded yet.** Alt text was written from the images. The design's
+alt for `in-4.webp` ("a family in their village") was wrong: it is a power plant.
+
+**Where the build departs from the design or the feature docs:**
+
+- **ESG Report link.** The design's `/report/sael-esg-report-cy-2023.pdf` answers **404**
+  on sael.co. It links the same file (8,143,097 bytes) at its investor-documents path
+  instead. A later CY 2024 report exists, and which one to link is SAEL's call.
+- **No metrics on Our Key ESG Metrics.** The live page reports none and the design adds
+  none, so FE-13's `<EsgMetricsSection>` and `getEsgMetrics()` are not built. `EsgMetric`
+  stays specified in `content-model.md`.
+- **FE-12's `<ImpactGrid>`, FE-14's `<HighlightGrid>` reuse and Mission/Vision/Ethos:**
+  none of them is in the designs. `<BeliefStack>` is FE-14's one new section, and a
+  `<HighlightGrid>` card cannot hold a cut-out, a checklist and an accent.
+- **No breadcrumbs or breadcrumb JSON-LD**, as on every inner page since 2026-09-17.
+- **Story of Our Influence has a visually hidden `<h1>`**, because the design draws no hero.
+  It snaps through the homepage's `data-snap-sections`. The design's request for
+  `proximity` on phones was not added: `mandatory` already lets a story that is taller
+  than the screen scroll freely (see globals.css).
+- **The SDG tiles link to `/sustainable-development-goals/#sdg-N`.** Those anchors land
+  only once FE-15 builds that page.
+- The SDGs are drawn as the design's grid option, not its carousel.
+- **All three pages snap, as the homepage does** (the client's call, 2026-10-06), through
+  the same `data-snap-sections` mechanism, footer last. The designs draw Key ESG Metrics
+  and Core Beliefs as scrolling pages, so two things were tightened to make each section
+  one screen at 1440 × 900 and 1920 × 1080. Each belief card is its own section, with the
+  copy taking 7 parts to the cut-out's 5 from `lg`, so every belief's name holds one line
+  (the design's even split put each name on two), and with a tight rhythm. The SDG
+  section has a tight rhythm and its icon grid is capped at `--sdg-grid-w` (icons about
+  190px rather than 224–300). Checked by scrolling each page in headless Chrome: every
+  stop lands on a section's top at both sizes. On a phone the SDG grid and the belief
+  cards are taller than the screen, and scroll inside before snapping on.
+
+**Verified** on a production build (`next start`) at 360 / 768 / 1024 / 1440, captured
+with reduced motion and again with motion for the wheel. None of the routes scrolls
+horizontally, every image loads, there is one `<h1>` per page, and each route is static
+(`○`). `pnpm lint`, `typecheck`, `verify:guardrails` and `build` are clean. Not measured:
+FE-12's 600KB mobile image budget.
+
+**For SAEL:** the three eyebrows, the CY 2023 / CY 2024 report choice, the alt text, and
+higher-resolution files for the three hero collage photographs. Those are 600px wide and
+are drawn at about 480 × 740.
+
+### Fix: proxy rewrites left the server behind nginx (not a tracker item), 2026-10-05
+
+On prod2-preview every Live Preview link and every missing article or tile answered `500`
+(`Failed to proxy https://localhost:3000/… EPROTO wrong version number`). Reproduced locally
+against the standalone server with `HOSTNAME=127.0.0.1` and nginx's `Host` and
+`X-Forwarded-Proto: https`.
+
+- **Cause.** Next 16.3 treats a proxy rewrite as internal only when its origin equals the router's
+  own, built from `HOSTNAME` (`127.0.0.1`). It shows the proxy every loopback host as `localhost`,
+  in `request.url`, `request.nextUrl` and its clones alike, so the origins never matched and every
+  rewrite was proxied out, over TLS when nginx said `https`. Over plain HTTP the server proxied the
+  request back to itself, which is why no local run caught it. `nextUrl.clone()` fails the same way.
+- **Fix.** The proxy marks the request (`x-sael-internal-rewrite`) and a `beforeFiles` rewrite in
+  `next.config.ts` routes it: `src/lib/routing/internal-rewrites.ts`. Its destination is a path, so
+  it stays internal whatever the host or protocol. The handler takes the preview page from its
+  URL's own path, which a config rewrite leaves as the original.
+- **Check.** `pnpm verify:guardrails` check 9 fails on any `NextResponse.rewrite(`/`.redirect(`
+  under `src/` and on a URL built in the proxy from the request's origin.
+- **Only behaviour change:** a client that sends `x-sael-internal-rewrite` itself on a path the
+  proxy does not handle gets a `404` (`private, no-store`) for its own request.
+
+### Live Preview: the other seven sections (not a tracker item), 2026-10-05
+
+**For SAEL's internal testing from 9 October.** FE-05 stays In Progress and untouched. Every Live
+Preview button in the panel now opens a page. Before this, all but Press Release went to a 404.
+
+- **Pages.** In The News, Our Views (+ articles), Multimedia, Offer Documents, Corporate
+  Governance, Financials & Reports (+ each tile) and Notifications. Each route file is a few
+  lines around `newsroom/_lib/preview-pages.tsx` or `investors/_lib/preview-pages.tsx`, which
+  render **the live route's own component**. Two were extracted for that: `<AreaIndex>`, from the
+  three investor index pages, and `<NotificationsPageBody>`. The 13 live pages touched were
+  checked before and after on a production build, and their `<main>` is byte-identical.
+  `api-contracts.md` §6.3 has the table.
+- **Investor previews.** `type`/`section` is sent on every preview fetch. Headings, empty headings
+  and the unheaded group render exactly as live. Gated tiles show the disclaimer. Their URLs come
+  through `investors/preview-actions.ts`, which reads the tile with the reviewer's session.
+  `TilePage` takes its gate actions as a prop, live by default.
+- **Incomplete records are shown, not dropped.** A preview record that fails the live schema or
+  mapper is listed in the banner with what it lacks ("Missing a link"), its heading and its
+  state. So is a tile with no page on the site. Live behaviour is unchanged.
+- **Consistency check.** `pnpm verify:guardrails` check 8 fails unless the registry, the route
+  files and `proxy.ts`'s matchers agree, and every preview page is `force-dynamic` with no
+  `revalidate`. It is proved against seven kinds of drift.
+- **Verified through the panel** on a standalone production build against the local backend.
+  A draft in each of the seven sections was created and opened with Live Preview. Other checks:
+  the DRHP gate, then I Confirm, opened a draft PDF from a SAS URL (`200 application/pdf`); a
+  `file: null` link and a document with no file both render; General Meeting's empty "Postal
+  Ballot" and the unheaded group render; a link for one section opened on another is refused,
+  naming both; YouTube and hosted Multimedia drafts play. Every preview route answers `noindex`
+  in the header and the HTML, `no-store`, and is `ƒ` in the build.
+- **Backend findings, not fixed here:** preview gives a published, never-promoted file a working
+  SAS URL where live sends `file: null` (`api-contracts.md` §5.1). The doubled `pt` was not seen.
+
+### Live Preview: the token exchange and `/newsroom/press-release-preview/` (not a tracker item), 2026-10-04
+
+**For SAEL's internal testing from 9 October.** FE-05 stays In Progress and untouched. The admin
+panel's Live Preview button sent reviewers to `-preview` URLs that all 404'd.
+
+- **Exchange.** `src/proxy.ts` rewrites a real page load carrying `pt` to
+  `src/app/api/preview/route.ts`. The handler spends the **first** `pt` (the panel still sends it
+  twice), sets `sael_site_preview` (`HttpOnly`, `Lax`, `Secure` in production, `Path` = the
+  preview page) and answers `303` to the same path without `pt`. Refusals come back as
+  `?preview=…` and the page explains them. `api-contracts.md` §6.3 has the details.
+- **Pages.** `/newsroom/press-release-preview/` and `/[slug]/` are `force-dynamic` (the build
+  marks both `ƒ`). They render the live routes' own components. `NewsListingPage` was split into
+  the live loader and a pure `<NewsListing>`; `<NewsArticlePage>` already took its data as a
+  prop. Three presentational differences: `<PreviewBanner>`; images `unoptimized`, so a signed
+  draft image never enters `/_next/image`'s cache; and `noindex` in the metadata plus
+  `X-Robots-Tag` from `next.config.ts`. Copy: `app/_content/preview.ts`, functional, for SAEL to
+  review.
+- **Repository.** `startPreviewSession`, `getNewsPreview` and `getNewsArticlePreview` were added
+  to the interface and to both adapters. In the mock, the link `mock:NEWS_PRESS_RELEASE` opens a
+  preview. `ApiClient` takes a bearer and refuses one on any cached request.
+- **Verified through the panel.** Signed in as the maker, created a draft with a newly uploaded
+  image, and clicked Live Preview. The draft rendered under the banner, its image a SAS URL to
+  the private container. A published article's rendered `<main>` is identical live and in
+  preview, apart from the banner, the image's source attributes and the in-preview link.
+- **Backend defects found, not fixed here:** the doubled `pt`; the media picker invalidating
+  the panel form's CSRF token (any save after choosing an image is a 403); local
+  `preview.site.base-url` defaulting to `https://www.sael.co`.
+
+### Correction: SAEL's homepage capacity figures restored (not a tracker item), 2026-10-04
+
+**Backend row 5.24, frontend side.** FE-05 stays In Progress and untouched.
+
+- **What went wrong.** The 2026-10-02 entry below replaced the homepage's capacity figures with
+  sael.co's, on the reasoning that the live site was the source of truth. **That reasoning was
+  wrong.** The figures we held had been supplied by SAEL after their own review, and were set on
+  2026-10-01 in `5494e70`. sael.co is SAEL's *previous* website. The new site's reviewed content is
+  what https://sael-dev.vercel.app/ shows. **So the change reverted SAEL-supplied content to their
+  old website's content.** That is now undone.
+- **Restored from git, not retyped.** The strings were copied by script from
+  `HEAD:src/lib/content/mock/data/capacity-stats.json` (blob `d2b64f4`) into `value` and
+  `footnote` on each row of `businessTiles` in `_content/homepage.ts`. They were checked
+  byte-for-byte against that blob: 8 of 8 strings identical, and the row order matches.
+
+  | Row | 2026-10-02 (sael.co) | Restored (SAEL's) |
+  |---|---|---|
+  | Solar Energy Generation | `8299.5 MWp` / no note | `8.3 GWp` / Contracted & Awarded (Solar IPP & BESS) |
+  | Solar Cell Manufacturing | `5000 MW+ (proposed)` / no note | `5 GW*` / \*Upcoming |
+  | Solar Module Manufacturing | `3625 MW + 5000 MW (proposed)` / no note | `3.6 GWp + 5 GW*` / Operational · \*Upcoming |
+  | Agri Waste-to-Energy | `164.9 MW` / no note | `164.9 MW` / Operational |
+
+  The repository method and the JSON fixture stay removed; only the content is restored.
+- **Labels were not touched, and they match sael-dev.** That covers the "Business Portfolio"
+  eyebrow and the four row titles. All are identical to `HEAD`. sael-dev.vercel.app's homepage,
+  read on 2026-10-04, shows the same eyebrow, titles, figures, notes and descriptions as the
+  restored build.
+- **Verified.** A `next build` (mock) prerendered the homepage with exactly sael-dev's Business
+  Portfolio text and none of sael.co's figures. `tsc --noEmit` and `eslint .` are clean.
+  `verify:guardrails` passes 18 of 18 under Node 24. It fails its env checks under Node 20, which
+  is below the `engines` floor.
+- **Audit of the rest of the 2026-10-02 change.** The board (10), committees (6, 30 rows) and team
+  (17) were compared by script with the deleted `HEAD` fixtures: every field and the order are
+  identical. Every name, designation, biography, committee row, column heading and LinkedIn link is
+  also on sael-dev. No other value in that change moved toward sael.co. Its new `our-team.ts`
+  comment had named sael.co as the roster's source; that comment is corrected.
+- **Elsewhere, recorded and not changed.** These are display copy taken from sael.co *at build
+  time* in FE-08 to FE-11, on the client's instruction of 2026-09-18 ("the screenshot fixes the
+  structure and the live page fixes the copy"):
+  - the `/solar-energy/` figure `8299.5 MWp` and its "How We Reduce Cost?" label;
+  - the `/module-manufacturing/` figure `3625 MW + 5000 MW (proposed)`;
+  - the dropped cell-manufacturing figure;
+  - the "Why Waste-to-Energy?" casing.
+
+  sael-dev shows all of them as built. The two figures now disagree with the homepage's, and the
+  sign-off list asks SAEL about that. The comments and feature docs that state "the live page wins
+  on content" as a principle predate rule 8. They were listed in the 2026-10-04 report, and were
+  reworded later that day. Each now reads as SAEL's instruction of 2026-09-18 for the four business
+  pages, which still stands for them, rather than as a general rule: the four `_content/` files, the
+  four page files, and feature docs 08 to 11. In the same pass, the nav, the footer, Waste to
+  Energy's name and feature doc 03 stopped claiming to match the live site. SAEL changed those
+  labels on 2026-10-01.
+- **Rule recorded** in `/CLAUDE.md` §2 rule 8 and `content-model.md` §1.1. For display copy, the
+  authority is SAEL's reviewed content for the new site, not sael.co. sael.co is the source only
+  for migrated records and slugs. "The live site says X" is not grounds for changing display copy.
+
+### Board, committees, team and capacity figures as static content (not a tracker item), 2026-10-02
+
+**Backend row 5.24, frontend side.** FE-05 stays In Progress and untouched.
+
+- **Before.** The four read through `getContentRepository()`, and the API adapter's methods
+  threw `NotImplementedError`. A `CONTENT_SOURCE=api` build, which production runs, rendered Board
+  of Directors, Board Committees and Our Team as empty states, and the homepage ledger without its
+  figures.
+- **After.** Static content, the pattern every other page uses: `boardMembers` and
+  `boardCommittees` in `_content/corporate-governance.ts`, `ourTeamMembers` in `_content/our-team.ts`,
+  and each figure as `value` on its row of `businessTiles` in `_content/homepage.ts`.
+  `getBoardMembers`, `getBoardCommittees`, `getTeamMembers` and `getCapacityStats` are gone from the
+  interface and from both adapters, along with their four fixtures, their types in
+  `lib/content/types.ts` (`TeamMember` and `TeamGroup` moved to `team-grid/types.ts`), the empty
+  states that only a failed fetch reached, and `investors/_lib/governance.ts`. `content-model.md` §1
+  now says what decides static versus repository.
+- **Checked against sael.co's HTML first, field by field, script against script.** The board
+  (10: name, designation, bio, order), committees (6, 30 rows: name, category, role, order) and
+  team (17: name, designation, tab, bio, LinkedIn, order) fixtures **were real and verbatim**. The
+  only differences were `&` against `&amp;`, which render the same. No invented name was ever
+  published. Neither governance page shows a DIN or a photograph. **The capacity fixture was not
+  the live site's**: `8.3 GWp`, `5 GW*`, `3.6 GWp + 5 GW*` with "Contracted & Awarded (Solar IPP &
+  BESS)", "Operational" and "*Upcoming", changed on 2026-10-01 in `5494e70` with no recorded
+  source. On the developer's instruction it is now the live homepage's Business Portfolio block,
+  verbatim: `8299.5 MWp`, `5000 MW+ (proposed)`, `3625 MW + 5000 MW (proposed)`, `164.9 MW`, no
+  footnotes. The homepage now reads 8299.5, as the live site does, which settles FE-08's
+  8299-versus-8299.5 note for the homepage. SAEL confirm the figure through the sign-off list.
+  **⚠ Wrong, and undone on 2026-10-04 — see the correction entry above.** The capacity fixture
+  held SAEL's own reviewed figures. sael.co is their previous website. This bullet replaced
+  SAEL-supplied content with the old site's.
+- **Portraits.** The seventeen are in the blob container at `web-assets/media/our-team/` and are
+  byte-identical (SHA-256) to the live `/img/team/` files. Nothing points at the legacy site. The
+  container is the agency's account today: backend cutover checklist §1.12 copies `web-assets/` to
+  SAEL's and rebuilds. Our Team is now fully prerendered, so its portrait URLs are fixed at build.
+- **Verified by rendering, in both modes.** `CONTENT_SOURCE=api` against the running backend, then
+  `mock`. Each build was served, and every field of the four surfaces was parsed out of the HTML
+  and compared with the live extraction. All 17 portraits were fetched through `/_next/image`
+  (200, `image/*`). Pages were screenshotted at 1440 and 360. Same result in both modes.
+  `pnpm typecheck`, `lint`, `verify:guardrails` and both builds clean.
+- **Open, for the client.** The sign-off list (backend `docs/client/static-content-sign-off.md`)
+  is to be sent to SAEL. At full ledger size, "(proposed)" wraps onto its own line; the live site
+  sets it small and lowercase. That is a design call, and it was not changed here.
+
+### Release packaging, Node floor and the noindex gate (not a tracker item), 2026-10-02
+
+**`pnpm package` could not produce an archive. It now does, and the archive has been extracted and
+run.** FE-05 stays In Progress and untouched.
+
+- **Cause.** Turbopack writes `.next/node_modules/postcss-9745a0d11e3197ae -> ../../node_modules/postcss`,
+  a relative link that the server chunks `require` by that hashed name (`postcss` is a Next
+  server-external package, and `sanitize-html` requires it). `package-release.mjs` copied the
+  standalone tree with `fs.cp`, whose default (`verbatimSymlinks: false`) rewrites a relative link
+  as an absolute path to the source, so the staged link pointed back into the build machine.
+  The step-5 guard then refused every symlink. **Fix:** copy with `verbatimSymlinks: true`. The
+  guard now refuses only links that are absolute, dangle, or resolve outside the archive. The
+  link is required: with it pointing outside the tree, the first re-render after a publish
+  returns 500 with `Cannot find module 'postcss-9745a0d11e3197ae'` while the webhook reports 200.
+- **Verified end to end** with a clean build against the running backend (`CONTENT_SOURCE=api`),
+  `--strip-components=1` extraction into a stand-in `/var/www/sael-web`, and `node server.js`.
+  This was run on macOS (Node 24.19) and on Linux with GNU tar (Node 24.21 and 22.23.3, as a
+  non-root user owning only `.next`). It listens on 127.0.0.1 only, serves pages, re-renders
+  through the link after a signed webhook, and writes its page, fetch and image caches under `.next`.
+- **Built on a Mac, the archive has no Linux `sharp`.** On the VM, Next then serves images
+  unoptimised and logs nothing. Releases must be built on the VM's OS and CPU (`architecture.md` §8).
+  macOS tar's `com.apple.provenance` xattrs, which made GNU tar print 5,310 warnings, are now left out.
+- **Node.** Nothing declares or uses anything newer than Node 22: `sanitize-html` needs ≥22.12 at
+  runtime, pnpm 11 needs ≥22.13 and `lint-staged` ≥22.22.1 to build. `engines: >=24` is policy.
+  `DEPLOY.txt` and `architecture.md` §8 now say Node 24 LTS, not 25, which reached end of life in June 2026.
+- **The noindex gate is announced.** See `accessibility-and-seo.md` §4. §4.1 lists the edits if SAEL
+  choose the apex. The canonical host is unchanged.
+
+### Deployment — systemd, nginx and HSTS (not a tracker item), 2026-10-02
+
+**Brought in line with the deployment facts sent to SAEL's infrastructure team on 2026-10-02.**
+FE-05 stays In Progress and untouched. The backend's rows are 5.25–5.27.
+
+- **systemd, not PM2.** The site runs as one systemd-managed `node /var/www/sael-web/server.js`
+  process, with no flags and environment file `/etc/sael-web/sael-web.env`, which sets
+  `HOSTNAME=127.0.0.1` and `PORT=3000`. `ecosystem.config.cjs` now throws, so `pm2 start` fails
+  with the reason. It stays in the repo because `package-release.mjs` copies it into the archive.
+  `DEPLOY.txt`, the README, `CLAUDE.md` §7 and `architecture.md` §8 say so. **Still one process:**
+  each holds its own page cache, so a second one serves stale pages after a publish while the
+  webhook reports success.
+- **`deploy/nginx.conf.sample` rewritten** as the reference for what was sent: one server block in
+  front of both applications, an eleven-row route table with `^~` on rows 1–10, `/admin/`'s upload
+  limits, and nginx owning `Strict-Transport-Security` (no `includeSubDomains`, no `preload`).
+  Neither application sends HSTS. Tested on nginx 1.24 with stub upstreams. The old
+  `/_next/static/` block is gone, because Next 16 sets that `Cache-Control` itself.
+- **Recorded where provisioning reads it:** the build prerenders whatever `CONTENT_SOURCE` the
+  build machine has, so a production build comes after the backend's content import and is made
+  with `CONTENT_SOURCE=api`. And `NEXT_PUBLIC_SITE_URL` is compiled in, so moving the host is a
+  rebuild (see Blocked).
 
 ### Client trial — Aceternity hover light (not a tracker item), 2026-09-25 → 29
 
@@ -226,7 +536,9 @@ Still open:
   markup is `<span data-target="8299">0</span><span>.5</span> MWp` — the counter lands on
   8299 and the ".5" is static text after it, so the settled figure is 8299.5. A scrape
   mid-count reads "0.5 MWp", which is the failure the client warned of. The homepage's
-  mock capacity stat still reads 8299. **Client to confirm which is right.**
+  mock capacity stat still reads 8299. **Client to confirm which is right.** *(2026-10-04: still
+  open. The homepage reads SAEL's `8.3 GWp`, not either of these. The 2026-10-02 note that it read
+  8299.5 MWp described a change that has been undone; see the correction entry under Done.)*
 - **No hero poster.** Until a still is supplied (`pending: solar-energy/hero-poster`) the
   box shows the neutral placeholder before the first frame and for reduced-motion users.
 - **A meta description for `/solar-energy/`.** The live page ships
@@ -808,9 +1120,6 @@ page has needed yet.
 
 | ID | Item | Feature doc | Reads |
 |---|---|---|---|
-| FE-12 | Story of Our Influence | `features/12-story-of-our-influence.md` | `design-guidelines.md` |
-| FE-13 | Our Key ESG Metrics | `features/13-our-key-esg-metrics.md` | `content-model.md` |
-| FE-14 | Our Core Beliefs | `features/14-our-core-beliefs.md` | `design-guidelines.md` |
 | FE-15 | Sustainable Development Goals | `features/15-sustainable-development-goals.md` | `design-guidelines.md`, `accessibility-and-seo.md` |
 | FE-16 | Investors hub + Corporate Governance + Notifications | `features/16-investors-hub.md` | `content-model.md`, `api-contracts.md` |
 | FE-17 | Financials & Reports (5 nested document pages) | `features/17-financials-and-reports.md` | `content-model.md`, `api-contracts.md` |
@@ -838,6 +1147,9 @@ Items that cannot start until an external dependency lands. Move to Pending once
 | — | `footer-background.jpg` | Client. Absent from the handover, so the footer uses the flat `--color-footer-bg`. `asset-inventory.md` §4 | 2026-08-04 |
 | — | Design sign-off on the mobile nav drawer | Design. Built to `features/03` §2 and verified against its accessibility contract; it has no prototype reference, so the visual treatment still wants a review | 2026-08-04 |
 | — | A cut of DIN containing `₹` (U+20B9) | Client. Neither supplied file has the glyph, so rupee figures fall back to another face mid-number. Alternative: design approves writing amounts as `INR` — see `src/assets/fonts/README.md` | 2026-08-04 |
+| — | Investor document headings from the API: named groups, subgroups, labels exactly as SAEL write them, CSR's oldest-first order, anchors derived from labels | Backend row **3.52**, Not Started. `documents-live` returns one level of groups, labelled `FY {yyyy}` or null, newest year first (`api-contracts.md` §4.3), so Codes & Policies, Sustainability Reports, Other Documents, General Meeting and CSR cannot be rendered from it as built. How those pages go live without it is not yet decided | 2026-10-01 |
+| — | Board of Directors, Board Committees and Our Team editable by SAEL | SAEL's answer to decision 14 (backend rows 3.24 and **5.24**). **Static in this repo at go-live**, and since 2026-10-02 actually static: `src/app/_content/`, not the content repository, so a `CONTENT_SOURCE=api` build renders all three (see the 2026-10-02 entry under Done). There is no backend endpoint for any of them (`api-contracts.md` §9), so every change is a release by us. SAEL's sign-off list: backend `docs/client/static-content-sign-off.md`, not yet sent | 2026-10-01 |
+| — | Rebuild for the production host when DNS moves from `prod2-preview.sael.co` | **The DNS switch, and a decision on the production origin.** `NEXT_PUBLIC_SITE_URL` is compiled in, so the move is a rebuild. On any origin but `PRODUCTION_URL` (`https://www.sael.co`, `src/lib/config/site.ts`), every page is `noindex`. The backend's cutover checklist §1.7 records `https://sael.co` for the panel, which conflicts with `www` being canonical (`accessibility-and-seo.md`). One must change before the switch. Backend row **5.27**, checklist §1.11 | 2026-10-02 |
 
 **Resolved 2026-08-05**, both by the client supplying the artwork, both consumed by FE-04:
 

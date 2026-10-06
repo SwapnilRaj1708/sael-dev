@@ -13,11 +13,16 @@ import { SIZES_NEWS_CARD } from '@/lib/utils/image-sizes';
 export interface NewsCarouselProps {
   title: string;
   items: NewsItem[];
+  /**
+   * "opens in a new tab" — appended to the accessible name of a card that
+   * links out to its publication, as the Newsroom's grid does.
+   */
+  newTabNote: string;
   snap?: boolean;
 }
 
 /**
- * "In the News" — press items on a paging rail. docs/features/04 §11, rebuilt
+ * "In the News" — news items on a paging rail. docs/features/04 §11, rebuilt
  * to `SAEL Home v2`.
  *
  * **The card lost its box.** It was a bordered, rounded panel with a date chip
@@ -47,7 +52,7 @@ export interface NewsCarouselProps {
  *
  * A Server Component apart from the rail's arrows.
  */
-export function NewsCarousel({ title, items, snap = false }: NewsCarouselProps) {
+export function NewsCarousel({ title, items, newTabNote, snap = false }: NewsCarouselProps) {
   if (items.length === 0) return null;
 
   return (
@@ -90,6 +95,7 @@ export function NewsCarousel({ title, items, snap = false }: NewsCarouselProps) 
                         href={item.href}
                         label="Read More"
                         accessibleLabel={`Read more: ${item.title}`}
+                        newTabNote={item.category === 'in-the-news' ? newTabNote : undefined}
                       />
                     }
                   />

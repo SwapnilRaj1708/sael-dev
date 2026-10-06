@@ -12,10 +12,10 @@ export interface InitialsAvatarProps {
  * `docs/features/07-our-team.md`: "`photo === null` → an initials avatar on a
  * brand-gradient background. Do not ship a broken image icon." The roster the
  * client publishes today has a portrait for every one of its seventeen people,
- * so nothing on the page currently takes this branch — it exists because the
- * repository type says `photoUrl` is nullable, and a card that renders a
- * cracked-image glyph the first time the backend omits one is a card that was
- * never finished.
+ * so nothing on the page currently takes this branch — it exists because
+ * `photoUrl` is nullable (an unset `AZURE_BLOB_BASE_URL` yields `null`), and a
+ * card that renders a cracked-image glyph the first time a portrait is missing
+ * is a card that was never finished.
  *
  * Deliberately **not** `<MediaFrame>`'s pending placeholder. That grey block
  * means "this asset has not been supplied yet and will be"; this means "this

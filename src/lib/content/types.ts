@@ -11,36 +11,15 @@
  *    server→client boundary and forces every consumer to re-parse.
  *  - **Nullable, not optional.** `foo: string | null`, not `foo?: string`, so
  *    "the backend sent nothing" is distinguishable from "we forgot to map it".
- *  - **Pre-formatted display values.** `CapacityStat.value` is the string
- *    `"3625 MW + 5 GW"`, not a number and a unit. The business owns that
- *    string and the frontend must not try to compose it.
  *  - **No invented ids.** Where the backend supplies no stable id, the adapter
  *    derives one deterministically and documents how. Never an array index.
  *
  * This file carries what the built pages consume. FE-05 adds the rest of
  * docs/content-model.md §2 — `EsgMetric`, `Paginated<T>` — alongside the
- * methods that return them. The investor types at the foot of the file came
- * in with the Offer Documents area, which is their first consumer.
+ * methods that return them. The investor types near the foot of the file
+ * follow the backend's sections → tiles → documents, grouped under the
+ * headings the backend supplies (docs/api-contracts.md §4).
  */
-
-/**
- * A headline capacity figure.
- *
- * Dynamic despite looking static: these change as plants commission, they are
- * owned by the business rather than by a design review, and they appear in
- * more than one place. docs/content-model.md §1.
- */
-export interface CapacityStat {
-  /** Stable, and shared with the static copy that surrounds it. */
-  id: string;
-  /** "Solar Energy Generation" */
-  label: string;
-  /** Pre-formatted for display: "8299 MWp", "3625 MW + 5 GW". */
-  value: string;
-  /** Qualifier shown beneath the figure. "Greater Noida — *Upcoming" */
-  footnote: string | null;
-  order: number;
-}
 
 /**
  * The Newsroom's four sections, each one listing at `/newsroom/<category>/`.
@@ -50,9 +29,29 @@ export interface CapacityStat {
  *  - `press-release` and `our-views` are articles **hosted here**, each at
  *    `/newsroom/<category>/<slug>/`, with a body.
  *  - `in-the-news` links **out** to the publication that ran the piece.
- *  - `multimedia` is a YouTube video.
+ *  - `multimedia` is a video — see {@link NewsVideo}.
  */
 export type NewsCategory = 'press-release' | 'in-the-news' | 'our-views' | 'multimedia';
+
+/**
+ * A Multimedia item's video, by where it is played from.
+ *
+ * A union rather than a bare id, because an id alone cannot say which player
+ * it belongs to: a Vimeo id handed to the YouTube player is a broken card,
+ * and a file we host has no id at all. Each branch carries exactly what its
+ * player needs and nothing a component would have to guess.
+ *
+ *  - `youtube` — the id; every YouTube URL is built from it (`lib/utils/youtube.ts`).
+ *  - `vimeo` — the id for the embed, and `pageUrl`, the address the maker
+ *    entered, for the no-JavaScript link. The page is kept as given rather
+ *    than rebuilt from the id, because an unlisted video's page carries a
+ *    hash the id does not.
+ *  - `hosted` — the file's absolute URL, played by the browser's own player.
+ */
+export type NewsVideo =
+  | { provider: 'youtube'; id: string }
+  | { provider: 'vimeo'; id: string; pageUrl: string }
+  | { provider: 'hosted'; fileUrl: string };
 
 /** The two categories whose items are articles on this site. */
 export type NewsArticleCategory = Extract<NewsCategory, 'press-release' | 'our-views'>;
@@ -65,24 +64,28 @@ export type NewsArticleCategory = Extract<NewsCategory, 'press-release' | 'our-v
  * from the CMS, so the frontend cannot know them at build time. The homepage
  * fixture serves the client's supplied stills from `public/news/` —
  * root-relative paths that `next/image` optimises exactly as it optimises the
- * absolute URLs the API returns. A Multimedia item's image is the video's
- * YouTube thumbnail.
+ * absolute URLs the API returns. A Multimedia item's image is its own artwork
+ * where it has one, and a YouTube video's thumbnail where it does not.
  *
  * `href` is where the card goes, resolved by the repository from the fields
- * below it: the article page, the publication, or the video on YouTube.
+ * below it: the article page, the publication, or the video itself.
  * `<Button>` tells internal from external. One field per destination rather
  * than one overloaded URL, so a card can tell an outbound link from a video
  * without parsing it.
  *
  * Which fields are set follows the category — nullable rather than a union,
- * the same trade `InvestorDocument.section` makes:
+ * the same trade `InvestorDocument.file` makes:
  *
- * | category        | publishedAt | slug | externalUrl | videoId |
- * |-----------------|-------------|------|-------------|---------|
- * | `press-release` | set         | set  | `null`      | `null`  |
- * | `in-the-news`   | set         | `null` | set       | `null`  |
- * | `our-views`     | `null`      | set  | `null`      | `null`  |
- * | `multimedia`    | `null`      | `null` | `null`    | set     |
+ * | category        | publishedAt | slug | externalUrl | video  |
+ * |-----------------|-------------|------|-------------|--------|
+ * | `press-release` | set         | set  | `null`      | `null` |
+ * | `in-the-news`   | set         | `null` | set       | `null` |
+ * | `our-views`     | either      | set  | `null`      | `null` |
+ * | `multimedia`    | either      | `null` | `null`    | set    |
+ *
+ * **The order of a list of these is the source's, not a sort.** The backend
+ * puts featured items first, then any position set in the panel, then newest
+ * first — editorial intent that no comparison on these fields can reproduce.
  */
 export interface NewsItem {
   id: string;
@@ -107,88 +110,103 @@ export interface NewsItem {
   slug: string | null;
   /** In The News: the publication's own URL. */
   externalUrl: string | null;
-  /** Multimedia: the YouTube video id. */
-  videoId: string | null;
+  /** Multimedia: the video and where it plays from. */
+  video: NewsVideo | null;
   /**
    * The publication's name — "The Hindu BusinessLine". `null` in every
-   * current row: the legacy In The News cards do not show one, so none is
-   * transcribed. The field exists for when the business decides to.
+   * mock row: the legacy In The News cards do not show one, so none is
+   * transcribed. The backend sends it as `sourcePublication`.
    */
   publication: string | null;
 }
 
 /**
- * A Press Release or Our Views article: its card fields, plus the body.
+ * A Press Release or Our Views article: its card fields, plus the body and
+ * what the maker wrote for search engines.
  *
  * `body` is HTML from the CMS — paragraphs, headings from `h2` down, lists,
- * links and the odd figure. The article page sanitises it again before
- * rendering, as Our Team sanitises a biography: `lib/utils/sanitize-article.ts`.
+ * tables, links and the odd figure. The article page sanitises it again
+ * before rendering: `lib/utils/sanitize-article.ts`.
+ *
+ * The four SEO fields are the panel's own, `null` where the maker left them
+ * blank. The page falls back for each one — see `articleMetadata()` — and
+ * never derives a value where the maker supplied one.
  */
 export interface NewsArticle extends NewsItem {
   category: NewsArticleCategory;
   slug: string;
   body: string;
-}
-
-/**
- * A director or a member of the leadership team, on `/our-team/`.
- *
- * **`group` is not in `docs/content-model.md` §2 or `api-contracts.md` §4.**
- * It was added for FE-07: `Our Team.dc.html` splits the page into Leadership
- * and Management tabs, and a tab is a partition of the roster, so it has to
- * come from the data rather than from a hardcoded list of names in a
- * component. Both docs are updated to match; the proposal for the backend is
- * a `group` string on `GET /api/v1/team` with exactly these two values.
- *
- * `photoUrl` rather than the `photo: ImageAsset` that `content-model.md` §2
- * describes, because the portraits are CMS assets that the frontend cannot
- * know at build time — the same reason and the same shape as
- * {@link NewsItem.imageUrl}, which set the precedent in FE-04. The mock serves
- * them from `public/team/`; the API will return absolute Azure Blob URLs, and
- * `next/image` optimises both identically.
- *
- * There is no `photoAlt`. The contract offers one and it is `null` in every
- * row: the correct alternative text for a portrait is the name of the person
- * in it, which this type already carries. A second field that would always
- * fall back to `name` is a field with no consumer.
- *
- * `bio` may contain HTML — `p, br, strong, em, ul, ol, li, a`, per
- * `api-contracts.md` §4. It is sanitised again on this side before it is
- * rendered; see `lib/utils/sanitize-bio.ts` for why that is not redundant.
- */
-export type TeamGroup = 'leadership' | 'management';
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  /** "Managing Director and Chairperson". Plain text, never HTML. */
-  designation: string;
-  group: TeamGroup;
-  /** `null` when no portrait exists; the card then shows an initials avatar. */
-  photoUrl: string | null;
-  /** Sanitised HTML, or `null` when the person has no published biography. */
-  bio: string | null;
-  /**
-   * Absolute URL to this person's LinkedIn profile, or `null`.
-   *
-   * `null` for most of the board and set for most of the leadership team —
-   * whether someone publishes a profile is their own decision, so this is
-   * genuinely sparse rather than merely unfilled, and the dialog omits the
-   * link entirely rather than showing a disabled one.
-   */
-  linkedinUrl: string | null;
-  /**
-   * How far the biography dialog zooms this person's portrait into its
-   * passport crop — `1` is the card's own framing, `1.5` the house default,
-   * `2` a tight head shot. Per person because the client sets it by eye,
-   * photograph by photograph (2026-09-17). `null` takes the default, which is
-   * `--scale-team-passport` in theme.css.
-   */
-  portraitZoom: number | null;
-  order: number;
+  /** The card's plain-text summary, or `null`. */
+  summary: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  /** Absolute URL of the share image, or `null` to use the card's. */
+  ogImageUrl: string | null;
 }
 
 /* ---------- Investors ---------- */
+
+/**
+ * The four investor sections, by the URL segment each lives at under
+ * `/investors/`. As with {@link NewsCategory}, the value a page asks for is
+ * the value in its address bar; the API adapter maps it to the backend's
+ * `section` code. docs/api-contracts.md §4.1.
+ */
+export type InvestorSection =
+  'offer-documents' | 'corporate-governance' | 'financials-and-reports' | 'notifications';
+
+/**
+ * How a tile's page is laid out, as the panel sets it. `media-list` is the
+ * one a page branches on: its documents are videos and audio.
+ * `external-link` is reserved by the backend and not offered in the panel.
+ */
+export type InvestorTileDisplayMode =
+  'single-document' | 'document-list' | 'media-list' | 'fy-grouped-list' | 'external-link';
+
+/**
+ * The SEBI disclaimer a tile shows before its documents. A union so that a
+ * gated tile cannot exist without its text: the backend refuses to submit a
+ * gated tile whose disclaimer is blank, and the adapter refuses one that
+ * arrives that way rather than showing gated documents with no notice.
+ *
+ * **An interstitial, not access control.** The document URLs arrive in the
+ * same response as the disclaimer. docs/api-contracts.md §4.4.
+ */
+export type InvestorGate = { enabled: false } | { enabled: true; disclaimerHtml: string };
+
+/**
+ * One tile on a section's index — the API calls it a `category`. Its page
+ * is {@link InvestorTile.path}. docs/api-contracts.md §4.2.
+ *
+ * **The order of a list of these is the panel's**, display order then
+ * title. Never re-sorted.
+ */
+export interface InvestorTile {
+  id: string;
+  section: InvestorSection;
+  /** Verbatim — "Draft Red Herring Prospectus (DRHP)". The page's `<h1>`. */
+  title: string;
+  /** The tile page's URL segment. Must equal a route; see `app/investors/_lib/tile-routes.ts`. */
+  slug: string;
+  /**
+   * Root-relative, trailing slash: the section's `basePath` as the backend
+   * sends it, plus the slug. The same string the backend's revalidation
+   * webhook names for this tile, which is why it is composed from the
+   * backend's `basePath` and not from the site's own.
+   */
+  path: string;
+  /** The section's `basePath` as the backend sends it — `/investors/offer-documents/`. */
+  sectionPath: string;
+  displayMode: InvestorTileDisplayMode;
+  /** Sanitised HTML shown above the documents, or `null`. Outstanding Dues' table is one. */
+  descriptionHtml: string | null;
+  gate: InvestorGate;
+  /** Published documents on the tile's page. `0` is a real answer. */
+  documentCount: number;
+  /** The panel's own, `null` where the maker left them blank. */
+  seoTitle: string | null;
+  seoDescription: string | null;
+}
 
 /**
  * A file in Azure Blob Storage, as a component needs it.
@@ -196,159 +214,227 @@ export interface TeamMember {
  * `url` is absolute. The mock composes it from a container path with
  * `tryBlobUrl()`; the API returns it whole. Either way no hostname is ever
  * written in this repository. docs/asset-inventory.md §8.
+ *
+ * **No file name.** The backend sends none; a row's type label comes from
+ * `mimeType`, which the backend checks against the file's own bytes at
+ * upload, not from an extension.
  */
 export interface BlobFile {
   url: string;
-  /** "SAEL_DRHP.pdf" — the name a visitor's download is saved under. */
-  fileName: string;
-  /** "application/pdf", "video/mp4". */
+  /** `application/pdf`, `video/mp4` — the backend's `contentType`. */
   mimeType: string;
-  /**
-   * `null` when the backend does not report one. Carried because the
-   * contract asks for it; whether a page *shows* it is that page's call —
-   * the Offer Documents pages do not, because the legacy site does not.
-   */
+  /** `null` when the backend does not report one. */
   sizeBytes: number | null;
 }
 
-/**
- * Which listing on the site a document belongs to. docs/api-contracts.md §3.
- *
- * One value per investor page that lists documents — except Offer Documents,
- * which is eight sub-pages under one category and is told apart by
- * {@link InvestorListing.section}. `notifications` is served by its own
- * paginated endpoint in the same item shape, and is here so those items
- * type-check when that page is built.
- */
-export type InvestorDocumentCategory =
-  | 'offer-documents'
-  | 'corporate-governance'
-  | 'annual-return'
-  | 'consolidated-financials'
-  | 'standalone-financials'
-  | 'subsidiary-financials'
-  | 'investor-downloads'
-  | 'notifications';
+/** What a document is: a hosted file, a link out, or a recording. */
+export type InvestorDocumentKind = 'file' | 'external-link' | 'video' | 'audio';
 
 /**
- * The address of one listing: a category, and the sub-page within it.
+ * One document on a tile's page.
  *
- * `section` is the sub-page's own URL slug — `drhp`,
- * `information-with-respect-to-group-companies` — so the value a page asks for
- * is the value in its address bar and needs no mapping table. `null` for a
- * category that is a single page.
- */
-export interface InvestorListing {
-  category: InvestorDocumentCategory;
-  section: string | null;
-}
-
-/**
- * A downloadable investor document — a PDF, in every case so far.
- *
- * `group` partitions a listing under headings — a financial year ("FY 2025",
- * "FY2026") or a name ("Statutory Policies"); `null` for a listing that is
- * one flat list. `subgroup` partitions a group once more, for the one page
- * that nests: General Meeting's "Extra-Ordinary General Meeting", by year.
- * Both are labels, shown verbatim, so the legacy site's inconsistent year
- * spellings stay as the company wrote them.
- *
- * `order` runs across the whole listing, and the repository returns the
- * listing sorted by it — so the business sets the order of documents *and*
- * of the headings, which appear in the order of their first document. Years
- * newest first on most pages, oldest first on CSR, named groups in the
- * company's own order: none of that is a sort a page could derive from the
- * labels. docs/api-contracts.md §3.
+ * **`file` and `externalUrl` can both be `null`**, and the document is still
+ * published and still shown. `file` is `null` for an external link (which
+ * has `externalUrl`) and for a hosted file the backend never promoted to
+ * public storage (which has nothing). A page renders the second as a
+ * visible "unavailable" row, never as an absence: a statutory disclosure
+ * that silently disappears from its page is the failure this rules out.
+ * docs/api-contracts.md §0.3.
  */
 export interface InvestorDocument {
   id: string;
   /** As the link reads, verbatim — "Draft Red Herring Prospectus". */
   title: string;
-  category: InvestorDocumentCategory;
-  section: string | null;
-  group: string | null;
-  subgroup: string | null;
-  /** ISO 8601, or `null`. None of the investor documents carries one. */
+  kind: InvestorDocumentKind;
+  /** ISO 8601 date, or `null`. The backend's `documentDate`. */
   publishedAt: string | null;
-  file: BlobFile;
-  order: number;
+  /** The stored label — "FY 2026" — or `null`. Metadata; headings come from the groups. */
+  financialYear: string | null;
+  file: BlobFile | null;
+  externalUrl: string | null;
 }
 
-/** A WebVTT caption track for an {@link InvestorVideo}. */
-export interface CaptionTrack {
-  /** Absolute URL of the `.vtt` file. */
-  url: string;
-  /** BCP 47 — `en`, `hi`. */
-  srcLang: string;
-  /** What the player's caption menu shows — "English", "हिन्दी". */
+/** A subheading and the documents under it. One level only. */
+export interface InvestorDocumentSubgroup {
+  /** Verbatim — "FY 2026". */
   label: string;
+  /** The backend's anchor, as given. Never derived here. */
+  anchor: string;
+  documents: InvestorDocument[];
 }
 
 /**
- * A self-hosted disclosure video — the DRHP audio-visual presentations.
+ * A heading on a tile's page and what sits under it, exactly as the backend
+ * groups it.
  *
- * Separate from {@link InvestorDocument} because a video needs two things a
- * document does not — a poster and caption tracks — and folding them into
- * every PDF row as nullable fields would give every document two fields with
- * no meaning. docs/api-contracts.md §3.
+ * - **`label` and `anchor` are `null` together**, for documents under no
+ *   heading. Such a group is rendered without a heading and never dropped.
+ * - **A heading with nothing under it is still a group**, and renders as a
+ *   heading alone: General Meeting's "Postal Ballot".
+ * - **`anchor` is the backend's, used as given.** It is frozen at the
+ *   heading's first publish so a published deep link keeps landing; a page
+ *   that computed its own from the label would break exactly that.
  */
-export interface InvestorVideo {
-  id: string;
-  title: string;
-  category: InvestorDocumentCategory;
-  section: string | null;
-  file: BlobFile;
-  /** Absolute URL of the still shown before playback, or `null`. */
-  posterUrl: string | null;
-  /**
-   * `[]` when none exist — which is the case for both offer videos today. A
-   * spoken presentation needs them, so that is an open action for the client
-   * rather than a finished state; docs/asset-inventory.md §9.
-   */
-  captions: CaptionTrack[];
+export interface InvestorDocumentGroup {
+  /** Verbatim — "Statutory Policies", "FY2026", "FY 2024-25". */
+  label: string | null;
+  anchor: string | null;
+  documents: InvestorDocument[];
+  subgroups: InvestorDocumentSubgroup[];
 }
-
-/* ---------- Governance ---------- */
 
 /**
- * A director, as `/investors/corporate-governance/board-of-directors/`
- * lists them.
+ * One tile's page: the tile, and its documents under their headings, in the
+ * order the backend gives — groups, subgroups and documents alike. CSR runs
+ * oldest first, and no sort on these fields could know that.
  *
- * **Not a `TeamMember`**, though some are the same people. This is the
- * governance record — a regulated disclosure of the board — and its
- * designations and biographies are worded for that page, not for Our Team;
- * the two are kept as separate records so that neither can silently rewrite
- * the other. docs/api-contracts.md §4.
+ * `groups` is `[]` for a tile with no headings and nothing published. That
+ * is a page with nothing on it yet, not a missing page.
  */
-export interface BoardMember {
-  id: string;
-  /** Verbatim, diacritics included — "Øistein Magnar Andresen". */
-  name: string;
-  /** "Managing Director and Chairperson". Plain text. */
-  designation: string;
-  /**
-   * The "About" text: HTML, `p` and `strong` in practice, sanitised again
-   * before it renders exactly as `TeamMember.bio` is. `null` when none.
-   */
-  bio: string | null;
-  order: number;
+export interface InvestorTilePage {
+  tile: InvestorTile;
+  groups: InvestorDocumentGroup[];
 }
 
-/** One row of a committee's table. Every field verbatim. */
-export interface CommitteeMember {
-  /** "Mr. Harbhajan Singh" — as the committee page writes it. */
-  name: string;
-  /** "Non-Executive Independent Director". */
-  category: string;
-  /** The member's role on the committee — "Chairman", "Member", "Invitee". */
-  position: string;
+/* ---------- Preview ---------- */
+
+/**
+ * The admin panel's eight previewable screens, as the backend names them. A
+ * preview session is scoped to exactly one of these, never to one record
+ * (docs/api-contracts.md §6.2).
+ */
+export type PreviewScreenCode =
+  | 'NEWS_PRESS_RELEASE'
+  | 'NEWS_IN_THE_NEWS'
+  | 'NEWS_OUR_VIEWS'
+  | 'NEWS_MULTIMEDIA'
+  | 'DOC_OFFER_DOCUMENTS'
+  | 'DOC_CORPORATE_GOVERNANCE'
+  | 'DOC_FINANCIALS_REPORTS'
+  | 'DOC_NOTIFICATIONS';
+
+/**
+ * What spending a `pt` link token bought: a session for one screen.
+ * `token` is a bearer credential. It is only ever held server-side or in an
+ * `HttpOnly` cookie, and never reaches client JavaScript or a log line.
+ */
+export interface PreviewSession {
+  token: string;
+  expiresInSeconds: number;
+  screenCode: PreviewScreenCode;
+  /** Who the panel issued the link to — an e-mail address. */
+  issuedFor: string;
 }
 
-/** A board committee and its members, in the order the company lists them. */
-export interface BoardCommittee {
-  id: string;
-  /** "Audit Committee". */
-  name: string;
-  members: CommitteeMember[];
-  order: number;
+/**
+ * The exchange's result. `refused` covers every reason the backend gives for
+ * not exchanging a token (invalid, expired, already used, revoked, malformed),
+ * because the reviewer's next step is the same for all of them.
+ */
+export type PreviewExchange =
+  | { ok: true; session: PreviewSession }
+  /** `code` is the backend's — `PREVIEW_TOKEN_CONSUMED` — for the log line, never for the copy. */
+  | { ok: false; reason: 'refused'; code: string | undefined };
+
+/**
+ * A record's state in the panel, from the preview response's `preview` block.
+ * `isDraft` is the backend's call on whether this differs from what the public
+ * sees: anything not `PUBLISHED`, so a `SCHEDULED` item counts as a draft.
+ */
+export interface PreviewState {
+  /** The workflow status, verbatim — `PENDING_APPROVAL`. Shown, never branched on. */
+  status: string;
+  versionNo: number;
+  isDraft: boolean;
+  /** Who made the version shown — a display name or e-mail; `null` if unknown. */
+  lastUpdatedBy: string | null;
+  /** ISO 8601 with offset, or `null`. */
+  lastUpdatedAt: string | null;
 }
+
+/** A record as a preview shows it: the same domain type the live page renders, and its state. */
+export interface Previewed<T> {
+  record: T;
+  preview: PreviewState;
+}
+
+/**
+ * What a record lacks that its page needs, in the site's terms rather than
+ * the backend's field names. The preview names each one to the reviewer.
+ *
+ *  - `link` — the address an In The News card or a link document opens.
+ *  - `video` — a Multimedia item's video: its provider, id, page or file.
+ *  - `disclaimer` — a gated tile's notice text.
+ *  - `route` — a tile whose slug is not an address the site serves
+ *    (`app/investors/_lib/tile-routes.ts`); found by the page, not the adapter.
+ *  - `other` — anything the site cannot name more precisely. The server log
+ *    has the backend's field.
+ */
+export type IncompleteField =
+  | 'title'
+  | 'slug'
+  | 'link'
+  | 'video'
+  | 'date'
+  | 'image'
+  | 'disclaimer'
+  | 'display-mode'
+  | 'file'
+  | 'kind'
+  | 'section'
+  | 'route'
+  | 'other';
+
+/**
+ * A record a preview could not map to the type its page renders — a draft
+ * that is half-written, by definition. **On a live page such a record is
+ * left out; on a preview it must never be**, because the reviewer was sent
+ * to approve it, and a record they cannot see is one they cannot approve.
+ * The page names it and what it lacks instead.
+ */
+export interface IncompleteRecord {
+  /** The backend's `publicId`, when the record carried a readable one. */
+  id: string | null;
+  /** The record's title, when it has a usable one. */
+  title: string | null;
+  /** What it lacks. Never empty. */
+  missing: readonly IncompleteField[];
+  /** Its workflow state, when the `preview` block itself was readable. */
+  preview: PreviewState | null;
+  /** For a document: the heading it sits under on the page, or `null`. */
+  heading: string | null;
+}
+
+/** A preview listing: the records the page renders, and those it cannot. */
+export interface PreviewListing<T> {
+  records: Previewed<T>[];
+  incomplete: IncompleteRecord[];
+}
+
+/** One record on a preview's detail page, or why it cannot be drawn. */
+export type PreviewDetail<T> =
+  { complete: true; value: Previewed<T> } | { complete: false; record: IncompleteRecord };
+
+/**
+ * A tile's page as its preview shows it: the page the live route renders,
+ * the tile's own state, each document's state by id, and the documents that
+ * could not be mapped. A document's state is beside the page rather than on
+ * the document, so `page` is exactly the type the live page renders.
+ */
+export interface PreviewTilePage {
+  page: InvestorTilePage;
+  documentStates: Readonly<Record<string, PreviewState>>;
+  incomplete: IncompleteRecord[];
+}
+
+/**
+ * A preview read. A refusal is an expected outcome, so it is a value rather
+ * than a throw; only a failure of the source itself throws.
+ *
+ *  - `session-ended` — no session, or it expired or was revoked (backend 401).
+ *  - `wrong-screen` — a valid session for another screen (backend 403, or 400
+ *    when the type sent contradicts the session).
+ *  - `switched-off` — preview is disabled in the panel (backend 404 on a listing).
+ */
+export type PreviewRead<T> =
+  { ok: true; value: T } | { ok: false; reason: 'session-ended' | 'wrong-screen' | 'switched-off' };

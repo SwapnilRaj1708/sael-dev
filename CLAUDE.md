@@ -21,10 +21,21 @@ These are hard rules. If a task appears to require breaking one, stop and ask.
 1. **Mobile-first.** Every component is authored at the smallest breakpoint first and enhanced upward with `min-width` media queries. The design is *reviewed* at 1920px but must be *correct* from 360px. See `docs/responsive-strategy.md`.
 2. **No raw values in components.** No hex colours, no `vw` units, no magic pixel numbers. Everything comes from design tokens defined in `src/styles/theme.css`. See `docs/design-guidelines.md`.
 3. **No invented content.** Copy, statistics, names, dates and figures come from the relevant feature doc in `docs/features/`. If a value is missing, insert `{{TODO: content}}` and list it at the end of your response — never fabricate a plausible-looking number for a company that publishes financial results.
-4. **Portable build.** The client deploys to an Azure VM running Nginx + PM2, from an archive we hand over. Nothing may assume a platform-specific runtime. See §7.
+4. **Portable build.** The client deploys to an Azure VM, nginx in front of one systemd-managed `node server.js` process, from an archive we hand over. Nothing may assume a platform-specific runtime. See §7.
 5. **Every dynamic surface goes through the content repository.** No component ever calls `fetch` against the backend directly. See §6.
 6. **URL parity with the legacy site.** Routes, trailing slashes and the canonical host must match the old site exactly. SEO equity depends on it. See `docs/accessibility-and-seo.md`.
 7. **One In Progress item at a time.** See §3.
+8. **Display copy comes from SAEL's reviewed content for the new site, not from sael.co.** This covers headings, labels, figures, section names and body text on static pages. The authority is what SAEL have reviewed for the new site: this repository, as shown to them on https://sael-dev.vercel.app/. **"The live site says X" is not grounds for changing display copy.**
+
+   **Why:** www.sael.co is SAEL's *previous* website. It is the site this one replaces, and it may be out of date. When the two disagree, the old site is the likelier to be wrong. "Correcting" our copy towards it puts the copy SAEL rejected back over the copy they approved. That happened on 2026-10-02: SAEL's reviewed homepage capacity figures were replaced with sael.co's older ones. It was undone on 2026-10-04.
+
+   **What to do instead:** keep our copy. Record the disagreement for SAEL in the backend's `docs/client/static-content-sign-off.md` or as a question to them, because they may want the old site updated.
+
+   sael.co **is** the source for two things only:
+   - **Migrated content records**: investor documents and news items.
+   - **Tile and page slugs**: these must match the existing URLs (rule 6).
+
+   See `docs/content-model.md` §1.1.
 
 ### What rule 2 enforces
 
@@ -142,7 +153,7 @@ Load these on demand, not all at once.
 
 ## 6. Data layer — read this before touching anything dynamic
 
-The backend is **Spring Boot microservices + MySQL**. **The APIs do not exist yet.** We build against mocks now and cut over later without touching a single component.
+The backend is **one Spring Boot application — a modular monolith — + MySQL**: the SAEL admin backend, which also serves this site's content API. **Its public endpoints are live** under `/app/v1`, and `docs/api-contracts.md` describes them as built. Pages are built against mocks and cut over to the API without touching a single component.
 
 ```
 src/lib/content/
@@ -163,27 +174,38 @@ src/lib/content/
 - The active implementation is selected by the `CONTENT_SOURCE` env var (`mock` | `api`). Default `mock`.
 - Adding a new dynamic surface means: add the type → add the method to the interface → implement in **both** mock and api → then build the UI. Never implement only the mock.
 - All API responses are validated with Zod at the boundary. A malformed response must degrade to an empty state, not crash the page.
-- Forms never post to Spring Boot from the browser. They post to a Next.js route handler under `src/app/api/forms/`, which validates and proxies server-side. This keeps credentials off the client and sidesteps CORS.
+- **The contact form posts from the browser, directly to the backend** (`POST /app/v1/contact-enquiry`, `docs/api-contracts.md` §8). This reverses the earlier rule, which sent forms through a Next.js route handler. **Why:** the backend rate-limits submissions to 5 per hour per client IP, by design, and it can only see the IP of whoever opened the connection. Proxied through the Next server, every visitor would share the server's one IP, and the site's sixth enquiry in any hour would be refused for everybody. No credential is involved, so there is nothing to keep off the client. The backend answers CORS for this endpoint and its options endpoint, for the exact origins it is told about.
+- **That endpoint is the single exception**, to this section and to §2 rule 5. Every other backend call — content, preview, the preview-session exchange — stays server-side and goes through the content repository.
 
 ---
 
 ## 7. Deployment constraints
 
-The client hosts on an **Azure VM: Nginx terminating TLS in front of PM2 running the Next.js standalone server.** There is no container step — we build the archive and hand it over.
+The client hosts on an **Azure VM: nginx terminating TLS in front of the Next.js standalone server, run by systemd as a single `node server.js` process.** PM2 is not used. `ecosystem.config.cjs` remains only because the archive includes it, and it throws so that `pm2 start` fails with the reason. The admin panel backend runs on the same VM behind the same nginx. There is no container step: we build the archive and hand it over.
 
 The following are **forbidden**:
 
 - Edge runtime (`export const runtime = 'edge'`)
-- Any Vercel-specific API, header or image loader
+- Any Vercel-specific API, header or image loader. **Next.js's own ISR — `export const revalidate`, `revalidatePath`, `revalidateTag` — is not Vercel-specific.** It runs on the standalone server and is required (below).
 - Reliance on writable local disk for anything other than Next's own build output and image cache
-- ISR (`revalidate` on `generateStaticParams` pages) — a multi-instance host would serve inconsistent caches without a shared cache handler we cannot yet configure
+
+**ISR is the caching model** — time-based `revalidate`, plus on-demand `revalidatePath` from the backend's signed webhook at `/api/revalidate/` (`docs/api-contracts.md` §7). This reverses the earlier rule, which forbade ISR. **Why:** SAEL publishes content from the admin panel at runtime, including statutory investor disclosures. A site rendered only at build time would show an approved publication at the next deploy, not when it was approved. The backend now calls the site after every publish, unpublish and delete, so the page can be refreshed at that moment.
+
+**The constraint that comes with it: production runs exactly one `node server.js` process, and must stay at one.** Each process holds its own cache of rendered pages. With more than one, `revalidatePath` clears only the process that received the webhook, returns 2xx, and the others keep serving the stale page. The backend counts that 2xx as success, so nothing anywhere reports it. **A second process requires a shared cache handler first** (`cacheHandler` in `next.config.ts`, backed by something every process reads). That applies however the second process would arrive: a second systemd unit, a cluster module, or a process manager. The same warning sits in `ecosystem.config.cjs`.
+
+**Two things the build bakes in**, both of which matter at deployment:
+
+- **Content.** The build prerenders pages from whatever `CONTENT_SOURCE` the build machine has. Built with the default (`mock`), it ships fixture content. A production build therefore comes after the backend is running, configured and imported, and is made with `CONTENT_SOURCE=api`.
+- **The host.** `NEXT_PUBLIC_SITE_URL` is compiled in. Moving the site to another host is a rebuild, not a reconfiguration, and on any origin but `PRODUCTION_URL` every page is `noindex`.
+
+The backend's `docs/tenant-cutover-checklist.md` §0.8 and §1.11 carry both for whoever provisions.
 
 And the following are **required**:
 
 - `output: 'standalone'` in `next.config.ts`
 - `pnpm build && pnpm package` must produce an archive that runs via `node server.js` on a bare Node box with no install step and no external services beyond the env vars documented in `.env.example`
 - All configuration through environment variables. No hardcoded hostnames.
-- Anything Nginx must do that Next does not — compression, TLS, long-cache headers on `/_next/static/` — is captured in `deploy/nginx.conf.sample`. Do not silently rely on a proxy behaviour that is not written down there.
+- Anything nginx must do that Next does not — compression, TLS, `Strict-Transport-Security`, and routing each path to this site or the backend — is captured in `deploy/nginx.conf.sample`. Do not silently rely on a proxy behaviour that is not written down there. (Next 16 sets the long-lived `Cache-Control` on `/_next/static/` itself, so nginx does not.)
 
 ---
 

@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { boardTable, governanceNav, governancePages } from '@/app/_content/corporate-governance';
-import { governanceEmpty } from '@/app/_content/investors';
-import { loadBoardMembers } from '@/app/investors/_lib/governance';
+import { boardMembers, boardTable, governancePages } from '@/app/_content/corporate-governance';
+import { loadAreaTiles } from '@/app/investors/_lib/documents';
+import { areaNavFor } from '@/app/investors/_lib/tile-page';
 import { SubPage } from '@/components/sections/sub-page';
 import { DataTable } from '@/components/ui/data-table';
-import { EmptyState } from '@/components/ui/empty-state';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { sanitizeBio } from '@/lib/utils/sanitize-bio';
 
@@ -21,10 +20,12 @@ export const metadata: Metadata = buildMetadata({
  * Board of Directors — the ten directors, each with a designation and an
  * "About" biography. **Not gated**, as on the legacy page.
  *
- * **From the repository, not from Our Team.** `getBoardMembers()` returns the
- * governance record, transcribed from this page's legacy HTML; some of these
- * people are on /our-team/ too, worded differently, and neither record is
- * copied from the other.
+ * **Static content, not repository content, and not Our Team's.**
+ * `boardMembers` in `_content/corporate-governance.ts` is the governance
+ * record, transcribed from this page's legacy HTML. SAEL descoped the board
+ * endpoint (backend row 5.24), so a change to the board is a release. Every
+ * director is on /our-team/ too, with the same text today; each page keeps
+ * its own copy, so a change to one cannot silently change the other.
  *
  * **On a phone.** The table is Name, Designation and a column of "+"
  * toggles, which holds at 360px with every cell wrapping and nothing
@@ -41,38 +42,36 @@ export const metadata: Metadata = buildMetadata({
  * leaves.
  */
 export default async function BoardOfDirectorsPage() {
-  const members = await loadBoardMembers();
+  // The side list is the area's: these two pages, then the live tiles. The
+  // tiles are the one thing on this page the backend serves.
+  const tiles = await loadAreaTiles('corporate-governance');
 
   return (
-    <SubPage masthead="ripple" title={page.name} nav={governanceNav(page)}>
-      {members.length === 0 ? (
-        <EmptyState
-          ground="dark"
-          title={governanceEmpty.title}
-          description={governanceEmpty.description}
-        />
-      ) : (
-        <DataTable
-          id="board-of-directors"
-          heading={boardTable.heading}
-          columns={boardTable.columns}
-          rows={members.map((member) => [member.name, member.designation])}
-          detail={{
-            column: boardTable.detailColumn,
-            content: members.map((member) => {
-              const bio = sanitizeBio(member.bio);
-              return bio === null ? null : (
-                <div
-                  className="rich-text max-w-(--measure) text-body-sm text-pretty text-body-on-dark"
-                  // Sanitised on the line above — `lib/utils/sanitize-bio.ts`
-                  // allows only p, br, strong, em, ul, ol, li and a.
-                  dangerouslySetInnerHTML={{ __html: bio }}
-                />
-              );
-            }),
-          }}
-        />
-      )}
+    <SubPage
+      masthead="ripple"
+      title={page.name}
+      nav={areaNavFor('corporate-governance', tiles, page.path)}
+    >
+      <DataTable
+        id="board-of-directors"
+        heading={boardTable.heading}
+        columns={boardTable.columns}
+        rows={boardMembers.map((member) => [member.name, member.designation])}
+        detail={{
+          column: boardTable.detailColumn,
+          content: boardMembers.map((member) => {
+            const bio = sanitizeBio(member.bio);
+            return bio === null ? null : (
+              <div
+                className="rich-text max-w-(--measure) text-body-sm text-pretty text-body-on-dark"
+                // Sanitised on the line above — `lib/utils/sanitize-bio.ts`
+                // allows only p, br, strong, em, ul, ol, li and a.
+                dangerouslySetInnerHTML={{ __html: bio }}
+              />
+            );
+          }),
+        }}
+      />
     </SubPage>
   );
 }

@@ -1,13 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import logoDark from '@/assets/images/sael-logo-dark.svg';
-import { SOCIAL_ICONS } from '@/components/icons/social';
 import { FooterLinks } from '@/components/layout/footer/footer-links';
 import { FooterPixelStrip } from '@/components/sections/footer-pixel-strip';
 import { Container } from '@/components/ui/container';
+import { SocialLinks } from '@/components/ui/social-links';
 import { siteConfig, TODO_CONTENT } from '@/lib/config/site';
 import { LEGAL_LINKS, SOCIAL_LINKS } from '@/lib/content/static/footer';
-import { cn } from '@/lib/utils/cn';
 
 /**
  * The site footer. A Server Component; only the accordions inside
@@ -143,32 +142,7 @@ export function Footer() {
               ))}
             </ul>
 
-            {SOCIAL_LINKS.length > 0 && (
-              <ul className="flex list-none items-center gap-3">
-                {SOCIAL_LINKS.map((social) => {
-                  const Icon = SOCIAL_ICONS[social.platform];
-                  return (
-                    <li key={social.platform}>
-                      <a
-                        href={social.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          'rounded-pill bg-white text-footer-icon',
-                          'inline-flex size-touch items-center justify-center',
-                          'transition-transform duration-(--duration-micro)',
-                          'hover:-translate-y-(--lift-social) focus-visible:-translate-y-(--lift-social)',
-                          'motion-reduce:transform-none',
-                        )}
-                      >
-                        <Icon className="size-5" />
-                        <span className="sr-only">{social.label} — opens in a new tab</span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <SocialLinks links={SOCIAL_LINKS} newTabNote="opens in a new tab" />
           </div>
         </div>
       </Container>

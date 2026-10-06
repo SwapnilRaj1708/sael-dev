@@ -6,10 +6,16 @@ import { siteConfig, TODO_CONTENT } from '@/lib/config/site';
  *
  * **The grouping here is deliberately not the navigation's.** "Know More"
  * mixes Company, Newsroom, Career and Contact, and the Investors column omits
- * Offer Documents. That is how the live site groups them, so it is reproduced
- * rather than derived from `nav-config.ts`. The acceptance criterion about a
- * route appearing everywhere from one edit covers the nav, the drawer and the
- * sitemap — not the footer, for exactly this reason.
+ * Offer Documents. That is how the legacy site grouped them in FE-03, so the
+ * grouping is reproduced rather than derived from `nav-config.ts`. The
+ * acceptance criterion about a route appearing everywhere from one edit covers
+ * the nav, the drawer and the sitemap — not the footer, for exactly this
+ * reason.
+ *
+ * **The Solutions labels and their order are SAEL's, not sael.co's.** SAEL
+ * changed them on 2026-10-01 (`5494e70`), with the navigation's. The labels
+ * they replaced were sael.co's, and sael.co is not grounds for restoring them
+ * (/CLAUDE.md §2 rule 8).
  *
  * docs/features/03-app-shell-header-footer.md §3.
  */

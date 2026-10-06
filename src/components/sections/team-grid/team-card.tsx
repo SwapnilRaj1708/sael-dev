@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import type { TeamMember } from '@/lib/content';
+import type { TeamMember } from './types';
 import { cn } from '@/lib/utils/cn';
 import { SIZES_TEAM_CARD } from '@/lib/utils/image-sizes';
 import { sanitizeBio } from '@/lib/utils/sanitize-bio';

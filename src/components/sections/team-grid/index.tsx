@@ -2,10 +2,12 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
-import type { TeamGroup, TeamMember } from '@/lib/content';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
 import { TeamCard } from './team-card';
 import { TeamTabs, type TeamTabsGroup } from './team-tabs';
+import type { TeamGroup, TeamMember } from './types';
+
+export type { TeamGroup, TeamMember } from './types';
 
 export interface TeamGridGroup {
   id: TeamGroup;
@@ -22,7 +24,7 @@ export interface TeamGridProps {
   breadcrumb: readonly BreadcrumbTrailItem[];
   /** The tabs, in the order they are shown. */
   groups: readonly TeamGridGroup[];
-  /** The whole roster, pre-sorted by the repository. Never re-sorted here. */
+  /** The whole roster, in the order the page lists it. Never re-sorted here. */
   members: readonly TeamMember[];
   /** Shown in place of the tabs when `members` is empty. */
   emptyTitle: string;
@@ -72,8 +74,8 @@ export function TeamGrid({
   emptyTitle,
   emptyDescription,
 }: TeamGridProps) {
-  // Partitioned, never re-sorted — docs/features/07-our-team.md: `order` is
-  // the repository's contract and the only thing that decides who comes first.
+  // Partitioned, never re-sorted: the roster's own order is the only thing
+  // that decides who comes first.
   // A group with nobody in it is dropped rather than rendered as an empty
   // panel behind a tab that leads nowhere.
   const tabs: TeamTabsGroup[] = groups

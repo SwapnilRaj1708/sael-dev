@@ -1,10 +1,12 @@
 import type { StaticImageData } from 'next/image';
+import type { ReactNode } from 'react';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Section } from '@/components/ui/section';
 import { VideoFrame } from '@/components/ui/video-frame';
+import { BUSINESS_GRADIENT_CLASS, type BusinessGradient } from '@/components/ui/display-heading';
 import { cn } from '@/lib/utils/cn';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
 import { SIZES_FULL_BLEED } from '@/lib/utils/image-sizes';
@@ -35,6 +37,11 @@ export interface PageHeroProps {
    * 2026-10-01: at 15ch its name broke at a hyphen on every screen.
    */
   titleMeasure?: 'hero' | 'none';
+  /**
+   * Sets the title in a business's mark ramp instead of white — the four
+   * business pages, at the client's request of 2026-10-06.
+   */
+  titleGradient?: BusinessGradient;
   /** The banner photograph. `null` until the client supplies it. */
   image: StaticImageData | null;
   /** Meaningful description of the banner, or `''` if it is decorative. */
@@ -48,6 +55,21 @@ export interface PageHeroProps {
   video?: string | null;
   /** The asset's name in docs/asset-inventory.md, for the pending placeholder. */
   pending?: string;
+  /**
+   * Something other than one photograph behind the copy — Our Core Beliefs'
+   * three-photograph collage, `<CollageBackdrop>`. Drawn in the photograph's
+   * place, and **it brings its own scrim**: the standard one is tuned for a
+   * single full-bleed photograph and is not drawn over a backdrop. `image`,
+   * `imageAlt`, `video` and `pending` are ignored; pass `null` and `''` for
+   * the two that are required.
+   */
+  backdrop?: ReactNode;
+  /**
+   * Opt into the page's section snapping — see `data-snap-sections` in
+   * globals.css. The band is already a screen tall, so this only marks it
+   * as the first stop.
+   */
+  snap?: boolean;
 }
 
 /**
@@ -89,6 +111,11 @@ export interface PageHeroProps {
  * **`video` swaps the banner for a moving one** — added 2026-09-18 for the
  * Solar Energy hero. The photograph stays as poster and reduced-motion still.
  *
+ * **`backdrop` swaps the media layer for a composition** — added 2026-10-06
+ * for Our Core Beliefs' three-photograph collage, which is the same hero in
+ * every other respect: the copy, its alignment and the band's height are
+ * unchanged, and only what stands behind the copy differs.
+ *
  * A Server Component; only `<VideoFrame>` is client, and only when used.
  */
 export function PageHero({
@@ -102,6 +129,9 @@ export function PageHero({
   video,
   align = 'start',
   titleMeasure = 'hero',
+  titleGradient,
+  backdrop,
+  snap = false,
 }: PageHeroProps) {
   return (
     <Section
@@ -117,10 +147,14 @@ export function PageHero({
       // the swap; the attribute is here so an inner page inherits it without
       // having to plumb anything through its own layout.
       data-viewport-hero
+      data-snap-section
+      className={cn(snap && 'snap-start')}
       fullBleed
     >
       <div className="relative flex min-h-(--page-hero-h) w-full max-w-full items-end overflow-hidden">
-        {video === undefined ? (
+        {backdrop !== undefined ? (
+          backdrop
+        ) : video === undefined ? (
           <MediaFrame
             image={image}
             alt={imageAlt}
@@ -141,11 +175,13 @@ export function PageHero({
         )}
 
         {/* Decorative: it carries no information, it protects the contrast of
-            the text over it. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-(image:--gradient-page-hero-scrim)"
-        />
+            the text over it. A backdrop draws its own. */}
+        {backdrop === undefined && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-(image:--gradient-page-hero-scrim)"
+          />
+        )}
 
         <Container className="relative z-10">
           {/* The masthead is fixed and overlays this section, so the copy
@@ -165,7 +201,22 @@ export function PageHero({
 
             <h1
               className={cn(
-                'text-hero text-white',
+                'text-hero',
+                titleGradient === undefined
+                  ? 'text-white'
+                  : [
+                      // `w-fit`: the ramp spans the words, not the band.
+                      'w-fit gradient-text',
+                      BUSINESS_GRADIENT_CLASS[titleGradient],
+                      // Lifts the ramp off the photograph (client, 2026-10-06).
+                      // A filter, not `text-shadow`: under `background-clip:
+                      // text` a text shadow paints over the gradient and
+                      // muddies it, where a drop-shadow sits behind the glyphs.
+                      'drop-shadow-(--shadow-business-hero-title)',
+                      // Without it the last line's descenders fall outside
+                      // the painted box and are cropped. See the token.
+                      '-mb-glyph-overhang pb-glyph-overhang',
+                    ],
                 titleMeasure === 'hero' && 'max-w-(--hero-measure)',
               )}
             >
@@ -173,7 +224,9 @@ export function PageHero({
             </h1>
 
             {intro !== undefined && (
-              <p className="max-w-(--measure) text-body text-pretty text-body-on-dark">{intro}</p>
+              // `balance`, not `pretty`: a one-sentence tagline that wraps should
+              // split evenly rather than strand two words. Client, 2026-10-06.
+              <p className="max-w-(--measure) text-body text-balance text-body-on-dark">{intro}</p>
             )}
           </div>
         </Container>

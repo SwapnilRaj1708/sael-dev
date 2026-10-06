@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
-import dottedMap from '@/assets/images/dotted-map.svg';
+// The map in this business's own ramp — the homepage map, recoloured.
+import dottedMap from '@/assets/images/solar-cell-map.svg';
 import type { CapabilityItem, CapabilitySplitProps } from '@/components/sections/capability-split';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { PresenceSite } from '@/components/sections/presence-map';
@@ -14,9 +15,12 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  * **Every string here is transcribed verbatim from the live
  * https://www.sael.co/solar-cell-manufacturing/**, read from its HTML on
  * 2026-09-19 with only its source whitespace collapsed — including its curly
- * apostrophes (`SAEL’s`, `India’s`). The client's reference screenshot fixed
- * the layout, not the copy. Same bargain as `solar-energy.ts`, which this
- * follows section for section.
+ * apostrophes (`SAEL’s`, `India’s`). That is **SAEL's instruction of
+ * 2026-09-18 for the four business pages, and it still stands for them**:
+ * their reference screenshot fixes the structure, their live page fixes the
+ * copy. It is specific to these pages, not the general rule (/CLAUDE.md §2
+ * rule 8). Same bargain as `solar-energy.ts`, which this follows section for
+ * section.
  *
  * ## What the live page does not have
  *
@@ -40,7 +44,7 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  * paths are committed (/CLAUDE.md §7). The two masked slots take the same
  * `mask1`/`mask2` shapes as Solar Energy — both assets are opaque, so the
  * CSS mask does the cutting, unlike Module Manufacturing's, which arrives
- * pre-shaped. The map is the homepage's `dotted-map.svg`.
+ * pre-shaped. The map is the homepage's, recoloured to this business's ramp (`solar-cell-map.svg`).
  *
  * **The hero is a photograph, not a video**, on the client's instruction of
  * 2026-09-21 — the one business page of the four without one. `<PageHero>`
@@ -106,8 +110,8 @@ export const solarCellSites: readonly PresenceSite[] = [
   {
     id: 'greater-noida',
     name: 'Greater Noida',
-    x: 94,
-    y: 93.2,
+    x: 95.2,
+    y: 89.6,
     figures: [{ metric: 'solar-cell', value: '5 GW' }],
   },
 ];

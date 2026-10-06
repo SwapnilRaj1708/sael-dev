@@ -107,9 +107,9 @@ export const SIZES_NEWS_GRID = '(min-width: 90rem) 28rem, (min-width: 44rem) 36r
 export const SIZES_ARTICLE_LEAD = '(min-width: 50rem) 720px, 92vw';
 
 /**
- * An "Our Goals" mark — `--spacing-goal-icon` wide, 60 → 126px.
+ * An "Our Goals" mark — `--spacing-goal-icon` wide, 48 → 101px.
  */
-export const SIZES_GOAL_ICON = '126px';
+export const SIZES_GOAL_ICON = '101px';
 
 /**
  * The dotted India map. Half the content column at `lg` and above, capped by
@@ -118,9 +118,14 @@ export const SIZES_GOAL_ICON = '126px';
 export const SIZES_MAP = '(min-width: 64rem) 38rem, 92vw';
 
 /**
- * A business mark on a ledger row — `--spacing-ledger-icon` wide, 69 → 132px.
+ * A business mark beside a figure in a map callout — `size-4`, 16px.
  */
-export const SIZES_BUSINESS_ICON = '132px';
+export const SIZES_MAP_LEGEND_ICON = '16px';
+
+/**
+ * A business mark on a ledger row — `--spacing-ledger-icon` wide, 55 → 106px.
+ */
+export const SIZES_BUSINESS_ICON = '106px';
 
 /**
  * A `<ProseSplit>` photograph. The split's columns have a 380px floor, so the
@@ -173,3 +178,33 @@ export const SIZES_CUTOUT_PORTRAIT = '(min-width: 48rem) 34vw, 190px';
  * is 41vw, so the first condition is rounded outward from that.
  */
 export const SIZES_GALLERY = '(min-width: 30rem) 48vw, 92vw';
+
+/**
+ * A story's photograph on Story of Our Influence — sections/story-split.
+ * From `lg` it is `--story-media-h` tall, 640px at most, and its width
+ * follows from `--aspect-story-shape` (352 : 483.43): 466px at most, rounded
+ * up. Below `lg` it is a `--spacing-story-thumb` (120px) thumbnail.
+ */
+export const SIZES_STORY_MEDIA = '(min-width: 64rem) 30rem, 7.5rem';
+
+/**
+ * One of the three photographs in Our Core Beliefs' hero collage —
+ * sections/page-hero/collage-backdrop. A third of the full-bleed hero at
+ * every width, less a sliver of gap.
+ */
+export const SIZES_COLLAGE = '34vw';
+
+/**
+ * A belief card's cut-out — sections/belief-stack. From `lg` it is five
+ * twelfths of the card, and the card is the content width less its own
+ * padding: 440px at 1440 and 600px at 1920, about 31vw at both, rounded up.
+ * Below `lg` it is the card's width less a small inset either side.
+ */
+export const SIZES_BELIEF_CUTOUT = '(min-width: 64rem) 33vw, 88vw';
+
+/**
+ * An SDG icon on Our Key ESG Metrics — sections/sdg-grid. Five across from
+ * `md`: ~130px at 768 (17vw), and from `lg` five across `--sdg-grid-w`
+ * (65rem), so never more than ~190px. Two across the content width below `md`.
+ */
+export const SIZES_SDG_TILE = '(min-width: 64rem) 12rem, (min-width: 48rem) 17vw, 45vw';

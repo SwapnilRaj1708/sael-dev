@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
-import dottedMap from '@/assets/images/dotted-map.svg';
+// The map in this business's own ramp — the homepage map, recoloured.
+import dottedMap from '@/assets/images/solar-module-map.svg';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { PresenceSite } from '@/components/sections/presence-map';
 import type { ProductDownloadsProps } from '@/components/sections/product-downloads';
@@ -16,9 +17,11 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  *
  * **Every string here is transcribed verbatim from the live
  * https://www.sael.co/module-manufacturing/**, read from its HTML on
- * 2026-09-19 with only its source whitespace collapsed. The client's
- * reference screenshot fixed the layout, not the copy. Follows
- * `solar-energy.ts`.
+ * 2026-09-19 with only its source whitespace collapsed. That is **SAEL's
+ * instruction of 2026-09-18 for the four business pages, and it still stands
+ * for them**: their reference screenshot fixes the structure, their live page
+ * fixes the copy. It is specific to these pages, not the general rule
+ * (/CLAUDE.md §2 rule 8). Follows `solar-energy.ts`.
  *
  * ## The page with a section fewer
  *
@@ -30,9 +33,11 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  *
  * - **The portfolio figure.** The screenshot draws only the caption "Module
  *   Manufacturing Portfolio"; the live page draws two counters over it,
- *   landing on **3625 MW + 5000 MW (proposed)**. The live page wins on content,
- *   so the figure is carried. It is the same value the homepage ledger sets
- *   as `3625 MW + 5 GW` — the live page writes the second in MW.
+ *   landing on **3625 MW + 5000 MW (proposed)**. SAEL's 2026-09-18
+ *   instruction takes this page's copy from the live page, so the figure is
+ *   carried. The homepage ledger shows SAEL's reviewed `3.6 GWp + 5 GW*`
+ *   instead. That disagreement is with SAEL, in the backend's
+ *   `docs/client/static-content-sign-off.md` §4, and is not reconciled here.
  * - **"Product Downloads."** The live page lists three product-sheet PDFs
  *   between the map and the prowess cards; the screenshot has no such block.
  *   Left out at first, because the PDFs live under the legacy site's
@@ -54,7 +59,7 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  * Only container-relative paths are committed; the host comes from
  * `AZURE_BLOB_BASE_URL` (/CLAUDE.md §7). The hero poster is still `null`.
  * There is no second photograph, and correctly so — this is the page without
- * a capability section. The map is the homepage's `dotted-map.svg`.
+ * a capability section. The map is the homepage's, recoloured to this business's ramp (`solar-module-map.svg`).
  *
  * **The photograph was briefly a pre-shaped asset and is not one now.** The
  * first export, `mask1Image.webp`, arrived 700 x 613 with the cut already in
@@ -86,7 +91,7 @@ export const moduleMeta = {
 } as const;
 
 export const moduleHero: PageHeroProps = {
-  title: 'Module Manufacturing',
+  title: 'Solar Module Manufacturing',
   intro:
     "Modules: Building Blocks of Innovation, Engineered for Excellence, Shaping Tomorrow's Technology Landscape",
   align: 'center',
@@ -130,25 +135,25 @@ export const moduleSites: readonly PresenceSite[] = [
   {
     id: 'punjab',
     name: 'Punjab',
-    x: 83.4,
-    y: 60.4,
-    figures: [{ metric: 'module-assembly', value: '300 MW' }],
+    x: 87.4,
+    y: 65.4,
+    figures: [{ metric: 'module-assembly', value: '225 MW' }],
     // href: 'https://maps.app.goo.gl/k7XpdviL8peJT1NT6',
   },
   {
     id: 'rajasthan',
     name: 'Rajasthan',
-    x: 45.4,
-    y: 124.4,
-    figures: [{ metric: 'module-assembly', value: '3.2 GW' }],
+    x: 50,
+    y: 128.4,
+    figures: [{ metric: 'module-assembly', value: '3400 MW' }],
     // href: 'https://maps.app.goo.gl/UW8wXkYiQQG7WzHdA',
   },
   {
     id: 'uttar-pradesh',
     name: 'Uttar Pradesh (proposed)',
-    x: 121.4,
-    y: 116.4,
-    figures: [{ metric: 'module-assembly', value: '5 GW' }],
+    x: 125,
+    y: 121,
+    figures: [{ metric: 'module-assembly', plus: 'solar-cell', value: '10000 MW' }],
   },
 ];
 

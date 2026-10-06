@@ -1,29 +1,19 @@
 /**
- * PM2 process definition for the Azure VM deployment (Nginx + PM2).
+ * NOT A PROCESS DEFINITION. PM2 is not how this site runs.
  *
- * This file ships inside the release archive and is run from the extracted
- * directory, so `script` is relative to it. See README.md → Deployment.
+ * Production runs the standalone server under systemd, as one `node server.js` process from the
+ * extracted archive, with HOSTNAME=127.0.0.1 and PORT set in its environment file. This file
+ * remains only because scripts/package-release.mjs copies it into the archive. It throws, so that
+ * `pm2 start ecosystem.config.cjs` fails with this reason instead of starting the site a second
+ * time, under a process manager nobody is watching, with whatever environment PM2 happens to have.
+ *
+ * Exactly one process, whatever starts it. Each process holds its own ISR cache, so with more than
+ * one, the backend's revalidation webhook clears only the process that received it.
+ * revalidatePath returns 2xx, and the others keep serving the stale page with nothing reporting
+ * it. More than one requires a shared cache handler (`cacheHandler` in next.config.ts) first.
+ * /CLAUDE.md §7.
  */
-module.exports = {
-  apps: [
-    {
-      name: 'sael-web',
-      script: 'server.js',
-      // Raise to 'max' to use every core. Each instance keeps its own data and
-      // image cache, which docs/architecture.md §5 accounts for.
-      instances: 1,
-      exec_mode: 'cluster',
-      max_memory_restart: '512M',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3000,
-        // Bind to loopback only — Nginx is the public listener.
-        HOSTNAME: '127.0.0.1',
-        // Runtime configuration. These must match the values the archive was
-        // built with for any NEXT_PUBLIC_* variable, which is baked in at build.
-        CONTENT_SOURCE: 'mock',
-        NEXT_PUBLIC_SITE_URL: 'https://www.sael.co',
-      },
-    },
-  ],
-};
+throw new Error(
+  'ecosystem.config.cjs: PM2 is not used. The site runs under systemd as a single ' +
+    '`node server.js` process. Start it with systemctl, not pm2. See the comment in this file.',
+);

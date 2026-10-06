@@ -255,6 +255,7 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
   something shaped like `StaticImageData` so no consuming component changes. The
   dimensions must be read from the blob itself. Vectors must be rendered `unoptimized`.
 - **The Careers page's six assets** live at `web-assets/media/career/`, uploaded by the client on 2026-09-22, and are described in `src/app/_content/career.ts` with dimensions read from the blobs' own headers: `career-image-1.webp` 700 × 524 (the intro photograph), `career-image-2.webp`, `-3.webp` and `-4.webp` 1200 × 800 and `career-image-5.jpg` 1024 × 683 (the "Life at SAEL" gallery, in that order; image 2 doubles as the hero's poster), and `career-video.mp4` 1920 × 1080, 12.3 s, H.264 with a silent AAC track (the hero). All five images are byte-identical to the live sael.co files, so the slot mapping is the live page's own. The video has no `cdnImage()` — it is a `<VideoFrame>` fed by `tryBlobUrl()`.
+- **Contact Us's hero video is not uploaded yet.** The legacy page's banner plays `/video/green-growth-video.mp4` — 566,892 bytes, 1920 × 1080, 8 s, H.264 with an audio track, played muted there as here — and it has been the hero of `/contact-us/` since 2026-10-01 (`src/app/_content/contact-us.ts`). While `LEGACY_ASSET_BASE_URL` is set it plays from the legacy site; upload it to `web-assets/media/contact-us/green-growth-video.mp4`, where the page looks once that variable is unset. **No poster exists** (`contact-us/hero-poster`, pending): the legacy page has none, so a reduced-motion visitor sees the title over the dark ground until one is supplied.
 - **The Offer Documents files (17) are not uploaded yet** — inventoried 2026-09-29 from the legacy pages, each legacy URL checked (all 200) and its size recorded. They are served from the container, never from the legacy site, which goes away at cutover. The rule is mechanical so the upload can be one pass: **a PDF's blob path is its legacy path with `web-assets` in front**, file name unchanged (including the legacy `corrigendum-to-drh.pdf`); the two videos and their posters go under `web-assets/media/offer-documents/`, file names unchanged. Until the upload, every Offer Documents link 404s. The same paths are in `src/lib/content/mock/data/investor-documents.json` and `investor-videos.json`, each row with its `legacyPath`.
 
   | Title (as the link reads) | Legacy path on www.sael.co | Blob path | Bytes |
@@ -429,7 +430,7 @@ Backend-supplied assets (news images, investor PDFs, team photos) live in Blob S
   | Jagbani Advertisement | `corporate-governance/other-documents/jagbani-advertisement.pdf` | corporate-governance / other-documents | Composite Scheme of Arrangement | 661,143 |
   | Tribune Advertisement | `corporate-governance/other-documents/tribune-advertisement.pdf` | corporate-governance / other-documents | Composite Scheme of Arrangement | 601,031 |
 
-- Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/media/our-team/<slug>.<ext>` — fifteen `.jpg`, two `.webp`, one `.png`, matching the slugs in `mock/data/team-members.json`.
+- Never commit a backend-supplied image either. The seventeen `/our-team/` portraits were briefly mirrored into `public/team/` while the client's URLs were outstanding; **the client supplied them on 2026-09-10** and the copies were deleted. They live at `web-assets/media/our-team/<slug>.<ext>` — thirteen `.jpg`, three `.webp`, one `.png` — and are named in `ourTeamMembers`, `src/app/_content/our-team.ts`. **Checked 2026-10-02: all seventeen are byte-identical (SHA-256) to the files the live `/our-team/` serves from `/img/team/`.** They are in the agency's container today; at cutover `web-assets/` is copied to SAEL's account and the site rebuilt (backend `docs/tenant-cutover-checklist.md` §1.12). The board pages carry no photographs.
 
 ---
 
@@ -553,9 +554,9 @@ Items the client must supply before the relevant tracker item can complete:
 - [ ] **Caption files for both DRHP audio-visual videos** (WebVTT — `.vtt`),
       English and Hindi. None exist: the legacy `<video>` carries no `<track>`,
       and these are spoken presentations. The site ships without them because
-      there is nothing to ship, not because they are optional; the player picks
-      them up from the data (`captions` on `GET /api/v1/investor-videos`) with
-      no code change. Proposed paths: `web-assets/media/offer-documents/
+      there is nothing to ship, not because they are optional. **The backend
+      has no caption field** (`api-contracts.md` §9) — the player can show
+      tracks, but nothing can deliver them until one is added there. Proposed paths: `web-assets/media/offer-documents/
       SAEL-DRHP-English.en.vtt` and `SAEL-DRHP-Hindi.hi.vtt`
 - [ ] **A CORS rule on the blob container** allowing `GET` from the site's
       origins — needed before the first caption file goes up, since a

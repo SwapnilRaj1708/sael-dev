@@ -42,8 +42,10 @@ const highlightItems: CapabilityItem[] = solarCellHighlights.items.map((item, in
 /**
  * Solar Cell Manufacturing — the Solar Energy template, four sections.
  *
- * Built to the client's reference screenshot for layout and to the live
- * https://www.sael.co/solar-cell-manufacturing/ for every word. Hero,
+ * Built to SAEL's reference screenshot for layout and to
+ * https://www.sael.co/solar-cell-manufacturing/ for every word, on SAEL's
+ * instruction of 2026-09-18 for the four business pages. That instruction still
+ * stands for them; it is not the general rule (/CLAUDE.md §2 rule 8). Hero,
  * overview beside a masked photograph, the projects map with its one pin,
  * and the four highlights beside a masked photograph. No practice cards: the
  * live page has none and neither does the screenshot. No portfolio figure
@@ -53,10 +55,11 @@ const highlightItems: CapabilityItem[] = solarCellHighlights.items.map((item, in
  */
 export default function SolarCellManufacturingPage() {
   return (
-    <div className="-mt-header lg:mt-0">
-      <PageHero {...solarCellHero} />
-      <ProseSplit {...solarCellOverview} />
+    <div className="-mt-header business-ramp-cell lg:mt-0">
+      <PageHero titleGradient="cell" {...solarCellHero} />
+      <ProseSplit titleGradient="cell" {...solarCellOverview} />
       <ProjectsMap
+        titleGradient="cell"
         eyebrow={solarCellProjects.eyebrow}
         title={solarCellProjects.title}
         body={[...solarCellProjects.body]}
@@ -65,6 +68,7 @@ export default function SolarCellManufacturingPage() {
         sites={solarCellSites}
       />
       <CapabilitySplit
+        titleGradient="cell"
         eyebrow={solarCellHighlights.eyebrow}
         title={solarCellHighlights.title}
         items={highlightItems}

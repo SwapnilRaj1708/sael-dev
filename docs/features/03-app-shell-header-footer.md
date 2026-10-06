@@ -21,12 +21,19 @@ export interface NavItem {
 }
 ```
 
-Structure, matching the live site exactly:
+Structure. The seven top-level items and every route were taken from the live site when this
+was built (FE-03, 2026-08-04), and the routes must keep matching it (URL parity, /CLAUDE.md §2
+rule 6).
+
+> **The Businesses labels and their order are SAEL's, not sael.co's.** SAEL renamed and
+> reordered them on 2026-10-01 (`5494e70`). The table shows SAEL's. Before that they were sael.co's:
+> Solar Energy, Waste To Energy, Module Manufacturing, Solar Cell Manufacturing. sael.co is not
+> grounds for restoring them (/CLAUDE.md §2 rule 8).
 
 | Label | Href | Children |
 |---|---|---|
 | Company | — (trigger only) | About Us `/about-us/`, Our Team `/our-team/` |
-| Businesses | — | Solar Energy `/solar-energy/`, Waste To Energy `/waste-to-energy/`, Module Manufacturing `/module-manufacturing/`, Solar Cell Manufacturing `/solar-cell-manufacturing/` |
+| Businesses | — | Solar Energy Generation `/solar-energy/`, Solar Module Manufacturing `/module-manufacturing/`, Solar Cell Manufacturing `/solar-cell-manufacturing/`, Agri Waste-To-Energy `/waste-to-energy/` |
 | Sustainability | — | Story of Our Influence `/story-of-our-influence/`, Our Key ESG Metrics `/our-key-esg-metrics/`, Our Core Beliefs `/our-core-beliefs/` |
 | Investors | — | Offer Documents `/investors/offer-documents/`, Corporate Governance `/investors/corporate-governance/`, Financials & Reports `/investors/financials-and-reports/`, Notifications `/investors/notifications/`, Investor Contact `/investors/contact-us/` |
 | Newsroom | `/newsroom/` | — |
@@ -131,7 +138,9 @@ Content is fixed and lives in `src/lib/content/static/footer.ts`.
    > with the move. The socials keep the right-hand side they already had.
 2. **Link grid, 4 columns:**
    - *Know More* — About Us, Our Team, Contact Us, Newsroom, Career
-   - *Solutions* — Solar Energy, Waste To Energy, Module Manufacturing, Solar Cell Manufacturing
+   - *Solutions* — Solar Energy Generation, Solar Module Manufacturing, Solar Cell
+     Manufacturing, Agri Waste-to-Energy. SAEL's labels and order since 2026-10-01, as in the
+     navigation (§1), and not sael.co's.
    - *Sustainability* — Story of Our Influence, Our Key ESG Metrics, Our Core Beliefs
    - *Investors* — Corporate Governance, Financials & Reports, Notifications, Investor Contact
 3. **Corporate block** — present on the live site, absent from the prototype. **Include it**, it is legally useful. **The wordmark sits at the right-hand end of this row** as of 2026-08-27, address left; below `md` the two stack, address first:

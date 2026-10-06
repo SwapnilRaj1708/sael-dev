@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
-import type { StaticImageData } from 'next/image';
+import Image, { type StaticImageData } from 'next/image';
+import { BatteryCharging } from 'lucide-react';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
 import { cn } from '@/lib/utils/cn';
-import { SIZES_MAP } from '@/lib/utils/image-sizes';
+import { SIZES_MAP, SIZES_MAP_LEGEND_ICON } from '@/lib/utils/image-sizes';
 import { MAP_VIEWBOX } from './dots';
 
 type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
@@ -12,17 +13,23 @@ type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
  * The map's four legends — and they are the four businesses, which is why the
  * ledger's accents are what colours them.
  *
- * The client's map draws each as an icon beside its figure, with a legend
- * strip under the map decoding the four. **We render the legend's name in
- * place of its icon**, at the client's request on 2026-08-27: an icon needs
- * the strip to be readable at all, and the strip needs four more assets and a
- * row the section has no space for. The name says the same thing and needs
- * nothing decoded.
+ * The client's map draws each as an icon beside its figure. From 2026-08-27
+ * the callout set the legend's *name* in its place; since 2026-10-06, at the
+ * client's request, it draws the icon again — the Business Portfolio's own
+ * marks, passed in as `marks` — with the name kept as the accessible text.
  */
 export type SiteMetric = 'solar-ipp' | 'module-assembly' | 'solar-cell' | 'agri-waste';
 
+/** What a figure can be paired with: a second business, or battery storage. */
+export type SiteFigurePartner = SiteMetric | 'storage';
+
 export interface PresenceSiteFigure {
   metric: SiteMetric;
+  /**
+   * A figure that covers two things at once, drawn as two icons joined by a
+   * "+" — module and cell capacity together, or solar with battery storage.
+   */
+  plus?: SiteFigurePartner;
   /** Value and unit together, as the client publishes them — "298 MW", "5 GW". */
   value: string;
 }
@@ -48,28 +55,23 @@ export interface PresenceSite {
 }
 
 /** The legend names, verbatim from the client's map. */
-const METRIC_LABEL: Record<SiteMetric, string> = {
+const METRIC_LABEL: Record<SiteFigurePartner, string> = {
   'solar-ipp': 'Solar Energy Generation',
   'module-assembly': 'Solar Module Manufacturing',
   'solar-cell': 'Solar Cell Manufacturing',
   'agri-waste': 'Agri Waste-to-Energy',
+  // Not one of the four legends: the client's map draws a battery beside a
+  // solar figure that includes storage, and names it nowhere. {{TODO: content}}
+  // — confirm this wording with the client. It is only ever read aloud.
+  storage: 'Battery Storage',
 };
 
-/**
- * Each legend in its business's own accent, so a figure on the map and the
- * same business's row in the ledger read as one colour.
- *
- * **The `-deep` four, not the `-bright` four the ledger itself uses.** The
- * callout sits on `--color-paper-alt` and the ledger sits on black; the bright
- * accents fail contrast badly on paper. Same hues, ground-appropriate weight —
- * see the note on the tokens.
- */
-const METRIC_CLASS: Record<SiteMetric, string> = {
-  'solar-ipp': 'text-figure-solar-deep',
-  'module-assembly': 'text-figure-module-deep',
-  'solar-cell': 'text-figure-cell-deep',
-  'agri-waste': 'text-figure-agri-deep',
-};
+/** "Solar Module Manufacturing + Solar Cell Manufacturing". */
+function figureLabel(figure: PresenceSiteFigure): string {
+  return figure.plus === undefined
+    ? METRIC_LABEL[figure.metric]
+    : `${METRIC_LABEL[figure.metric]} + ${METRIC_LABEL[figure.plus]}`;
+}
 
 /**
  * "298 MW Solar Energy Generation; 89.4 MW Agri Waste-to-Energy" — or, with
@@ -77,7 +79,7 @@ const METRIC_CLASS: Record<SiteMetric, string> = {
  */
 function describeSite(site: PresenceSite, legend: boolean): string {
   return site.figures
-    .map((figure) => (legend ? `${figure.value} ${METRIC_LABEL[figure.metric]}` : figure.value))
+    .map((figure) => (legend ? `${figure.value} ${figureLabel(figure)}` : figure.value))
     .join('; ');
 }
 
@@ -89,11 +91,13 @@ export interface PresenceMapFigureProps {
   /** The accessible name of the whole figure — "Map of SAEL project sites across India". */
   label: string;
   /**
-   * Name each figure's business in the callout. On for the homepage, whose
-   * map carries all four businesses; off for a page whose map carries one,
-   * where the legend would repeat the page's own title beside every pin.
+   * The four businesses' marks — the Business Portfolio's own artwork. Passed,
+   * each figure in the callout leads with its business's mark (and a pinned
+   * pair with both, joined by "+"). On for the homepage, whose map carries all
+   * four businesses; omitted for a page whose map carries one, where the mark
+   * would repeat the page's own subject beside every figure.
    */
-  legend?: boolean;
+  marks?: Record<SiteMetric, StaticImageData | null>;
   /** Reveal stagger position within the section. */
   order?: number;
   /** Applied to the figure's box, which is the `<Reveal>` itself. */
@@ -135,10 +139,29 @@ export function PresenceMapFigure({
   map,
   sites,
   label,
-  legend = true,
+  marks,
   order = 0,
   className,
 }: PresenceMapFigureProps) {
+  const legend = marks !== undefined;
+
+  /** One figure's mark, at the callout's icon size. Decorative: the pin's
+   * accessible name says which business each figure is. */
+  const markFor = (partner: SiteFigurePartner) => {
+    if (partner === 'storage') {
+      return <BatteryCharging aria-hidden="true" focusable="false" className="size-4 shrink-0" />;
+    }
+    const image = marks?.[partner] ?? null;
+    return image === null ? null : (
+      <Image
+        src={image}
+        alt=""
+        sizes={SIZES_MAP_LEGEND_ICON}
+        className="size-4 shrink-0 object-contain"
+      />
+    );
+  };
+
   return (
     <Reveal
       order={order}
@@ -229,25 +252,27 @@ export function PresenceMapFigure({
               )}
             >
               <p className="text-body-sm font-bold text-ink">{site.name}</p>
-              {/* One row per legend the state appears under: the figure
-                  as it is published, then the legend's name in that
-                  business's accent. The figure keeps --text-meta, the
-                  role it already had here; the name takes the quieter
-                  --text-tile-note, which is the footnote-on-a-figure
-                  role and is not one of the five uppercase ones — at
-                  --text-meta's 0.2em tracking "In-house Module Assembly
-                  Capacity" would be half the map wide. §2. */}
-              <ul className="flex list-none flex-col gap-0">
-                {site.figures.map((figure) => (
-                  <li key={figure.metric} className="flex items-end justify-between gap-2">
+              {/* One row per figure, as the client's map sets them: the
+                  business's mark — two, joined by "+", for a combined
+                  figure — then the figure as it is published. The figure
+                  keeps --text-meta, the role it already had here. */}
+              <ul className="mt-1 flex list-none flex-col gap-1">
+                {site.figures.map((figure, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    {legend && (
+                      <span className="flex items-center gap-1 text-ink">
+                        {markFor(figure.metric)}
+                        {figure.plus !== undefined && (
+                          <>
+                            <span className="text-tile-note">+</span>
+                            {markFor(figure.plus)}
+                          </>
+                        )}
+                      </span>
+                    )}
                     <span className="text-meta tracking-normal text-meta-paper uppercase">
                       {figure.value}
                     </span>
-                    {legend && (
-                      <span className={cn('text-tile-note', METRIC_CLASS[figure.metric])}>
-                        {METRIC_LABEL[figure.metric]}
-                      </span>
-                    )}
                   </li>
                 ))}
               </ul>

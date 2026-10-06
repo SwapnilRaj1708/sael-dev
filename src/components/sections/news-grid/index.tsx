@@ -2,7 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Newspaper, Play } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { NewsCard, NewsCardLink } from '@/components/ui/news-card';
-import { YouTubeDialog } from '@/components/ui/youtube-dialog';
+import { VideoDialog } from '@/components/ui/video-dialog';
 import type { NewsItem } from '@/lib/content';
 import { cn } from '@/lib/utils/cn';
 import { SIZES_NEWS_GRID } from '@/lib/utils/image-sizes';
@@ -51,6 +51,8 @@ export interface NewsGridProps extends VariantProps<typeof grid> {
   labels: NewsGridLabels;
   /** Shown in place of the grid when there are no items — the repository failed. */
   empty: { title: string; description: string };
+  /** Bypass the image optimiser — on a preview page, always. See `<NewsCard unoptimized>`. */
+  unoptimizedImages?: boolean;
 }
 
 /**
@@ -88,8 +90,9 @@ function PlayMark() {
  *    tab, and says so to a screen reader.
  *  - **Our Views** — no date, because the item has none. The `<time>` is
  *    absent, not hidden.
- *  - **Multimedia** — the 16:9 YouTube thumbnail with a play mark, the title,
- *    and `<YouTubeDialog>` in place of the link.
+ *  - **Multimedia** — the 16:9 artwork with a play mark, the title, and
+ *    `<VideoDialog>` in place of the link, playing YouTube, Vimeo or a file
+ *    we host.
  *
  * **The grid's columns follow its own width, not the screen's**: it is a
  * size container, and the columns and each card's row-or-column layout are
@@ -105,7 +108,15 @@ function PlayMark() {
  *
  * A Server Component; each video card's player is the client leaf.
  */
-export function NewsGrid({ items, label, headingLevel, labels, empty, columns }: NewsGridProps) {
+export function NewsGrid({
+  items,
+  label,
+  headingLevel,
+  labels,
+  empty,
+  columns,
+  unoptimizedImages = false,
+}: NewsGridProps) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -130,18 +141,20 @@ export function NewsGrid({ items, label, headingLevel, labels, empty, columns }:
             sizes: SIZES_NEWS_GRID,
             ground: 'dark',
             layout: 'adaptive',
+            unoptimized: unoptimizedImages,
           } as const;
 
           return (
             <li key={item.id} className="flex">
-              {item.category === 'multimedia' && item.videoId !== null ? (
+              {item.category === 'multimedia' && item.video !== null ? (
                 <NewsCard
                   {...shared}
                   media="video"
                   thumbOverlay={<PlayMark />}
                   action={
-                    <YouTubeDialog
-                      videoId={item.videoId}
+                    <VideoDialog
+                      video={item.video}
+                      href={item.href}
                       title={item.title}
                       label={labels.watch}
                       accessibleLabel={`${labels.watchPrefix}: ${item.title}`}

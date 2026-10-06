@@ -67,8 +67,10 @@ const practiceItems: ValueGridItem[] = solarPractices.items.map((item, index) =>
 /**
  * Solar Energy — the first business page, on the About Us template.
  *
- * Built to the client's reference screenshot for layout and to the live
- * https://www.sael.co/solar-energy/ for every word. Five sections: the hero,
+ * Built to SAEL's reference screenshot for layout and to
+ * https://www.sael.co/solar-energy/ for every word, on SAEL's instruction of
+ * 2026-09-18 for the four business pages. That instruction still stands for
+ * them; it is not the general rule (/CLAUDE.md §2 rule 8). Five sections: the hero,
  * an overview beside a photograph, the projects map beside its copy and
  * portfolio figure, the three execution capabilities beside a photograph, and
  * the four EPC and O&M practice cards.
@@ -82,11 +84,12 @@ const practiceItems: ValueGridItem[] = solarPractices.items.map((item, index) =>
  */
 export default function SolarEnergyPage() {
   return (
-    <div className="-mt-header lg:mt-0">
-      <PageHero {...solarEnergyHero} />
-      <ProseSplit {...solarOverview} />
-      <ProjectsMap {...solarProjects} sites={solarSites} />
+    <div className="-mt-header business-ramp-solar lg:mt-0">
+      <PageHero titleGradient="solar" {...solarEnergyHero} />
+      <ProseSplit titleGradient="solar" {...solarOverview} />
+      <ProjectsMap titleGradient="solar" {...solarProjects} sites={solarSites} />
       <CapabilitySplit
+        titleGradient="solar"
         eyebrow={solarCapabilities.eyebrow}
         title={solarCapabilities.title}
         items={capabilityItems}
@@ -95,6 +98,7 @@ export default function SolarEnergyPage() {
       {/* Outlined cards, as the reference draws them and as About Us's
           strategic pillars already are. */}
       <ValueGrid
+        titleGradient="solar"
         eyebrow={solarPractices.eyebrow}
         title={solarPractices.title}
         items={practiceItems}

@@ -2,7 +2,11 @@
 
 import { Search } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { DocumentGroups, type DocumentGroupData } from '@/components/ui/document-groups';
+import {
+  DocumentGroups,
+  type DocumentGroupData,
+  type DocumentLinkRow,
+} from '@/components/ui/document-groups';
 
 /** The filter's own words — functional copy, from the page's content file. */
 export interface DocumentFilterCopy {
@@ -18,7 +22,7 @@ export interface DocumentFilterCopy {
 }
 
 export interface DocumentFilterProps {
-  groups: readonly DocumentGroupData[];
+  groups: readonly DocumentGroupData<DocumentLinkRow>[];
   copy: DocumentFilterCopy;
   /** Passed through to `<DocumentGroups>`. */
   jumpLabel: string;

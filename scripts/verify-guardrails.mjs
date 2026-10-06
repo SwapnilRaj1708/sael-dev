@@ -2,7 +2,7 @@
  * Asserts that the project's guardrails actually fail when they should.
  *
  * A guardrail nobody tests is a guardrail that quietly stops working. This
- * script proves six things:
+ * script proves these things:
  *
  *   1. `src/lib/config/env.ts` rejects a missing or malformed environment with
  *      a readable message, at module load — so the build fails, not a request.
@@ -16,6 +16,13 @@
  *      (docs/design-guidelines.md §3).
  *   6. No file under `src/` carries a magic number in a Tailwind arbitrary
  *      value (/CLAUDE.md §2.2, third clause).
+ *   7. Every top-level rule in the layered stylesheets is inside a layer.
+ *   8. The Live Preview pages registered in `src/lib/preview/pages.ts`, their
+ *      route files and their matchers in `src/proxy.ts` agree, and every
+ *      preview page is `force-dynamic` — and the check fails on each way they
+ *      can drift apart (docs/api-contracts.md §6.3).
+ *   9. No rewrite or redirect under `src/` is built on an absolute URL, which
+ *      behind nginx sent every proxy rewrite out of the server (2026-10-05).
  *
  * 4 and 5 are the FE-02 acceptance criteria that would otherwise be "someone
  * remembers to grep for it". 6 closes the gap they left: rule 2.2 has four
@@ -109,6 +116,17 @@ const ENV_CASES = [
       API_BASE_URL: 'https://api.example.com',
     },
     shouldPass: true,
+  },
+  {
+    // Optional, but a typo must fail the build rather than send every
+    // enquiry to a URL that does not parse. docs/api-contracts.md §5.
+    name: 'env: malformed FORM_SUBMISSION_URL is rejected',
+    vars: {
+      NEXT_PUBLIC_SITE_URL: VALID_SITE_URL,
+      FORM_SUBMISSION_URL: 'forms.example.com/enquiries',
+    },
+    shouldPass: false,
+    expect: 'FORM_SUBMISSION_URL',
   },
   {
     name: 'env: unknown CONTENT_SOURCE is rejected',
@@ -430,6 +448,346 @@ for (const id of LAYERED_STYLESHEETS) {
       ? undefined
       : `${offenders.join('\n')}\nWrap it in @layer base (globals.css) or @layer components (animations.css).`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// 8. Live Preview pages: the registry, the route files and the proxy agree
+// ---------------------------------------------------------------------------
+
+/**
+ * A Live Preview page exists in three places that nothing else ties
+ * together: its entry in `src/lib/preview/pages.ts`, its route files, and its
+ * literal matchers in `src/proxy.ts`, which Next requires to be written out.
+ * Each disagreement fails quietly:
+ *
+ *  - an entry with no route spends the reviewer's single-use link and lands
+ *    them on a 404;
+ *  - a route with no entry never exchanges its link, so it always says "open
+ *    this from the panel";
+ *  - a page with no matcher never reaches the proxy, so its link is never
+ *    exchanged either; a detail page with no `:slug` matcher, the same.
+ *
+ * So: for every registered page, `page.tsx` at its root and a matcher for
+ * it, and `[slug]/page.tsx` and a `:slug` matcher exactly when it has detail
+ * pages; no `*-preview` route and no `-preview` matcher that is not
+ * registered; and every preview page `force-dynamic`, with no `revalidate`,
+ * because a cached preview is one reviewer's draft served to the next
+ * visitor with no session.
+ *
+ * The registry is read by importing it (Node strips its types); the matchers
+ * by reading `proxy.ts`'s source, which is how Next reads them too — they
+ * must be literals.
+ */
+
+function loadPreviewRegistry() {
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
+      '--input-type=module',
+      '-e',
+      "const m = await import('./src/lib/preview/pages.ts'); console.log(JSON.stringify(m.PREVIEW_PAGES));",
+    ],
+    { cwd: ROOT, encoding: 'utf8' },
+  );
+  if (result.status !== 0)
+    throw new Error(`Could not load the preview registry:\n${result.stderr}`);
+  return JSON.parse(result.stdout);
+}
+
+function loadProxyMatchers() {
+  const source = readFileSync(join(ROOT, 'src', 'proxy.ts'), 'utf8');
+  const block = /matcher:\s*\[([\s\S]*?)\]/.exec(source);
+  if (block === null) throw new Error('src/proxy.ts has no `matcher: [...]` in its config.');
+  const withoutComments = block[1].replace(/\/\/.*$/gm, '');
+  return [...withoutComments.matchAll(/'([^']*)'|"([^"]*)"/g)].map((m) => m[1] ?? m[2]);
+}
+
+/** Every `*-preview` route under src/app: its URL root, and its two page files' sources. */
+function loadPreviewRoutes() {
+  const appDir = join(ROOT, 'src', 'app');
+  const routes = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const path = join(dir, entry.name);
+      if (entry.name.endsWith('-preview')) {
+        const read = (file) => {
+          try {
+            return readFileSync(join(path, file), 'utf8');
+          } catch {
+            return null;
+          }
+        };
+        routes.push({
+          root: `/${relative(appDir, path).split(sep).join('/')}/`,
+          page: read('page.tsx'),
+          slugPage: read(join('[slug]', 'page.tsx')),
+        });
+      }
+      walk(path);
+    }
+  };
+  walk(appDir);
+  return routes;
+}
+
+const FORCE_DYNAMIC = /^export const dynamic = 'force-dynamic';$/m;
+const REVALIDATE = /^export const revalidate\b/m;
+
+/** Every way the three disagree, as lines a person can act on. Empty when they agree. */
+function previewPageProblems({ pages, matchers, routes }) {
+  const problems = [];
+  const routeByRoot = new Map(routes.map((route) => [route.root, route]));
+  const expectedMatchers = new Set();
+
+  const seen = { root: new Set(), screenCode: new Set() };
+  for (const page of pages) {
+    for (const key of ['root', 'screenCode']) {
+      if (seen[key].has(page[key])) problems.push(`registry: ${key} ${page[key]} appears twice`);
+      seen[key].add(page[key]);
+    }
+
+    const bare = page.root.replace(/\/$/, '');
+    expectedMatchers.add(bare);
+    if (page.detail) expectedMatchers.add(`${bare}/:slug`);
+
+    const route = routeByRoot.get(page.root);
+    if (route === undefined || route.page === null) {
+      problems.push(`${page.screenCode}: no route at src/app${page.root}page.tsx`);
+    }
+    if (page.detail && (route === undefined || route.slugPage === null)) {
+      problems.push(
+        `${page.screenCode}: has detail pages, but no src/app${page.root}[slug]/page.tsx`,
+      );
+    }
+    if (!page.detail && route !== undefined && route.slugPage !== null) {
+      problems.push(
+        `${page.screenCode}: has no detail pages, but src/app${page.root}[slug]/page.tsx exists`,
+      );
+    }
+    if (!matchers.includes(bare)) problems.push(`${page.screenCode}: no proxy matcher '${bare}'`);
+    if (page.detail && !matchers.includes(`${bare}/:slug`)) {
+      problems.push(`${page.screenCode}: no proxy matcher '${bare}/:slug'`);
+    }
+  }
+
+  for (const route of routes) {
+    if (!pages.some((page) => page.root === route.root)) {
+      problems.push(
+        `src/app${route.root}: a preview route with no entry in src/lib/preview/pages.ts`,
+      );
+    }
+    for (const [file, source] of [
+      ['page.tsx', route.page],
+      ['[slug]/page.tsx', route.slugPage],
+    ]) {
+      if (source === null) continue;
+      if (!FORCE_DYNAMIC.test(source)) {
+        problems.push(`src/app${route.root}${file}: not export const dynamic = 'force-dynamic'`);
+      }
+      if (REVALIDATE.test(source)) problems.push(`src/app${route.root}${file}: sets revalidate`);
+    }
+  }
+
+  for (const matcher of matchers) {
+    if (matcher.includes('-preview') && !expectedMatchers.has(matcher)) {
+      problems.push(`src/proxy.ts: matcher '${matcher}' is not a registered preview page`);
+    }
+  }
+
+  return problems;
+}
+
+let previewTree;
+try {
+  previewTree = {
+    pages: loadPreviewRegistry(),
+    matchers: loadProxyMatchers(),
+    routes: loadPreviewRoutes(),
+  };
+} catch (error) {
+  report(false, 'preview: the registry, routes and proxy matchers can be read', error.message);
+}
+
+if (previewTree !== undefined) {
+  const problems = previewPageProblems(previewTree);
+  report(
+    problems.length === 0,
+    `preview: ${previewTree.pages.length} registered pages, their routes and their proxy matchers agree`,
+    problems.join('\n'),
+  );
+
+  // And the check fails when they disagree — one case per kind of drift.
+  const [detailed] = previewTree.pages.filter((page) => page.detail);
+  const bareOf = (page) => page.root.replace(/\/$/, '');
+  const DRIFT = [
+    {
+      name: 'a registered page with no route',
+      tree: {
+        ...previewTree,
+        routes: previewTree.routes.filter((route) => route.root !== detailed.root),
+      },
+    },
+    {
+      name: 'a detail page with no [slug] route',
+      tree: {
+        ...previewTree,
+        routes: previewTree.routes.map((route) =>
+          route.root === detailed.root ? { ...route, slugPage: null } : route,
+        ),
+      },
+    },
+    {
+      name: 'a page with no matcher',
+      tree: {
+        ...previewTree,
+        matchers: previewTree.matchers.filter((m) => m !== bareOf(detailed)),
+      },
+    },
+    {
+      name: 'a detail page with no :slug matcher',
+      tree: {
+        ...previewTree,
+        matchers: previewTree.matchers.filter((m) => m !== `${bareOf(detailed)}/:slug`),
+      },
+    },
+    {
+      name: 'a preview route that is not registered',
+      tree: {
+        ...previewTree,
+        routes: [
+          ...previewTree.routes,
+          {
+            root: '/newsroom/unregistered-preview/',
+            page: "export const dynamic = 'force-dynamic';",
+            slugPage: null,
+          },
+        ],
+      },
+    },
+    {
+      name: 'a preview matcher that is not registered',
+      tree: {
+        ...previewTree,
+        matchers: [...previewTree.matchers, '/investors/unregistered-preview'],
+      },
+    },
+    {
+      name: 'a preview page that is not force-dynamic',
+      tree: {
+        ...previewTree,
+        routes: previewTree.routes.map((route) =>
+          route.root === detailed.root
+            ? { ...route, page: 'export const revalidate = 300;' }
+            : route,
+        ),
+      },
+    },
+  ];
+  for (const drift of DRIFT) {
+    report(
+      previewPageProblems(drift.tree).length > 0,
+      `preview: the check fails on ${drift.name}`,
+      'previewPageProblems() reported nothing.',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 9. No rewrite or redirect is built on an absolute URL
+// ---------------------------------------------------------------------------
+
+/**
+ * `NextResponse.rewrite()` and `.redirect()` take an absolute URL, and this
+ * process cannot know its own origin. Behind nginx, Next 16.3 shows the proxy
+ * `https://localhost:3000` (it turns any loopback host into `localhost`) while
+ * its router knows itself as `https://127.0.0.1:3000`, from `HOSTNAME`. Every
+ * rewrite the proxy built from `request.url` — or from `request.nextUrl.clone()`,
+ * which carries the same origin — was therefore proxied as an external
+ * request, over TLS to a plain-HTTP port: a 500 for every Live Preview link
+ * and every missing article on prod2-preview, 2026-10-05. Over plain HTTP the
+ * same mismatch passed unseen, so no local run caught it.
+ *
+ * So: no `NextResponse.rewrite(` or `.redirect(` anywhere under `src/` (the
+ * proxy marks a request and `next.config.ts` rewrites it —
+ * `src/lib/routing/internal-rewrites.ts`; a route handler answers a redirect
+ * with a relative `Location`, as `app/api/preview/route.ts` does), and no URL
+ * built in `src/proxy.ts` from `request.url`, `nextUrl.clone()`,
+ * `nextUrl.origin` or `new URL(`.
+ */
+const ABSOLUTE_ROUTING = [
+  {
+    pattern: /\bNextResponse\.(?:rewrite|redirect)\s*\(/g,
+    applies: () => true,
+    hint: 'Mark the request for next.config.ts (src/lib/routing/internal-rewrites.ts), or answer with a relative Location.',
+  },
+  {
+    pattern: /\brequest\.url\b|\.nextUrl\.(?:clone\s*\(|origin\b)|\bnew URL\s*\(/g,
+    applies: (id) => id === 'src/proxy.ts',
+    hint: "The proxy cannot know this server's origin; it routes by marking the request.",
+  },
+];
+
+/** Every absolute-URL rewrite or redirect in `files`, as `id:line  match` lines. */
+function absoluteRoutingProblems(files) {
+  const problems = [];
+  for (const { id, source } of files) {
+    const code = stripComments(source);
+    for (const rule of ABSOLUTE_ROUTING) {
+      if (!rule.applies(id)) continue;
+      for (const match of code.matchAll(rule.pattern)) {
+        const line = code.slice(0, match.index).split('\n').length;
+        problems.push(`${id}:${line}  ${match[0]}  — ${rule.hint}`);
+      }
+    }
+  }
+  return problems;
+}
+
+const ROUTING_FILES = SOURCE_FILES.filter((file) => /\.tsx?$/.test(file.id)).map((file) => ({
+  id: file.id,
+  source: readFileSync(file.path, 'utf8'),
+}));
+
+{
+  const problems = absoluteRoutingProblems(ROUTING_FILES);
+  report(
+    problems.length === 0,
+    'routing: no rewrite or redirect under src/ is built on an absolute URL',
+    problems.join('\n'),
+  );
+
+  // And the check fails on each way the 2026-10-05 fault could be written.
+  const PLANTED = [
+    {
+      name: 'a proxy rewrite built from request.url',
+      id: 'src/proxy.ts',
+      source: "return NextResponse.rewrite(new URL('/__not-found__/', request.url));",
+    },
+    {
+      name: 'a proxy rewrite built from request.nextUrl.clone()',
+      id: 'src/proxy.ts',
+      source: "const to = request.nextUrl.clone();\nto.pathname = '/api/preview/';",
+    },
+    {
+      name: 'a rewrite to a written-out origin',
+      id: 'src/app/example/route.ts',
+      source: "return NextResponse.rewrite('https://www.sael.co/__not-found__/');",
+    },
+    {
+      name: 'a route handler redirect built from request.url',
+      id: 'src/app/example/route.ts',
+      source: "return NextResponse.redirect(new URL('/newsroom/', request.url), 303);",
+    },
+  ];
+  for (const planted of PLANTED) {
+    report(
+      absoluteRoutingProblems([planted]).length > 0,
+      `routing: the check fails on ${planted.name}`,
+      'absoluteRoutingProblems() reported nothing.',
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

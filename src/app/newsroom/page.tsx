@@ -39,8 +39,9 @@ export const metadata: Metadata = buildMetadata({
  *
  * On `<SubPage>` with the ripple masthead and no side list, since this page
  * *is* that list — the Offer Documents index's arrangement. The four
- * sections are fetched together, and each fails alone: a section the
- * repository could not load shows its empty state and the rest still render.
+ * sections are fetched together, and a failure in any one fails the render,
+ * so that a section missing for a transient reason is never cached as empty:
+ * Next keeps the last good page instead. `loadNewsItems` explains why.
  *
  * A Server Component; the ripple grid and each video card's player are the
  * client leaves.

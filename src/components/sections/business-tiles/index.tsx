@@ -65,7 +65,7 @@ export interface BusinessTile {
   /** Rendered as a superscript after the title. Marks "upcoming". */
   titleMarker?: string;
   description: string;
-  /** The capacity figure. `null` when the repository could not supply one. */
+  /** The capacity figure, verbatim. `null` for a row that has none. */
   value: string | null;
   /** Qualifier under the figure. */
   footnote: string | null;
@@ -120,11 +120,9 @@ export interface BusinessTilesProps {
  * it to carry more of the row. It is one line at roughly twice the size now,
  * in one of two treatments — see TITLE_VARIANT below.
  *
- * The figures still come from the repository, not from this file and not from
- * the page's static content — they change as plants commission and the
- * business owns them. docs/content-model.md §1. A failed fetch leaves `value`
- * null and the row renders without its figure rather than the section
- * disappearing.
+ * The figures are the page's static content (`app/_content/homepage.ts`),
+ * passed in with the rest of each row — the backend has no endpoint for them.
+ * A row whose `value` is null renders without its figure.
  *
  * **The whole row is the link, and there is exactly one link in it.** The
  * design draws a "Know More" action; making the row a link *and* keeping the
@@ -164,7 +162,9 @@ export function BusinessTiles({ eyebrow, tiles, snap = false }: BusinessTilesPro
                 className="flex"
               >
                 <Card
-                  hoverIntensity={0.3}
+                  // Half the 0.3 it was — the client found the dots too
+                  // strong on hover, 2026-10-06.
+                  hoverIntensity={0.15}
                   as="article"
                   ground="dark"
                   inset="block"

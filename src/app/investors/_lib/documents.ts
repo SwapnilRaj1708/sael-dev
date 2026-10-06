@@ -1,153 +1,215 @@
 import type { DocumentGroupData } from '@/components/ui/document-groups';
-import type { DocumentListGatedItem, DocumentListLink } from '@/components/ui/document-list';
-import { getContentRepository, type InvestorDocument, type InvestorListing } from '@/lib/content';
+import type {
+  DocumentListGatedItem,
+  DocumentListLink,
+  DocumentListUnavailableItem,
+} from '@/components/ui/document-list';
+import { isBuildPhase, isProduction } from '@/lib/config/env';
+import {
+  getContentRepository,
+  type InvestorDocument,
+  type InvestorDocumentGroup,
+  type InvestorSection,
+  type InvestorTile,
+  type InvestorTilePage,
+} from '@/lib/content';
+import {
+  auditTileRoutes,
+  describeMissingTiles,
+  describeTileRouteProblem,
+  INVESTOR_AREAS,
+} from './tile-routes';
 
 /**
- * What the investor pages share between fetching a listing and handing it to
- * `<DocumentList>`. Page code, so it lives beside the pages — a section never
- * fetches (docs/architecture.md §3) — and in a `_lib` folder so the router
- * does not treat it as a route.
- */
-
-/**
- * One listing, or `[]` if the repository failed. Logged, not swallowed:
- * nothing else would record that the backend is down, and the page renders
- * its empty state either way. The same bargain Our Team makes. /CLAUDE.md §6.
+ * What the investor pages share between the repository and the document
+ * components. Page code, so it lives beside the pages — a section never
+ * fetches (docs/architecture.md §3) — in a `_lib` folder the router ignores.
  *
- * Takes `null` — a page with no listing — and returns `[]` for it, so a page
- * can pass its content file's `listing` straight through.
+ * **Every loader throws on failure, in every environment**, as the
+ * Newsroom's do (`app/newsroom/_lib/news.ts`, which says why at length): an
+ * empty list would be cached as the page for the whole ISR window, and on a
+ * statutory page that is a disclosure that has silently gone. A throw is not
+ * cached — Next keeps serving the last good page — and at build time it
+ * fails the build.
  */
-export async function loadInvestorDocuments(
-  listing: InvestorListing | null,
-): Promise<InvestorDocument[]> {
-  if (listing === null) return [];
 
-  try {
-    return await getContentRepository().getInvestorDocuments(listing);
-  } catch (error) {
-    const where = [listing.category, listing.section].filter(Boolean).join('/');
-    console.error(
-      `[investors] getInvestorDocuments(${where}) failed; rendering the empty state.`,
-      error,
-    );
-    return [];
+/**
+ * Whether a tile with no page should stop what is running. During the build
+ * and in development: yes, so the mismatch is fixed before it ships. In a
+ * running production server: no — the tile is logged and left off the
+ * index, and every other tile still renders.
+ */
+function failHard(): boolean {
+  return !isProduction || isBuildPhase;
+}
+
+/**
+ * One section's live tiles that the site can serve, in the panel's order —
+ * for an index and for the side list beside each tile page.
+ *
+ * **Checked against the site's routes on every call** (`tile-routes.ts`). A
+ * tile whose address the site does not serve throws during the build and in
+ * development; in production it is logged and left out, so no link goes to
+ * a page that would not show it. A legacy URL with no live tile behind it is
+ * logged in every environment — not thrown, because a tile SAEL drop at
+ * sign-off is a decision, and its URL a matter for the redirect map.
+ */
+export async function loadAreaTiles(section: InvestorSection): Promise<InvestorTile[]> {
+  const area = INVESTOR_AREAS[section];
+  const audit = auditTileRoutes(area, await getContentRepository().getInvestorTiles(section));
+
+  if (audit.problems.length > 0) {
+    const message = `[investors] ${audit.problems.length === 1 ? 'A tile has' : 'Tiles have'} no page on the site:\n  ${audit.problems.map((problem) => describeTileRouteProblem(area, problem)).join('\n  ')}`;
+    if (failHard()) throw new Error(message);
+    console.error(`${message}\n  Left off ${area.path}; the rest are shown.`);
   }
+  if (audit.missing.length > 0) {
+    console.error(`[investors] ${describeMissingTiles(area, audit)}`);
+  }
+
+  return audit.routable;
 }
 
 /**
- * The label a row shows for its file type — "PDF". From the MIME type where
- * it is one we name, from the file's extension otherwise, never guessed.
+ * The slugs for a `[slug]` route's `generateStaticParams` — the pages built
+ * ahead of the first visitor, not the pages that exist: the routes set
+ * `dynamicParams = true`, so a tile published after the deploy renders on
+ * its first request. Goes through {@link loadAreaTiles}, so a tile with no
+ * page fails the build.
  */
-function fileTypeLabel(document: InvestorDocument): string | undefined {
-  if (document.file.mimeType === 'application/pdf') return 'PDF';
-  const extension = /\.([a-z0-9]+)$/i.exec(document.file.fileName)?.[1];
-  return extension?.toUpperCase();
+export async function loadTileParams(section: InvestorSection): Promise<{ slug: string }[]> {
+  return (await loadAreaTiles(section)).map(({ slug }) => ({ slug }));
 }
 
 /**
- * Rows whose URLs may be in the page.
- *
- * **No size**, although the repository has one. The legacy Offer Documents
- * pages show none, and those pages are reproduced without additions — so a
- * page that does want sizes (the Financials pages, per the contract) opts in
- * by mapping its own rows rather than inheriting them here.
+ * One tile's page, or `null` for a slug that is not a live tile of the
+ * section. **Not caught**: a source failure is not a 404.
  */
-export function toDocumentLinks(documents: readonly InvestorDocument[]): DocumentListLink[] {
-  return documents.map((document) => ({
-    id: document.id,
-    title: document.title,
-    href: document.file.url,
-    fileType: fileTypeLabel(document),
+export function loadTilePage(
+  section: InvestorSection,
+  slug: string,
+): Promise<InvestorTilePage | null> {
+  return getContentRepository().getInvestorTilePage(section, slug);
+}
+
+/**
+ * The label a row shows for its file type — "PDF" — **from the file's MIME
+ * type**, which the backend verifies against the file's own bytes at upload.
+ * The API sends no file name, and an extension would be the weaker evidence
+ * anyway. These are the types the media library accepts
+ * (`media.upload.allowed-mime-types`); another would be named by nothing
+ * rather than guessed.
+ */
+const TYPE_LABELS: Record<string, string> = {
+  'application/pdf': 'PDF',
+  'video/mp4': 'MP4',
+  'audio/mpeg': 'MP3',
+  'image/jpeg': 'JPEG',
+  'image/png': 'PNG',
+  'image/webp': 'WebP',
+};
+
+/** For a document with no file: what its link leads to. */
+const LINK_LABELS: Record<InvestorDocument['kind'], string> = {
+  file: 'Link',
+  'external-link': 'Link',
+  video: 'Video',
+  audio: 'Audio',
+};
+
+function typeLabel(document: InvestorDocument): string {
+  return document.file === null
+    ? LINK_LABELS[document.kind]
+    : (TYPE_LABELS[document.file.mimeType] ?? '');
+}
+
+/** Where a document opens: its file, else its link, else nowhere. */
+export function documentUrl(document: InvestorDocument): string | null {
+  return document.file?.url ?? document.externalUrl;
+}
+
+/** What a document with nowhere to open says in place of a link. */
+export interface UnavailableCopy {
+  label: string;
+}
+
+function unavailable(
+  document: InvestorDocument,
+  copy: UnavailableCopy,
+): DocumentListUnavailableItem {
+  return { id: document.id, title: document.title, unavailable: copy.label };
+}
+
+function mapGroups<T>(
+  groups: readonly InvestorDocumentGroup[],
+  row: (document: InvestorDocument) => T,
+): DocumentGroupData<T>[] {
+  return groups.map((group) => ({
+    label: group.label,
+    anchor: group.anchor,
+    items: group.documents.map(row),
+    subgroups: group.subgroups.map((subgroup) => ({
+      label: subgroup.label,
+      anchor: subgroup.anchor,
+      items: subgroup.documents.map(row),
+    })),
   }));
 }
 
 /**
- * Rows for a gated list: **the URL is dropped here**, on the server, so it
- * never reaches the props of a client component and so never reaches the
- * page. `revealGatedDocument` fetches it again after consent.
- */
-export function toGatedItems(documents: readonly InvestorDocument[]): DocumentListGatedItem[] {
-  return documents.map((document) => ({
-    id: document.id,
-    title: document.title,
-    fileType: fileTypeLabel(document),
-  }));
-}
-
-/**
- * A heading's anchor: the label lowercased, with everything but letters and
- * digits removed — "FY 2025" → "fy2025". That is exactly how the legacy
- * site's tab ids are formed, so its deep links (`…/annual-return/#fy2024`)
- * still land. A subgroup's anchor is prefixed with its group's.
- */
-export function anchorOf(label: string): string {
-  return label.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-export interface GroupingOptions {
-  /**
-   * Group headings the page shows whatever the data holds, in this order,
-   * ahead of any group the data adds. For a heading the legacy page carries
-   * with nothing under it — General Meeting's "Postal Ballot" — and which is
-   * content in its own right. Empty ones render as a heading alone.
-   */
-  declared?: readonly string[];
-}
-
-/**
- * A listing, grouped for `<DocumentGroups>`: headings in the order of their
- * first document (the repository sorts by `order`, and so the business
- * orders the headings too), subgroups likewise within a group. Never
- * re-sorted here.
+ * A tile page's groups as `<DocumentGroups>` takes them, **one for one** —
+ * every group, subgroup, label, anchor and document, in the order given.
+ * Nothing is grouped, sorted, merged or dropped here; a document with no
+ * file and no link becomes an "unavailable" row.
  *
- * Documents with no `group` are kept, as an unheaded group at the top,
- * rather than dropped: a document the business uploads without a heading
- * should still be on the page. None exist today.
+ * **No size**, although the repository has one: the legacy pages show none.
  */
-export function toDocumentGroups(
-  documents: readonly InvestorDocument[],
-  { declared = [] }: GroupingOptions = {},
-): DocumentGroupData[] {
-  interface Bucket {
-    items: InvestorDocument[];
-    subgroups: Map<string, InvestorDocument[]>;
-  }
-
-  const buckets = new Map<string | null, Bucket>();
-  const bucket = (label: string | null): Bucket => {
-    let found = buckets.get(label);
-    if (found === undefined) {
-      found = { items: [], subgroups: new Map() };
-      buckets.set(label, found);
-    }
-    return found;
-  };
-
-  if (documents.some((document) => document.group === null)) bucket(null);
-  for (const label of declared) bucket(label);
-
-  for (const document of documents) {
-    const target = bucket(document.group);
-    if (document.subgroup === null) {
-      target.items.push(document);
-    } else {
-      const members = target.subgroups.get(document.subgroup) ?? [];
-      members.push(document);
-      target.subgroups.set(document.subgroup, members);
-    }
-  }
-
-  return [...buckets].map(([label, { items, subgroups }]) => {
-    const anchor = label === null ? 'documents' : anchorOf(label);
-    return {
-      label,
-      anchor,
-      items: toDocumentLinks(items),
-      subgroups: [...subgroups].map(([sublabel, members]) => ({
-        label: sublabel,
-        anchor: `${anchor}-${anchorOf(sublabel)}`,
-        items: toDocumentLinks(members),
-      })),
-    };
+export function toLinkGroups(
+  page: InvestorTilePage,
+  copy: UnavailableCopy,
+): DocumentGroupData<DocumentListLink | DocumentListUnavailableItem>[] {
+  return mapGroups(page.groups, (document) => {
+    const href = documentUrl(document);
+    return href === null
+      ? unavailable(document, copy)
+      : { id: document.id, title: document.title, href, fileType: typeLabel(document) };
   });
+}
+
+/**
+ * The same, for a gated tile: **the URL is dropped here**, on the server, so
+ * it never reaches the props of a client component and so never reaches the
+ * page. A row's id is the key `revealGatedDocument` resolves —
+ * `section/slug/documentId` — since the action takes no bound arguments.
+ */
+export function toGatedGroups(
+  page: InvestorTilePage,
+  copy: UnavailableCopy,
+): DocumentGroupData<DocumentListGatedItem | DocumentListUnavailableItem>[] {
+  const { section, slug } = page.tile;
+  return mapGroups(page.groups, (document) =>
+    documentUrl(document) === null
+      ? unavailable(document, copy)
+      : {
+          id: gatedDocumentKey(section, slug, document.id),
+          title: document.title,
+          fileType: typeLabel(document),
+        },
+  );
+}
+
+export function gatedDocumentKey(
+  section: InvestorSection,
+  slug: string,
+  documentId: string,
+): string {
+  return `${section}/${slug}/${documentId}`;
+}
+
+/** Every document on the page, headings and subheadings flattened, in page order. */
+export function allDocuments(page: InvestorTilePage): InvestorDocument[] {
+  return page.groups.flatMap((group) => [
+    ...group.documents,
+    ...group.subgroups.flatMap((subgroup) => subgroup.documents),
+  ]);
 }

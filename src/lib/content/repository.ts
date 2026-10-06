@@ -1,21 +1,26 @@
 import type {
-  BoardCommittee,
-  BoardMember,
-  CapacityStat,
-  InvestorDocument,
-  InvestorListing,
-  InvestorVideo,
+  InvestorSection,
+  InvestorTile,
+  InvestorTilePage,
   NewsArticle,
   NewsArticleCategory,
   NewsCategory,
   NewsItem,
-  TeamMember,
+  PreviewDetail,
+  PreviewExchange,
+  PreviewListing,
+  PreviewRead,
+  PreviewTilePage,
 } from './types';
 
 /** {@link ContentRepository.getNewsItems}'s options. */
 export interface NewsItemsQuery {
-  /** One Newsroom section. Omit for the homepage's feed. */
-  category?: NewsCategory;
+  /**
+   * One Newsroom section. Required: the backend has no "every category"
+   * call and answers one without a type with `400`.
+   */
+  category: NewsCategory;
+  /** The first `limit` items only. Omitted, the whole section. */
   limit?: number;
 }
 
@@ -25,12 +30,15 @@ export interface NewsItemsQuery {
  * *both* the mock and the API adapter, and only then building the UI.
  * docs/content-model.md §3.
  *
- * Five methods so far. Two came from the homepage; `getTeamMembers` was
- * carved out of FE-05 by FE-07, which is the page that consumes it — the same
- * trade FE-04 made for stats and news, and the reason the interface is
- * deliberately ordered after its consumers (docs/features/05 §preamble). The
- * two investor methods came in with Offer Documents, the first investor area
- * built. FE-05 fills in the rest of docs/content-model.md §3.
+ * **Only what the backend serves is here**: news and investor documents.
+ * The capacity figures, the team, the board and its committees were methods
+ * of this interface until 2026-10-02, when they became static content
+ * (`app/_content/`): the backend has no endpoint for any of them — SAEL
+ * descoped the team and board on 20 Sep 2026 (backend row 5.24), and the
+ * figures were never specified (docs/api-contracts.md §9). A method that
+ * existed only to throw in the API adapter told the reader of this interface
+ * that the backend served something it does not. The investor methods follow
+ * the backend's sections → tiles → documents (docs/api-contracts.md §4).
  *
  * Contract:
  *
@@ -38,26 +46,38 @@ export interface NewsItemsQuery {
  *     `undefined`, never a silent `null` for a list — an empty list is `[]`.
  *  2. **Callers handle failure locally.** A page wraps its call and renders an
  *     empty state; one failed fetch must not take down the page around it.
+ *     **Except live news and investor documents**, whose pages are ISR: there
+ *     an empty state would be cached for the whole window, so their loaders
+ *     let the failure throw, and Next keeps the last good page
+ *     (`app/newsroom/_lib/news.ts`, `app/investors/_lib/documents.ts`).
  *  3. Both implementations, always. The API side may throw
- *     {@link NotImplementedError}, but the method must exist, so that the
- *     cutover in FE-23 is a checklist rather than an excavation.
+ *     {@link NotImplementedError} while its endpoint is being built, but the
+ *     method must exist, so that the cutover is a checklist rather than an
+ *     excavation. **A surface the backend will never serve is not a method
+ *     here at all** — it is static content in `app/_content/`.
  */
 export interface ContentRepository {
-  getCapacityStats(): Promise<CapacityStat[]>;
   /**
-   * News items, in the order the listing shows them: newest first, and for
-   * the undated categories (Our Views, Multimedia) the business's own order.
+   * One Newsroom section's items, **in the source's order** — featured
+   * first, then the panel's manual position, then newest first. That order
+   * is editorial; neither the adapter nor a page re-sorts it.
    *
-   * `category` selects one Newsroom section — filtered by the adapter, never
-   * by a page fetching everything and discarding most of it. **Omitted, it
-   * is the homepage's call**, and returns what the homepage carousel has
-   * always shown; see docs/api-contracts.md §2 for what that means against
-   * the API, and the mock for why it is a separate fixture there.
-   *
-   * `limit` is a hint the adapter may satisfy by asking the backend for a
-   * page, so callers must not rely on getting exactly that many.
+   * Without `limit` this is **every** item in the section, however many
+   * pages the backend serves them in. With it, the first `limit`.
    */
-  getNewsItems(options?: NewsItemsQuery): Promise<NewsItem[]>;
+  getNewsItems(options: NewsItemsQuery): Promise<NewsItem[]>;
+  /**
+   * The homepage's "In the News" rail: In The News items, at most `limit`,
+   * in the source's order.
+   *
+   * A method of its own rather than `getNewsItems({ category, limit })`
+   * because the backend caps this one call again with a business setting,
+   * `content.home.in-the-news.limit` — so the rail may return fewer than
+   * `limit`, by the business's choice, and must render what it gets. That
+   * cap belongs to the rail alone; the Newsroom's own rows must not be cut
+   * by it. docs/api-contracts.md §3.3.
+   */
+  getInTheNewsRail(limit: number): Promise<NewsItem[]>;
   /**
    * One Press Release or Our Views article, body included, by its slug.
    * `null` when there is no such article — the page 404s — and a throw only
@@ -65,39 +85,78 @@ export interface ContentRepository {
    */
   getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null>;
   /**
-   * The whole roster, both groups, ascending by `order`.
+   * Whether `slug` is a published article, without fetching it. Never cached.
    *
-   * Not split per group and not filtered here: `/our-team/` renders both tabs
-   * in one response and switches between them on the client, so two calls
-   * would be two round trips for one screen. A caller that wants one group
-   * partitions the result.
+   * For `src/proxy.ts`, which answers an unknown slug with the root
+   * not-found page before the article route renders: a `notFound()` thrown
+   * from the page itself reaches the visitor as an empty HTML shell that only
+   * JavaScript fills. Throws when the source failed, like the rest.
    */
-  getTeamMembers(): Promise<TeamMember[]>;
+  hasNewsArticle(category: NewsArticleCategory, slug: string): Promise<boolean>;
   /**
-   * Every document in one listing, sorted by `order` — the order the page
-   * shows them in, headings included (a group appears where its first
-   * document does). `[]` for a listing with no documents, never a throw.
-   *
-   * By listing rather than by page because one listing is one request: the
-   * Group Companies page shows three financial years, and asking once and
-   * partitioning by `group` is one round trip where asking per year is three.
+   * Every live tile of one section, **in the panel's order** — the
+   * section's index renders them as given. However many pages the backend
+   * serves them in. `[]` for a section with no live tile.
    */
-  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]>;
+  getInvestorTiles(section: InvestorSection): Promise<InvestorTile[]>;
   /**
-   * The videos in one listing. Only the two DRHP audio-visual pages have any,
-   * one each; a list rather than a single item so a listing that grows a
-   * second cut (a sign-language version, say) is not a contract change.
+   * One tile's page — the tile, and every published document on it under
+   * the backend's headings. `null` when no live tile has that slug in that
+   * section (the page 404s); a throw only when the source itself failed.
    */
-  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]>;
+  getInvestorTilePage(section: InvestorSection, slug: string): Promise<InvestorTilePage | null>;
   /**
-   * The board, in the order the company lists it. Dynamic rather than static
-   * copy because the board changes by resolution, not by design review, and
-   * the website must reflect a change within days of it (SEBI LODR Reg. 46)
-   * — the same record Notifications announces resignations from.
+   * Whether `slug` is a live tile of `section`, without fetching its page.
+   * Never cached. For `src/proxy.ts`, as {@link hasNewsArticle} is.
    */
-  getBoardMembers(): Promise<BoardMember[]>;
-  /** The board's committees and their members, each in the company's order. */
-  getBoardCommittees(): Promise<BoardCommittee[]>;
+  hasInvestorTile(section: InvestorSection, slug: string): Promise<boolean>;
+
+  /**
+   * Spend a preview link's `pt` for a session. docs/api-contracts.md §6.
+   * **Never cached, and single-use on the backend**: a second call with the
+   * same token is refused. Throws only when the source failed, in which case
+   * the token may or may not have been spent.
+   */
+  startPreviewSession(token: string): Promise<PreviewExchange>;
+  /**
+   * One Newsroom section as its preview shows it: every item in its most
+   * recent state, draft or live, in the source's order. `href` on an article
+   * card is its **preview** page, so a reviewer stays inside the preview.
+   * An item the site cannot map is in `incomplete`, never dropped. Never
+   * cached.
+   */
+  getNewsPreview(
+    category: NewsCategory,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewListing<NewsItem>>>;
+  /**
+   * One article as its preview shows it — or as incomplete, naming what it
+   * lacks — or `null` when the session's screen has no such slug. Never cached.
+   */
+  getNewsArticlePreview(
+    category: NewsArticleCategory,
+    slug: string,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewDetail<NewsArticle> | null>>;
+  /**
+   * One investor section's tiles as its preview shows them: every tile in its
+   * most recent state, in the panel's order, and the tiles the site cannot
+   * map in `incomplete`. Never cached.
+   */
+  getInvestorTilesPreview(
+    section: InvestorSection,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewListing<InvestorTile>>>;
+  /**
+   * One tile's page as its preview shows it: the tile and every document in
+   * its most recent state, under the headings of the tile's most recent
+   * outline. `null` when the session's section has no such slug. Never cached.
+   */
+  getInvestorTilePagePreview(
+    section: InvestorSection,
+    slug: string,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewDetail<PreviewTilePage> | null>>;
 }
 
 /**
@@ -105,16 +164,32 @@ export interface ContentRepository {
  * says which endpoint failed rather than just that something did.
  */
 export class ContentUnavailableError extends Error {
+  /** The backend's error `code` — `NEWS_TYPE_REQUIRED` — when it sent one. */
+  readonly code: string | undefined;
+  /**
+   * The backend's `correlationId` for the failed request, when it sent one.
+   * With it, the backend team can find the request in their logs.
+   */
+  readonly correlationId: string | undefined;
+
   constructor(
     readonly endpoint: string,
     readonly status?: number,
-    options?: { cause?: unknown },
+    options?: { cause?: unknown; code?: string; correlationId?: string },
   ) {
+    const details = [
+      status === undefined ? null : `HTTP ${String(status)}`,
+      options?.code,
+      options?.correlationId === undefined ? null : `correlationId ${options.correlationId}`,
+    ].filter((part) => part !== null && part !== undefined);
+
     super(
-      `Content unavailable from "${endpoint}"${status === undefined ? '' : ` (HTTP ${String(status)})`}.`,
+      `Content unavailable from "${endpoint}"${details.length === 0 ? '' : ` (${details.join(', ')})`}.`,
       options,
     );
     this.name = 'ContentUnavailableError';
+    this.code = options?.code;
+    this.correlationId = options?.correlationId;
   }
 }
 

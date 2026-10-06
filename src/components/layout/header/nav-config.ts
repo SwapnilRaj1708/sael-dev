@@ -12,8 +12,14 @@ import wasteToEnergy from '@/assets/images/nav/waste-to-energy.jpg';
  * far as the site is concerned** — which is the point: adding a page means
  * adding one entry, not remembering four places.
  *
- * Structure matches the live site exactly. Do not reorder without checking
- * `docs/features/03-app-shell-header-footer.md` §1.
+ * The seven top-level items and the routes under them were taken from the
+ * legacy site in FE-03; the routes must keep matching it (URL parity,
+ * /CLAUDE.md §2 rule 6). **The Businesses labels and their order are SAEL's,
+ * not sael.co's.** SAEL renamed and reordered them on 2026-10-01 (`5494e70`):
+ * Solar Energy Generation, Solar Module Manufacturing, Solar Cell
+ * Manufacturing, Agri Waste-To-Energy. The labels they replaced were sael.co's,
+ * and sael.co is not grounds for restoring them (/CLAUDE.md §2 rule 8). Do not reorder
+ * without checking `docs/features/03-app-shell-header-footer.md` §1.
  */
 
 export interface NavItem {

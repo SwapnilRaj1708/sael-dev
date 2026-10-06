@@ -110,21 +110,23 @@ export function DocumentRowBody({
   const meta = [fileType, size].filter((part) => part !== '');
   const tail = [...meta, ...(action === undefined ? [] : [action])];
   const g = ground ?? 'paper';
+  const showMark = typeMark && fileType === 'PDF';
+  // With the mark shown, the visible line drops the type: the icon already
+  // says "PDF" (client, 2026-10-06). The accessible name keeps it, via `tail`.
+  const visibleMeta = showMark ? meta.filter((part) => part !== fileType) : meta;
 
   return (
     <>
-      {typeMark && fileType === 'PDF' && (
-        <PdfIcon className={cn('size-icon-mark shrink-0', MARK_CLASS[g])} />
-      )}
+      {showMark && <PdfIcon className={cn('size-icon-mark shrink-0', MARK_CLASS[g])} />}
 
       {/* Takes the room between the mark and the glyph, so a long title wraps
           rather than pushing the glyph off the row. */}
       <span className="flex flex-1 flex-col gap-1">
         <span className={cn('text-h3', TITLE_CLASS[g])}>{title}</span>
 
-        {meta.length > 0 && (
+        {visibleMeta.length > 0 && (
           <span className={cn('text-body-sm', META_CLASS[g])} aria-hidden="true">
-            {meta.join(' · ')}
+            {visibleMeta.join(' · ')}
           </span>
         )}
 

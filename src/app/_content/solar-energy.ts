@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
-import dottedMap from '@/assets/images/dotted-map.svg';
+// The map in this business's own ramp — the homepage map, recoloured.
+import dottedMap from '@/assets/images/solar-energy-map.svg';
 import type { CapabilityItem, CapabilitySplitProps } from '@/components/sections/capability-split';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { PresenceSite } from '@/components/sections/presence-map';
@@ -23,8 +24,14 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  * with only its source whitespace collapsed. /CLAUDE.md §2 rule 3: nothing is
  * paraphrased, nothing missing has been invented, and the live page's own
  * spellings stand — "Karnatka", "Nagamangla", "Gr. Noida", "TL-related" — as
- * do its straight apostrophes. The client's reference screenshot fixed the
- * layout, not the copy; where the two differ the live page was followed.
+ * do its straight apostrophes.
+ *
+ * **That is SAEL's instruction of 2026-09-18 for the four business pages, and
+ * it still stands for them**: their reference screenshot fixes the structure,
+ * their live page fixes the copy, so where the two differ the live page was
+ * followed. It is specific to these pages, not the general rule, which is
+ * that SAEL's reviewed content for the new site is the authority for display
+ * copy and sael.co is not (/CLAUDE.md §2 rule 8).
  *
  * ## The portfolio figure
  *
@@ -32,9 +39,11 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  * markup is `<span data-target="8299">0</span><span>.5</span> MWp`: the
  * counter lands on 8299 and the ".5" is static text after it, so the figure
  * a visitor sees once it settles is **8299.5 MWp**. That is what is carried
- * here. The reference screenshot reads "8299 MWp" and the homepage's mock
- * capacity stat reads "8299 MWp" too; the live page wins on content, and the
- * difference is flagged for the client rather than reconciled.
+ * here, under SAEL's 2026-09-18 instruction for this page; the reference
+ * screenshot reads "8299 MWp". The homepage ledger shows SAEL's reviewed
+ * "8.3 GWp" instead. That disagreement is with SAEL, in the backend's
+ * `docs/client/static-content-sign-off.md` §4, and is not reconciled here in
+ * either direction.
  *
  * ## The artwork
  *
@@ -47,7 +56,7 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  * and are clipped to the two shapes that stayed in the repository
  * (`solarEnergy/mask1.svg`, `mask2.svg`, carried as `--mask-solar-*` in
  * theme.css). The hero poster is still `null` with a `pending` name. The map
- * is the same `dotted-map.svg` the homepage draws.
+ * is the homepage's, recoloured to this business's ramp (`solar-energy-map.svg`).
  *
  * The marks are joined to their cards by the page, not here: a `mark` is a
  * React node, and this file is data.
@@ -84,7 +93,7 @@ export const solarEnergyMeta = {
 } as const;
 
 export const solarEnergyHero: PageHeroProps = {
-  title: 'Solar Energy',
+  title: 'Solar Energy Generation',
   intro: 'Harnessing the Sun to Tread the Path of Sustainable Growth',
   // No trail, as on About Us since 2026-09-17 and as the reference draws it.
   align: 'center',
@@ -146,79 +155,85 @@ export const solarSites: readonly PresenceSite[] = [
   {
     id: 'punjab',
     name: 'Punjab',
-    x: 83.4,
-    y: 60.4,
-    figures: [{ metric: 'solar-ipp', value: '1061 MW' }],
+    x: 87.4,
+    y: 65.4,
+    figures: [{ metric: 'solar-ipp', value: '685.6 MW' }],
   },
   {
     id: 'haryana',
     name: 'Haryana',
-    x: 76,
-    y: 76.5,
-    figures: [{ metric: 'solar-ipp', value: '285 MW' }],
+    x: 80,
+    y: 81.5,
+    figures: [{ metric: 'solar-ipp', value: '5.3 MW' }],
   },
   {
     id: 'delhi',
     name: 'Delhi',
-    x: 91.4,
-    y: 84.6,
+    x: 95.2,
+    y: 89.6,
     figures: [{ metric: 'solar-ipp', value: '1 MW' }],
   },
   {
     id: 'uttar-pradesh',
     name: 'Uttar Pradesh',
-    x: 121.4,
-    y: 116.4,
-    figures: [{ metric: 'solar-ipp', value: '196 MW' }],
+    x: 125,
+    y: 121,
+    figures: [{ metric: 'solar-ipp', value: '196.2 MW' }],
   },
   {
     id: 'rajasthan',
     name: 'Rajasthan',
-    x: 45.4,
-    y: 124.4,
+    x: 50,
+    y: 128.4,
     figures: [{ metric: 'solar-ipp', value: '298 MW' }],
   },
   {
     id: 'assam',
     name: 'Assam',
-    x: 265.2,
-    y: 124.4,
+    x: 268,
+    y: 129,
     figures: [{ metric: 'solar-ipp', value: '1 MW' }],
   },
   {
     id: 'mizoram',
     name: 'Mizoram',
-    x: 257.6,
-    y: 164.5,
+    x: 260.5,
+    y: 168.5,
     figures: [{ metric: 'solar-ipp', value: '21 MW' }],
   },
   {
     id: 'gujarat',
     name: 'Gujarat',
-    x: 30.4,
-    y: 172.4,
-    figures: [{ metric: 'solar-ipp', value: '2406 MW' }],
+    x: 34.6,
+    y: 176.4,
+    figures: [{ metric: 'solar-ipp', value: '2620 MW' }],
   },
   {
     id: 'maharashtra',
     name: 'Maharashtra',
-    x: 60.4,
-    y: 204.4,
-    figures: [{ metric: 'solar-ipp', value: '408 MW' }],
+    x: 65.2,
+    y: 208.1,
+    figures: [
+      { metric: 'solar-ipp', value: '133.4 MW' },
+      { metric: 'solar-ipp', plus: 'storage', value: '275 MW' },
+    ],
   },
   {
     id: 'andhra-pradesh',
     name: 'Andhra Pradesh',
-    x: 106.4,
-    y: 252,
-    figures: [{ metric: 'solar-ipp', value: '3165 MW' }],
+    x: 110.4,
+    y: 255.4,
+    figures: [
+      { metric: 'solar-ipp', value: '1599 MW' },
+      { metric: 'solar-ipp', plus: 'storage', value: '1646 MW' },
+    ],
   },
   {
     id: 'karnataka',
     name: 'Karnataka',
-    x: 68.4,
-    y: 244,
-    figures: [{ metric: 'solar-ipp', value: '1248 MW' }],
+    x: 72.4,
+    y: 248,
+    figures: [{ metric: 'solar-ipp', value: '1356 MW' }],
   },
 ];
 
@@ -269,8 +284,9 @@ export const solarPractices: {
   title: ValueGridProps['title'];
   items: readonly PracticeCopy[];
 } = {
-  // The live page's label. The reference screenshot reads "How do we reduce
-  // cost?"; the live page wins on content.
+  // The live page's label, under SAEL's 2026-09-18 instruction for this page
+  // (copy from the live page, structure from the screenshot). The reference
+  // screenshot reads "How do we reduce cost?".
   eyebrow: 'How We Reduce Cost?',
   title: 'Our EPC And O&M Practices',
   items: [

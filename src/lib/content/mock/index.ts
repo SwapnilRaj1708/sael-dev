@@ -1,31 +1,33 @@
 import { env } from '@/lib/config/env';
-import { tryBlobUrl } from '@/lib/utils/blob-url';
-import { newsItemHref, newsVideoThumbnail } from '../news-links';
+import { legacyOrBlobUrl } from '@/lib/utils/blob-url';
+import { newsItemHref, newsPreviewItemHref, newsVideoThumbnail } from '../news-links';
 import type { ContentRepository, NewsItemsQuery } from '../repository';
 import type {
   BlobFile,
-  BoardCommittee,
-  BoardMember,
-  CapacityStat,
-  CaptionTrack,
   InvestorDocument,
-  InvestorDocumentCategory,
-  InvestorListing,
-  InvestorVideo,
+  InvestorDocumentGroup,
+  InvestorDocumentKind,
+  InvestorSection,
+  InvestorTile,
+  InvestorTileDisplayMode,
+  InvestorTilePage,
   NewsArticle,
   NewsArticleCategory,
   NewsCategory,
   NewsItem,
-  TeamMember,
+  NewsVideo,
+  PreviewDetail,
+  PreviewExchange,
+  PreviewListing,
+  PreviewRead,
+  PreviewScreenCode,
+  PreviewState,
+  PreviewTilePage,
 } from '../types';
-import boardCommittees from './data/board-committees.json';
-import boardMembers from './data/board-members.json';
-import capacityStats from './data/capacity-stats.json';
 import investorDocuments from './data/investor-documents.json';
-import investorVideos from './data/investor-videos.json';
+import investorTiles from './data/investor-tiles.json';
 import newsItems from './data/news-items.json';
 import newsroomItems from './data/newsroom-items.json';
-import teamMembers from './data/team-members.json';
 
 /**
  * A file as the fixtures store it: a path within the blob container, never a
@@ -36,25 +38,48 @@ interface FixtureFile extends Omit<BlobFile, 'url'> {
 }
 
 /**
- * The investor fixtures carry one field the domain type does not:
- * `legacyPath`, the file's path on the legacy www.sael.co, recorded so the
- * client can upload every file to its blob path in one pass. It is never
- * handed to a component as such — see `fixtureUrl()` for the one, temporary,
- * way it becomes a URL.
+ * A tile as `investor-tiles.json` stores it: the tile, and its headings as
+ * the backend stores an outline — label, **stored** anchor, one level of
+ * subheadings. The anchors in the file are written out, not computed here:
+ * the fixture stands in for the backend, which stores them, and the site
+ * never derives one (docs/api-contracts.md §4.3).
  */
-interface DocumentFixture extends Omit<InvestorDocument, 'category' | 'file'> {
-  category: InvestorDocumentCategory;
-  file: FixtureFile;
-  legacyPath: string;
+interface TileFixture {
+  section: InvestorSection;
+  slug: string;
+  title: string;
+  displayMode: InvestorTileDisplayMode;
+  gateDisclaimerHtml: string | null;
+  descriptionHtml: string | null;
+  outline: {
+    label: string;
+    anchor: string;
+    subheadings: { label: string; anchor: string }[];
+  }[];
 }
 
-interface VideoFixture extends Omit<InvestorVideo, 'category' | 'file' | 'posterUrl' | 'captions'> {
-  category: InvestorDocumentCategory;
+/**
+ * A document as `investor-documents.json` stores it: filed under its tile,
+ * and under a heading and subheading by their anchors (`null` for none).
+ *
+ * One field the domain type does not have: `legacyPath`, the file's path on
+ * the legacy www.sael.co, recorded so the client can upload every file to
+ * its blob path in one pass. It is never handed to a component as such —
+ * see `fixtureUrl()` for the one, temporary, way it becomes a URL.
+ */
+interface DocumentFixture {
+  id: string;
+  title: string;
+  section: InvestorSection;
+  tile: string;
+  heading: string | null;
+  subheading: string | null;
+  kind: InvestorDocumentKind;
+  publishedAt: string | null;
+  financialYear: string | null;
   file: FixtureFile;
-  posterPath: string | null;
-  captions: (Omit<CaptionTrack, 'url'> & { path: string })[];
   legacyPath: string;
-  legacyPosterPath: string | null;
+  externalUrl: string | null;
 }
 
 /**
@@ -63,25 +88,107 @@ interface VideoFixture extends Omit<InvestorVideo, 'category' | 'file' | 'poster
  *
  * **The legacy branch is temporary**, the client's instruction of 2026-09-29:
  * the Offer Documents files are not in the container yet, so until they are,
- * the links point at the live site's own copies rather than 404ing. The
- * origin comes from the environment, not from here (/CLAUDE.md §7), and the
- * path is the one the fixture already records. Unset the variable after the
- * upload — and before cutover at the latest, when that origin becomes this
- * site and those paths stop existing — and every link falls back to its blob
- * path with no code change.
+ * the links point at the live site's own copies rather than 404ing. The path
+ * is the one the fixture already records. The rule itself, and when to retire
+ * it, is `legacyOrBlobUrl()`'s.
  */
 function fixtureUrl(path: string | null, legacyPath: string | null): string | null {
-  const legacyBase = env.LEGACY_ASSET_BASE_URL;
-  if (legacyBase !== undefined && legacyPath !== null) {
-    return `${legacyBase.replace(/\/+$/, '')}${legacyPath}`;
-  }
-  return tryBlobUrl(path);
+  return legacyOrBlobUrl(path, legacyPath);
 }
 
 /** Resolve a fixture file to a `BlobFile`, or `null` if it has no URL. */
 function blobFile({ path, ...file }: FixtureFile, legacyPath: string | null): BlobFile | null {
   const url = fixtureUrl(path, legacyPath);
   return url === null ? null : { ...file, url };
+}
+
+const TILE_PATHS: Record<InvestorSection, string> = {
+  'offer-documents': '/investors/offer-documents/',
+  'corporate-governance': '/investors/corporate-governance/',
+  'financials-and-reports': '/investors/financials-and-reports/',
+  notifications: '/investors/notifications/',
+};
+
+function tileDocuments(row: TileFixture): DocumentFixture[] {
+  return (investorDocuments as DocumentFixture[]).filter(
+    (document) => document.section === row.section && document.tile === row.slug,
+  );
+}
+
+function toInvestorTile(row: TileFixture): InvestorTile {
+  const sectionPath = TILE_PATHS[row.section];
+  return {
+    id: `${row.section}/${row.slug}`,
+    section: row.section,
+    title: row.title,
+    slug: row.slug,
+    path: `${sectionPath}${row.slug}/`,
+    sectionPath,
+    displayMode: row.displayMode,
+    descriptionHtml: row.descriptionHtml,
+    gate:
+      row.gateDisclaimerHtml === null
+        ? { enabled: false }
+        : { enabled: true, disclaimerHtml: row.gateDisclaimerHtml },
+    documentCount: tileDocuments(row).length,
+    seoTitle: null,
+    seoDescription: null,
+  };
+}
+
+/**
+ * A fixture document as the API would serve it. **A file whose URL cannot
+ * be composed is kept, with `file: null`** — the shape the backend sends for
+ * a file never promoted — so the page shows it as unavailable rather than
+ * leaving it out. Mapped field by field, so `legacyPath` cannot ride along
+ * into a component by accident.
+ */
+function toInvestorDocument(row: DocumentFixture): InvestorDocument {
+  return {
+    id: row.id,
+    title: row.title,
+    kind: row.kind,
+    publishedAt: row.publishedAt,
+    financialYear: row.financialYear,
+    file: blobFile(row.file, row.legacyPath),
+    externalUrl: row.externalUrl,
+  };
+}
+
+/**
+ * The backend's grouping of a tile with an outline (docs/api-contracts.md
+ * §4.3), reproduced over the fixture: one group per heading in the
+ * outline's order — empty ones included — each with its subheadings, then
+ * the documents under no heading in a trailing group with a null label and
+ * anchor. A tile with no outline and documents is one unlabelled group;
+ * with neither, no groups at all. Documents keep the file's order.
+ */
+function toGroups(row: TileFixture): InvestorDocumentGroup[] {
+  const documents = tileDocuments(row);
+  const under = (heading: string | null, subheading: string | null) =>
+    documents
+      .filter((document) => document.heading === heading && document.subheading === subheading)
+      .map(toInvestorDocument);
+
+  const headings = new Set(row.outline.map((heading) => heading.anchor));
+  const groups: InvestorDocumentGroup[] = row.outline.map((heading) => ({
+    label: heading.label,
+    anchor: heading.anchor,
+    documents: under(heading.anchor, null),
+    subgroups: heading.subheadings.map((subheading) => ({
+      label: subheading.label,
+      anchor: subheading.anchor,
+      documents: under(heading.anchor, subheading.anchor),
+    })),
+  }));
+
+  const unheaded = documents
+    .filter((document) => document.heading === null || !headings.has(document.heading))
+    .map(toInvestorDocument);
+  if (unheaded.length > 0) {
+    groups.push({ label: null, anchor: null, documents: unheaded, subgroups: [] });
+  }
+  return groups;
 }
 
 /**
@@ -101,11 +208,13 @@ interface HomepageNewsFixture {
 /**
  * A Newsroom row: the domain fields, with the image as a path pair rather
  * than a URL, and the body for an article. Generated from the legacy pages'
- * HTML — see `getNewsItems()`.
+ * HTML — see `getNewsItems()`. Every legacy video is on YouTube, so a row
+ * stores the bare `videoId` and `toNewsItem()` names the provider.
  */
-interface NewsroomFixture extends Omit<NewsItem, 'category' | 'href' | 'imageUrl'> {
+interface NewsroomFixture extends Omit<NewsItem, 'category' | 'href' | 'imageUrl' | 'video'> {
   category: NewsCategory;
   image: { path: string; legacyPath: string } | null;
+  videoId: string | null;
   body: string | null;
 }
 
@@ -128,7 +237,9 @@ function resolveBodyImages(body: string): string {
 
 /** A Newsroom row as a card needs it, or `null` if it has nowhere to go. */
 function toNewsItem(row: NewsroomFixture): NewsItem | null {
-  const href = newsItemHref(row);
+  const video: NewsVideo | null =
+    row.videoId === null || row.videoId === '' ? null : { provider: 'youtube', id: row.videoId };
+  const href = newsItemHref({ ...row, video });
   if (href === null) return null;
 
   return {
@@ -139,33 +250,75 @@ function toNewsItem(row: NewsroomFixture): NewsItem | null {
     href,
     imageUrl:
       row.image === null
-        ? newsVideoThumbnail(row.videoId)
+        ? newsVideoThumbnail(video)
         : fixtureUrl(row.image.path, row.image.legacyPath),
     imageAlt: row.imageAlt,
     slug: row.slug,
     externalUrl: row.externalUrl,
-    videoId: row.videoId,
+    video,
     publication: row.publication,
   };
-}
-
-function inListing(listing: InvestorListing) {
-  return (row: { category: InvestorDocumentCategory; section: string | null }) =>
-    row.category === listing.category && row.section === listing.section;
 }
 
 /**
  * The local-development and pre-backend implementation. docs/content-model.md §4.
  *
- * Seeded from the client's own design rather than from Lorem: the figures are
- * the ones printed in `SAEL - New Website.pdf` and on the live site. Realistic
- * data is not a nicety — placeholder text hides the layout failures that real
- * copy exposes, and "3625 MW + 5 GW" is a good deal wider than "100 MW".
+ * Seeded from the live site rather than from Lorem: every news item and
+ * investor document is transcribed from www.sael.co. Realistic data is not a
+ * nicety — placeholder text hides the layout failures that real copy exposes.
  *
  * **This survives the cutover.** FE-23 flips `CONTENT_SOURCE` per environment
  * and keeps the mock as the local default and as a fixture source. It is not
  * scaffolding to be deleted.
  */
+/**
+ * The mock's preview credentials, so a preview page can be exercised with no
+ * backend: the link token `mock:NEWS_PRESS_RELEASE` exchanges for a session on
+ * that screen, and anything else is refused. Not a secret and not a stand-in
+ * for one — the mock serves the same fixtures it serves live.
+ */
+const MOCK_LINK_PREFIX = 'mock:';
+const MOCK_SESSION_PREFIX = 'mock-session:';
+
+const NEWS_SCREENS = {
+  'press-release': 'NEWS_PRESS_RELEASE',
+  'in-the-news': 'NEWS_IN_THE_NEWS',
+  'our-views': 'NEWS_OUR_VIEWS',
+  multimedia: 'NEWS_MULTIMEDIA',
+} as const satisfies Record<NewsCategory, PreviewScreenCode>;
+
+const DOCUMENT_SCREENS = {
+  'offer-documents': 'DOC_OFFER_DOCUMENTS',
+  'corporate-governance': 'DOC_CORPORATE_GOVERNANCE',
+  'financials-and-reports': 'DOC_FINANCIALS_REPORTS',
+  notifications: 'DOC_NOTIFICATIONS',
+} as const satisfies Record<InvestorSection, PreviewScreenCode>;
+
+const SCREEN_CODES: readonly string[] = [
+  ...Object.values(NEWS_SCREENS),
+  ...Object.values(DOCUMENT_SCREENS),
+];
+
+/** Every fixture is published, so its preview shows it as live. */
+const MOCK_PREVIEW_STATE: PreviewState = {
+  status: 'PUBLISHED',
+  versionNo: 1,
+  isDraft: false,
+  lastUpdatedBy: null,
+  lastUpdatedAt: null,
+};
+
+/** The backend's session check, reproduced: 401 for no session, 403 for another screen. */
+function mockSessionCheck(
+  sessionToken: string,
+  screenCode: PreviewScreenCode,
+): PreviewRead<never> | null {
+  if (!sessionToken.startsWith(MOCK_SESSION_PREFIX)) return { ok: false, reason: 'session-ended' };
+  return sessionToken === `${MOCK_SESSION_PREFIX}${screenCode}`
+    ? null
+    : { ok: false, reason: 'wrong-screen' };
+}
+
 export class MockContentRepository implements ContentRepository {
   /**
    * Optional artificial delay, so loading and error states can be exercised
@@ -178,65 +331,57 @@ export class MockContentRepository implements ContentRepository {
     return value;
   }
 
-  getCapacityStats(): Promise<CapacityStat[]> {
-    // Sorted here rather than trusted from the file: `order` is the contract,
-    // and the API adapter will have to honour it too.
-    const stats = [...(capacityStats as CapacityStat[])].sort((a, b) => a.order - b.order);
-    return this.settle(stats);
-  }
-
   /**
-   * **Two fixtures, on purpose.** With no `category` this is the homepage's
-   * call, and it reads `news-items.json` exactly as it always has: six
-   * press releases, newest first, with the client's own stills from
-   * `public/news/` and every card linking to `/newsroom/`. That set is a
-   * snapshot from before the Newsroom existed, and it is kept rather than
-   * re-derived so the homepage does not change under this work. Against the
-   * API the same call is the newest items across every category — see
-   * docs/api-contracts.md §2 — and the homepage should choose a category
-   * before cutover.
+   * One Newsroom section, from `newsroom-items.json`: the legacy
+   * https://www.sael.co/newsroom/ listings transcribed from their raw HTML on
+   * 2026-10-01 by script, not by hand — every title, date, image `alt`,
+   * outbound URL, video id and article body exactly as published.
    *
-   * With a `category` it reads `newsroom-items.json`, which is the legacy
-   * https://www.sael.co/newsroom/ listings transcribed from their raw HTML
-   * on 2026-10-01 by script, not by hand: every title, date, image `alt`,
-   * outbound URL, video id and article body exactly as published. The file's
-   * line order is each legacy listing's order, which for the dated sections
-   * is also newest first — the sort below is stable, so it changes nothing
-   * there and leaves Our Views and Multimedia, which carry no date, in the
-   * order the company published them.
+   * **In the file's line order, which is each legacy listing's order** —
+   * newest first for the dated sections, the company's own for Our Views and
+   * Multimedia. Not sorted here: the repository returns the source's order,
+   * and the backend's is editorial (featured first), which no sort on these
+   * fields reproduces. A mock that sorted would hide a page that did.
    *
    * Images resolve like the investor files do: the legacy copy while
    * `LEGACY_ASSET_BASE_URL` is set, the blob path (`web-assets` + legacy
    * path) otherwise. docs/asset-inventory.md §8 lists every one for upload.
    */
-  getNewsItems(options?: NewsItemsQuery): Promise<NewsItem[]> {
-    const category = options?.category;
-    const items =
-      category === undefined
-        ? (newsItems as HomepageNewsFixture[]).map((row): NewsItem => ({
-            ...row,
-            category: 'press-release',
-            imageAlt: null,
-            slug: null,
-            externalUrl: null,
-            videoId: null,
-            publication: null,
-          }))
-        : (newsroomItems as NewsroomFixture[])
-            .filter((row) => row.category === category)
-            .flatMap((row) => toNewsItem(row) ?? []);
+  getNewsItems({ category, limit }: NewsItemsQuery): Promise<NewsItem[]> {
+    const items = (newsroomItems as NewsroomFixture[])
+      .filter((row) => row.category === category)
+      .flatMap((row) => toNewsItem(row) ?? []);
 
-    // Sorted here rather than trusted from the file: "most recent first" is
-    // the contract, not a property of the fixture's line order. Undated items
-    // compare equal and keep their place.
-    const sorted = items.sort((a, b) =>
-      a.publishedAt === null || b.publishedAt === null
-        ? 0
-        : b.publishedAt.localeCompare(a.publishedAt),
-    );
+    return this.settle(limit === undefined ? items : items.slice(0, limit));
+  }
 
-    const limit = options?.limit;
-    return this.settle(limit === undefined ? sorted : sorted.slice(0, limit));
+  /**
+   * The homepage rail, from its own fixture, `news-items.json`, exactly as
+   * it has been read since FE-04: six press releases, newest first, with the
+   * client's own stills from `public/news/` and every card linking to
+   * `/newsroom/`. A snapshot from before the Newsroom existed, kept so the
+   * homepage does not change under the API work.
+   *
+   * **It is not In The News**, which the API rail is. Switching this to the
+   * `in-the-news` rows of `newsroom-items.json` would make the mock match,
+   * at the price of the homepage's current look under the mock; that is a
+   * decision for the homepage's owner, not a side effect of the cutover.
+   */
+  getInTheNewsRail(limit: number): Promise<NewsItem[]> {
+    const items = (newsItems as HomepageNewsFixture[]).map((row): NewsItem => ({
+      ...row,
+      category: 'press-release',
+      imageAlt: null,
+      slug: null,
+      externalUrl: null,
+      video: null,
+      publication: null,
+    }));
+    return this.settle(items.slice(0, limit));
+  }
+
+  async hasNewsArticle(category: NewsArticleCategory, slug: string): Promise<boolean> {
+    return (await this.getNewsArticle(category, slug)) !== null;
   }
 
   getNewsArticle(category: NewsArticleCategory, slug: string): Promise<NewsArticle | null> {
@@ -247,150 +392,162 @@ export class MockContentRepository implements ContentRepository {
 
     if (row === undefined || item === null || row.body === null) return this.settle(null);
 
+    // The legacy articles carry no summary and no SEO fields; their meta
+    // description is derived from the body, as the legacy site derives it.
     return this.settle({
       ...item,
       category,
       slug,
       body: resolveBodyImages(row.body),
+      summary: null,
+      seoTitle: null,
+      seoDescription: null,
+      ogImageUrl: null,
     });
   }
 
-  getTeamMembers(): Promise<TeamMember[]> {
-    // Seeded from `Our Team.dc.html`, which carries the roster the live site
-    // publishes — seventeen real people, their real designations and their
-    // real biographies, two of them long enough (Harbhajan Singh at ~2,500
-    // characters, over two paragraphs) to prove that the dialog scrolls rather
-    // than that a two-line placeholder fits.
-    //
-    // Sorted here rather than trusted from the file: `order` is the contract,
-    // and the API adapter will have to honour it too.
-    //
-    // Every row has a portrait, a biography and — for seven of them — a
-    // LinkedIn profile. `photoUrl: null` and `bio: null` are therefore **not**
-    // exercised by this fixture; the card and the page handle both, but
-    // docs/features/05 §3's "a team member with no photo" edge case belongs to
-    // FE-05, which owns the fixtures, and inventing an eighteenth person to
-    // satisfy it here would put a fabricated director on a page of real ones.
-    //
-    // `photoUrl` is stored as a **path within the blob container**, not as an
-    // absolute URL, so no hostname is committed (/CLAUDE.md §7) and the same
-    // fixture works against any environment's container. `tryBlobUrl` composes
-    // it with `AZURE_BLOB_BASE_URL`, and passes an already-absolute value
-    // through untouched — which is what the API will return in FE-23, so this
-    // mapping survives the cutover without a special case.
-    //
-    // **The non-throwing form on purpose.** With `AZURE_BLOB_BASE_URL` unset
-    // this yields `null` and each card falls back to its initials avatar, so a
-    // misconfigured environment still renders the roster — every name,
-    // designation, biography and LinkedIn link — instead of an empty state.
-    // The trade is that the omission is quiet; `.env.example` carries the real
-    // base so the default configuration is the working one.
-    const members = [...(teamMembers as TeamMember[])]
-      .map((member) => ({ ...member, photoUrl: tryBlobUrl(member.photoUrl) }))
-      .sort((a, b) => a.order - b.order);
-    return this.settle(members);
-  }
-
   /**
-   * Seeded from the legacy https://www.sael.co/investors/offer-documents/
-   * sub-pages, read from their HTML on 2026-09-29: every title is the legacy
-   * link text verbatim, and every size is the byte count the legacy server
-   * reported for that file the same day.
+   * The investor tiles, seeded from the legacy https://www.sael.co/investors/
+   * section pages: every tile the four landing pages link to, in their order
+   * and with their titles verbatim, read on 2026-10-02 — except Board of
+   * Directors and Board Committees, which the backend does not model as
+   * tiles either (backend descope note S1). Their headings are those the
+   * legacy pages show, in the order shown, with the anchors the backend
+   * would store for them.
    *
-   * **The files are not in the container yet.** Each row's path is where the
-   * client is asked to upload it — the legacy path under `web-assets/`, file
-   * name unchanged — so until that upload every link here 404s. That is the
-   * expected state of a mock (docs/content-model.md §4), not a defect.
+   * The gated tiles' disclaimers and Outstanding Dues' table are the legacy
+   * pages' own text, carried as the HTML the backend serves them in — the
+   * DRHP notice of twenty-two paragraphs, the audio-visual one of twelve,
+   * transcribed on 2026-09-29.
+   */
+  getInvestorTiles(section: InvestorSection): Promise<InvestorTile[]> {
+    const tiles = (investorTiles as TileFixture[])
+      .filter((row) => row.section === section)
+      .map(toInvestorTile);
+    return this.settle(tiles);
+  }
+
+  /**
+   * One tile's documents, seeded from the legacy pages read on 2026-09-29
+   * and 2026-09-30: every title is the legacy link text verbatim, every size
+   * the byte count the legacy server reported for that file.
    *
-   * A row whose URL cannot be composed — `AZURE_BLOB_BASE_URL` unset — is
-   * dropped rather than rendered as a title that goes nowhere; the page then
-   * shows its empty state.
+   * **The files are not in the container yet.** Each row's path is where
+   * the client is asked to upload it, so until then a link 404s unless
+   * `LEGACY_ASSET_BASE_URL` points it at the legacy copy. With neither set,
+   * the document is still listed, as unavailable.
    */
-  getInvestorDocuments(listing: InvestorListing): Promise<InvestorDocument[]> {
-    const documents = (investorDocuments as DocumentFixture[])
-      .filter(inListing(listing))
-      // Mapped field by field rather than spread, so `legacyPath` cannot ride
-      // along into a component by accident.
-      .flatMap((row): InvestorDocument[] => {
-        const file = blobFile(row.file, row.legacyPath);
-        if (file === null) return [];
-
-        return [
-          {
-            id: row.id,
-            title: row.title,
-            category: row.category,
-            section: row.section,
-            group: row.group,
-            subgroup: row.subgroup,
-            publishedAt: row.publishedAt,
-            file,
-            order: row.order,
-          },
-        ];
-      })
-      // `order` alone, across the whole listing — the contract, not the
-      // file's line order. Headings follow their first document, so the
-      // business orders the groups too (docs/api-contracts.md §3).
-      .sort((a, b) => a.order - b.order);
-    return this.settle(documents);
+  getInvestorTilePage(section: InvestorSection, slug: string): Promise<InvestorTilePage | null> {
+    const row = (investorTiles as TileFixture[]).find(
+      (candidate) => candidate.section === section && candidate.slug === slug,
+    );
+    return this.settle(
+      row === undefined ? null : { tile: toInvestorTile(row), groups: toGroups(row) },
+    );
   }
 
-  /**
-   * The two DRHP audio-visual presentations, seeded from the legacy pages.
-   * `captions` is empty in both rows because no caption files exist — the
-   * legacy `<video>` carries no `<track>` — and inventing a path for one
-   * would render a caption menu that fails to load.
-   */
-  getInvestorVideos(listing: InvestorListing): Promise<InvestorVideo[]> {
-    const videos = (investorVideos as VideoFixture[])
-      .filter(inListing(listing))
-      .flatMap((row): InvestorVideo[] => {
-        const file = blobFile(row.file, row.legacyPath);
-        if (file === null) return [];
-
-        return [
-          {
-            id: row.id,
-            title: row.title,
-            category: row.category,
-            section: row.section,
-            file,
-            posterUrl: fixtureUrl(row.posterPath, row.legacyPosterPath),
-            // A track whose file cannot be addressed is dropped; the video
-            // still plays, and the menu offers only what will load.
-            captions: row.captions.flatMap(({ path, srcLang, label }): CaptionTrack[] => {
-              const url = tryBlobUrl(path);
-              return url === null ? [] : [{ url, srcLang, label }];
-            }),
-          },
-        ];
-      });
-    return this.settle(videos);
+  async hasInvestorTile(section: InvestorSection, slug: string): Promise<boolean> {
+    return (await this.getInvestorTilePage(section, slug)) !== null;
   }
 
-  /**
-   * The ten directors on the legacy
-   * https://www.sael.co/investors/corporate-governance/board-of-directors/,
-   * read from its HTML on 2026-09-30 — name, designation and the "About"
-   * text exactly as that page has them, bios as the page's own `<p>` and
-   * `<strong>` markup with the source whitespace collapsed. **Not** copied
-   * from `team-members.json`: the two pages word the same people differently,
-   * and this one is the governance record.
-   */
-  getBoardMembers(): Promise<BoardMember[]> {
-    const members = [...(boardMembers as BoardMember[])].sort((a, b) => a.order - b.order);
-    return this.settle(members);
+  startPreviewSession(token: string): Promise<PreviewExchange> {
+    const screenCode = token.startsWith(MOCK_LINK_PREFIX)
+      ? token.slice(MOCK_LINK_PREFIX.length)
+      : null;
+    if (screenCode === null || !SCREEN_CODES.includes(screenCode)) {
+      return this.settle({ ok: false, reason: 'refused', code: 'PREVIEW_TOKEN_INVALID' });
+    }
+    return this.settle({
+      ok: true,
+      session: {
+        token: `${MOCK_SESSION_PREFIX}${screenCode}`,
+        expiresInSeconds: 1800,
+        screenCode: screenCode as PreviewScreenCode,
+        issuedFor: 'mock@localhost',
+      },
+    });
   }
 
-  /**
-   * The six committees on the legacy board-committees page, same read, same
-   * rules: every name, category and position verbatim — including where this
-   * page spells a director differently from the board page ("Bjornar",
-   * "Kewal Kundanlal Handa").
-   */
-  getBoardCommittees(): Promise<BoardCommittee[]> {
-    const committees = [...(boardCommittees as BoardCommittee[])].sort((a, b) => a.order - b.order);
-    return this.settle(committees);
+  async getNewsPreview(
+    category: NewsCategory,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewListing<NewsItem>>> {
+    const refusal = mockSessionCheck(sessionToken, NEWS_SCREENS[category]);
+    if (refusal !== null) return refusal;
+
+    const items = await this.getNewsItems({ category });
+    return {
+      ok: true,
+      value: {
+        records: items.map((item) => ({
+          record: { ...item, href: newsPreviewItemHref(item) },
+          preview: MOCK_PREVIEW_STATE,
+        })),
+        incomplete: [],
+      },
+    };
+  }
+
+  async getNewsArticlePreview(
+    category: NewsArticleCategory,
+    slug: string,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewDetail<NewsArticle> | null>> {
+    const refusal = mockSessionCheck(sessionToken, NEWS_SCREENS[category]);
+    if (refusal !== null) return refusal;
+
+    const article = await this.getNewsArticle(category, slug);
+    return {
+      ok: true,
+      value:
+        article === null
+          ? null
+          : { complete: true, value: { record: article, preview: MOCK_PREVIEW_STATE } },
+    };
+  }
+
+  async getInvestorTilesPreview(
+    section: InvestorSection,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewListing<InvestorTile>>> {
+    const refusal = mockSessionCheck(sessionToken, DOCUMENT_SCREENS[section]);
+    if (refusal !== null) return refusal;
+
+    const tiles = await this.getInvestorTiles(section);
+    return {
+      ok: true,
+      value: {
+        records: tiles.map((tile) => ({ record: tile, preview: MOCK_PREVIEW_STATE })),
+        incomplete: [],
+      },
+    };
+  }
+
+  async getInvestorTilePagePreview(
+    section: InvestorSection,
+    slug: string,
+    sessionToken: string,
+  ): Promise<PreviewRead<PreviewDetail<PreviewTilePage> | null>> {
+    const refusal = mockSessionCheck(sessionToken, DOCUMENT_SCREENS[section]);
+    if (refusal !== null) return refusal;
+
+    const page = await this.getInvestorTilePage(section, slug);
+    if (page === null) return { ok: true, value: null };
+
+    const documentStates = Object.fromEntries(
+      page.groups
+        .flatMap((group) => [
+          ...group.documents,
+          ...group.subgroups.flatMap((subgroup) => subgroup.documents),
+        ])
+        .map((document) => [document.id, MOCK_PREVIEW_STATE]),
+    );
+    return {
+      ok: true,
+      value: {
+        complete: true,
+        value: { record: { page, documentStates, incomplete: [] }, preview: MOCK_PREVIEW_STATE },
+      },
+    };
   }
 }

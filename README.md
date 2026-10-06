@@ -51,30 +51,54 @@ Nothing else in the codebase may read `process.env`; ESLint enforces this.
 
 ## Deployment
 
-The client hosts on an Azure VM behind Nginx with PM2. There is no container step.
+The client hosts on an Azure VM: nginx terminating TLS in front of this site and the admin
+panel backend, each a systemd service bound to loopback. PM2 is not used. There is no container
+step.
+
+**Build last, from the API.** `pnpm build` prerenders pages from whatever `CONTENT_SOURCE` the
+build machine has, and the default (`mock`) is fixture content. So a production build comes
+after the backend is running, configured and has had its content imported, and is made with
+`CONTENT_SOURCE=api` and an `API_BASE_URL` the build machine can reach. The backend's
+`docs/tenant-cutover-checklist.md` §0.8 gives the whole order.
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build
+CONTENT_SOURCE=api API_BASE_URL=<reachable backend> NEXT_PUBLIC_SITE_URL=<host it will serve> pnpm build
 pnpm package          # -> release/sael-web-<version>.tar.gz
 ```
 
-The archive is self-contained — the standalone server, its traced dependencies, `.next/static`,
-`public/`, `ecosystem.config.cjs` and `DEPLOY.txt`. On the VM:
+The archive is self-contained: the standalone server, its traced dependencies, `.next/static`,
+`public/` and `DEPLOY.txt`. On the VM:
 
 ```bash
-tar -xzf sael-web-<version>.tar.gz -C /var/www
-cd /var/www/sael-web-<version>
-# set the runtime environment in ecosystem.config.cjs first
-pm2 start ecosystem.config.cjs
+mkdir -p /var/www/sael-web
+tar -xzf sael-web-<version>.tar.gz -C /var/www/sael-web --strip-components=1
 ```
 
-Nginx terminates TLS, compresses responses and caches `/_next/static/` —
-[`deploy/nginx.conf.sample`](deploy/nginx.conf.sample) is a working starting point. Liveness is
-`GET /api/health/`.
+It runs as **one** systemd-managed `node server.js` process, with no flags:
 
-`NEXT_PUBLIC_*` values are compiled into the client bundle at build time. Changing one means a
-rebuild, not a restart.
+```ini
+WorkingDirectory=/var/www/sael-web
+EnvironmentFile=/etc/sael-web/sael-web.env
+ExecStart=/usr/bin/node /var/www/sael-web/server.js
+```
+
+- `/etc/sael-web/sael-web.env` (mode 600) holds the runtime environment from
+  [`.env.example`](.env.example). It **must** set `HOSTNAME=127.0.0.1` and `PORT=3000`, because
+  without them the server listens on every interface.
+- The service account must be able to write `/var/www/sael-web/.next`. The page cache and the
+  image cache are written there.
+- One process only, for the reason in [`CLAUDE.md`](CLAUDE.md) §7.
+
+nginx terminates TLS, compresses responses, sends `Strict-Transport-Security` and routes each path
+to this site or the backend. [`deploy/nginx.conf.sample`](deploy/nginx.conf.sample) is the
+reference, route table included. Liveness is `GET /api/health/`.
+
+**`NEXT_PUBLIC_SITE_URL` is compiled into the build**, as is `LEGACY_ASSET_BASE_URL`. Changing one
+means a rebuild, not a restart. **Moving the site from `prod2-preview.sael.co` to the production
+host is therefore a rebuild.** The value must then be exactly `https://www.sael.co`: on any other
+origin, every page is marked `noindex` (`src/lib/config/site.ts`). See the backend's cutover
+checklist §1.11.
 
 ## Branching
 

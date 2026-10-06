@@ -40,6 +40,21 @@ const displayHeading = cva('gradient-text text-display', {
   defaultVariants: { ground: 'paper' },
 });
 
+/**
+ * A business's own mark ramp — the gradient its name takes on the homepage's
+ * Business Portfolio ledger. The four business pages set every section
+ * heading, and the hero title, in their business's ramp instead of the
+ * ground's, at the client's request of 2026-10-06.
+ */
+export type BusinessGradient = 'solar' | 'cell' | 'module' | 'agri';
+
+export const BUSINESS_GRADIENT_CLASS: Record<BusinessGradient, string> = {
+  solar: 'bg-(image:--gradient-ledger-solar)',
+  cell: 'bg-(image:--gradient-ledger-cell)',
+  module: 'bg-(image:--gradient-ledger-module)',
+  agri: 'bg-(image:--gradient-ledger-agri)',
+};
+
 export interface DisplayHeadingProps
   extends ComponentPropsWithRef<'h2'>, VariantProps<typeof displayHeading> {
   /**
@@ -49,17 +64,34 @@ export interface DisplayHeadingProps
    * outline a screen-reader user navigates by.
    */
   as?: 'h1' | 'h2' | 'h3';
+  /** Replaces the ground's ramp with a business's. See BUSINESS_GRADIENT_CLASS. */
+  business?: BusinessGradient;
 }
 
 export function DisplayHeading({
   as: Heading = 'h2',
   ground,
+  business,
   className,
   children,
   ...props
 }: DisplayHeadingProps) {
   return (
-    <Heading className={cn(displayHeading({ ground }), className)} {...props}>
+    <Heading
+      className={cn(
+        business === undefined
+          ? displayHeading({ ground })
+          : [
+              // `w-fit` so the ramp spans the words, not the column: a
+              // background is sized to the box, and a full-width box showed a
+              // short heading only the first part of its ramp.
+              'w-fit gradient-text text-display',
+              BUSINESS_GRADIENT_CLASS[business],
+            ],
+        className,
+      )}
+      {...props}
+    >
       {children}
     </Heading>
   );

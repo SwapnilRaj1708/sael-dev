@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
-import dottedMap from '@/assets/images/dotted-map.svg';
+// The map in this business's own ramp — the homepage map, recoloured.
+import dottedMap from '@/assets/images/agri-waste-to-energy-map.svg';
 import type { CapabilityItem, CapabilitySplitProps } from '@/components/sections/capability-split';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { PresenceSite } from '@/components/sections/presence-map';
@@ -14,13 +15,22 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
 /**
  * The Agri Waste-to-Energy page's static content.
  *
- * **Every string here is transcribed verbatim from the live
+ * **Every string here but the page's name is transcribed verbatim from
  * https://www.sael.co/waste-to-energy/**, read from its HTML on 2026-09-19
  * with only its source whitespace collapsed — including its curly apostrophes
  * (`SAEL’s`), the en dash in the standfirst, and its own inconsistent casing
- * of "Waste-To-Energy" / "Waste-to-Energy" from one heading to the next. The
- * client's reference screenshot fixed the layout, not the copy. Follows
- * `solar-energy.ts` section for section.
+ * of "Waste-To-Energy" / "Waste-to-Energy" from one heading to the next.
+ * That is **SAEL's instruction of 2026-09-18 for the four business pages, and
+ * it still stands for them**: their reference screenshot fixes the structure,
+ * their live page fixes the copy. It is specific to these pages, not the
+ * general rule, which is that SAEL's reviewed content for the new site is the
+ * authority for display copy and sael.co is not (/CLAUDE.md §2 rule 8).
+ * Follows `solar-energy.ts` section for section.
+ *
+ * **The page's name is SAEL's, not sael.co's.** SAEL renamed it "Agri
+ * Waste-to-Energy" on 2026-10-01 (`5494e70`), in the `<title>` and the hero;
+ * the page transcribed on 2026-09-19 said "Waste To Energy". The rename stands
+ * — sael.co is not grounds for undoing it.
  *
  * ## Where the screenshot and the live page disagree
  *
@@ -57,7 +67,7 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  * `AZURE_BLOB_BASE_URL` unset, or before the first frame, the hero holds its
  * box as a placeholder. The shapes the photographs are clipped to are the
  * Solar Energy pair, carried as `--mask-solar-*` in theme.css. The map is the
- * homepage's `dotted-map.svg`.
+ * homepage's map, recoloured to this business's ramp (`agri-waste-to-energy-map.svg`).
  */
 
 export type TechnologyCopy = Omit<CapabilityItem, 'mark'>;
@@ -70,7 +80,11 @@ const wteAsset = (file: string, width: number, height: number): StaticImageData 
   cdnImage(`web-assets/media/waste-to-energy/${file}`, width, height);
 
 export const wasteToEnergyMeta = {
-  /** The live page's own `<title>`, verbatim. */
+  /**
+   * SAEL's name for the page since 2026-10-01, in the legacy `<title>`
+   * pattern. The live page's, transcribed on 2026-09-19, was
+   * "Waste To Energy | SAEL".
+   */
   title: 'Agri Waste-to-Energy | SAEL',
   /** The live page ships an empty description. Nothing invented. */
   description: TODO_CONTENT,
@@ -128,22 +142,22 @@ export const wasteToEnergySites: readonly PresenceSite[] = [
   {
     id: 'punjab',
     name: 'Punjab',
-    x: 83.4,
-    y: 60.4,
+    x: 87.4,
+    y: 65.4,
     figures: [{ metric: 'agri-waste', value: '60.5 MW' }],
   },
   {
     id: 'haryana',
     name: 'Haryana',
-    x: 76,
-    y: 76.5,
+    x: 80,
+    y: 81.5,
     figures: [{ metric: 'agri-waste', value: '15 MW' }],
   },
   {
     id: 'rajasthan',
     name: 'Rajasthan',
-    x: 45.4,
-    y: 124.4,
+    x: 50,
+    y: 128.4,
     figures: [{ metric: 'agri-waste', value: '89.4 MW' }],
   },
 ];

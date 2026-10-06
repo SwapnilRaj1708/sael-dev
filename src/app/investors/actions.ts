@@ -1,9 +1,9 @@
 'use server';
 
-import { z } from 'zod';
-import { gatedDocumentListings, gatedVideoListings } from '@/app/_content/offer-documents';
 import type { VideoPlayerSource } from '@/components/ui/video-player';
-import { getContentRepository } from '@/lib/content';
+import { getContentRepository, type InvestorSection, type InvestorTilePage } from '@/lib/content';
+import { allDocuments, documentUrl } from './_lib/documents';
+import { parseDocumentKey, parseTileKey } from './_lib/gate-keys';
 
 /**
  * The investor area's Server Actions — how a consent gate gets the URL it
@@ -17,16 +17,17 @@ import { getContentRepository } from '@/lib/content';
  * only then.
  *
  * **Not access control, and not pretending to be.** An action is a POST
- * endpoint that anyone can call, and the files are public blobs that are also
- * published by SEBI and the exchanges. What this guarantees is narrower and is
- * the requirement: nothing gated is in the page until the reader confirms.
- * docs/api-contracts.md §3 records the rest for legal review.
+ * endpoint that anyone can call, and the backend sends the document URLs in
+ * the same response as the disclaimer (docs/api-contracts.md §4.4). What
+ * this guarantees is narrower and is the requirement: nothing gated is in
+ * the page until the reader confirms.
  *
  * Every input is untrusted — the page supplies it, but anything can POST.
- * Keys are validated as short strings and then looked up only inside the
- * gated listings named in the content file; anything else resolves `null`
- * rather than reaching the repository, so an action cannot be pointed at
- * listings it was not written for. Returns carry only what the gate renders.
+ * A key names a section, a tile and (for a document) its id; it is parsed
+ * (`_lib/gate-keys.ts`), and resolved **only against a tile whose `gate` the backend has switched
+ * on**. Anything else resolves `null` rather than reaching further, so an
+ * action cannot be pointed at a tile it was not written for. Returns carry
+ * only what the gate renders.
  *
  * No closures and no bound arguments, so nothing is encrypted into the page:
  * the PM2 instances need no shared `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`.
@@ -34,56 +35,50 @@ import { getContentRepository } from '@/lib/content';
  * rejection here; the gates catch it and ask for a refresh.
  */
 
-const Key = z.string().min(1).max(200);
-
-/**
- * The URL of one gated document, by id — or `null` if the id is not a
- * document in a gated listing, or the repository failed.
- */
-export async function revealGatedDocument(id: string): Promise<string | null> {
-  const parsed = Key.safeParse(id);
-  if (!parsed.success) return null;
-
-  try {
-    const repository = getContentRepository();
-
-    for (const listing of gatedDocumentListings) {
-      const documents = await repository.getInvestorDocuments(listing);
-      const match = documents.find((document) => document.id === parsed.data);
-      if (match !== undefined) return match.file.url;
-    }
-  } catch (error) {
-    console.error('[investors] revealGatedDocument failed.', error);
-  }
-
-  return null;
+/** The tile's page, if the tile exists and is gated; `null` otherwise. */
+async function gatedTile(section: InvestorSection, slug: string): Promise<InvestorTilePage | null> {
+  const page = await getContentRepository().getInvestorTilePage(section, slug);
+  return page?.tile.gate.enabled === true ? page : null;
 }
 
 /**
- * The sources of the video in one gated listing, by its section — or `null`
- * if the section is not gated, it has no video, or the repository failed.
+ * The URL of one gated document — or `null` if the key is not a document on
+ * a gated tile, the document has nothing to open, or the repository failed.
  */
-export async function revealGatedVideo(section: string): Promise<VideoPlayerSource | null> {
-  const parsed = Key.safeParse(section);
-  if (!parsed.success) return null;
-
-  const listing = gatedVideoListings.find((candidate) => candidate.section === parsed.data);
-  if (listing === undefined) return null;
+export async function revealGatedDocument(key: string): Promise<string | null> {
+  const parsed = parseDocumentKey(key);
+  if (parsed === null) return null;
+  const { section, slug, documentId } = parsed;
 
   try {
-    const [video] = await getContentRepository().getInvestorVideos(listing);
-    if (video === undefined) return null;
+    const page = await gatedTile(section, slug);
+    const document =
+      page === null ? undefined : allDocuments(page).find((d) => d.id === documentId);
+    return document === undefined ? null : documentUrl(document);
+  } catch (error) {
+    console.error('[investors] revealGatedDocument failed.', error);
+    return null;
+  }
+}
 
-    return {
-      src: video.file.url,
-      type: video.file.mimeType,
-      poster: video.posterUrl,
-      captions: video.captions.map((track) => ({
-        src: track.url,
-        srcLang: track.srcLang,
-        label: track.label,
-      })),
-    };
+/**
+ * The sources of the recording on one gated tile — or `null` if the tile is
+ * not gated, has no hosted recording, or the repository failed. The backend
+ * has no poster or caption tracks (docs/api-contracts.md §9), so neither is
+ * returned.
+ */
+export async function revealGatedVideo(key: string): Promise<VideoPlayerSource | null> {
+  const parsed = parseTileKey(key);
+  if (parsed === null) return null;
+  const { section, slug } = parsed;
+
+  try {
+    const page = await gatedTile(section, slug);
+    const file =
+      page === null ? null : (allDocuments(page).find((d) => d.file !== null)?.file ?? null);
+    return file === null
+      ? null
+      : { src: file.url, type: file.mimeType, poster: null, captions: [] };
   } catch (error) {
     console.error('[investors] revealGatedVideo failed.', error);
     return null;

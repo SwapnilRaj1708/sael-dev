@@ -35,6 +35,16 @@ const monthYearFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'long',
 });
 
+/** `"Sep 5, 2026, 8:33 AM"` — a moment, for the preview banner's "last changed". */
+const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: IST,
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
 function parse(value: string | Date): Date | null {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -56,6 +66,15 @@ export function formatDate(value: string | Date): string {
 export function formatMonthYear(value: string | Date): string {
   const date = parse(value);
   return date === null ? '' : monthYearFormatter.format(date);
+}
+
+/**
+ * Format as `"Sep 5, 2026, 8:33 AM"`, in IST like every date here. Same
+ * failure behaviour as {@link formatDate}.
+ */
+export function formatDateTime(value: string | Date): string {
+  const date = parse(value);
+  return date === null ? '' : dateTimeFormatter.format(date);
 }
 
 /**

@@ -1,4 +1,8 @@
 import type { NextConfig } from 'next';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
+import { indexingBanner } from './src/lib/config/production-origin';
+import { INTERNAL_REWRITES } from './src/lib/routing/internal-rewrites';
+import { REDIRECTS } from './src/lib/seo/redirects';
 
 type RemotePattern = NonNullable<NonNullable<NextConfig['images']>['remotePatterns']>[number];
 
@@ -27,6 +31,27 @@ function legacyImagePattern(): RemotePattern[] {
   ];
 }
 
+/**
+ * `next dev` only: the local backend's media, served by Azurite at
+ * `http://127.0.0.1:10000/devstoreaccount1/…` (docs/api-contracts.md §2.6).
+ *
+ * Gated on `NODE_ENV`, which Next sets to `development` for `next dev` and to
+ * `production` for `next build`, so neither the address nor
+ * `dangerouslyAllowLocalIP` can reach the standalone artefact (/CLAUDE.md §7).
+ * The second is needed because Next 16 refuses to optimise an image whose
+ * host is a private address, `127.0.0.1` included — the SSRF guard that must
+ * stay on in production. The port is Azurite's default, which the backend's
+ * Docker Compose publishes unless `SAEL_AZURITE_BLOB_PORT` moves it.
+ */
+const isDevServer = process.env.NODE_ENV === 'development';
+
+function localStoragePatterns(): RemotePattern[] {
+  if (!isDevServer) return [];
+  return [
+    { protocol: 'http', hostname: '127.0.0.1', port: '10000', pathname: '/devstoreaccount1/**' },
+  ];
+}
+
 const nextConfig: NextConfig = {
   // `next dev` only — the LAN address a phone on the same network uses to
   // reach the dev server, which Next otherwise refuses as a cross-origin
@@ -35,7 +60,7 @@ const nextConfig: NextConfig = {
   // It is one machine's address: change it, do not assume it is yours.
   allowedDevOrigins: ['192.168.0.156'],
   // Standalone output is the deployment artefact: `.next/standalone/server.js`
-  // runs under PM2 behind Nginx. See docs/architecture.md §8 and /CLAUDE.md §7,
+  // runs under systemd behind nginx. See docs/architecture.md §8 and /CLAUDE.md §7,
   // which requires it. It stays the default, so `pnpm build && pnpm package`
   // produces the client's archive with no environment set at all.
   //
@@ -55,6 +80,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],
+    dangerouslyAllowLocalIP: isDevServer,
     remotePatterns: [
       { protocol: 'https', hostname: '*.blob.core.windows.net' },
       // YouTube's thumbnail host, for the Newsroom's Multimedia cards — a
@@ -62,6 +88,7 @@ const nextConfig: NextConfig = {
       // image rather than served `unoptimized`. lib/utils/youtube.ts.
       { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
       ...legacyImagePattern(),
+      ...localStoragePatterns(),
     ],
   },
   turbopack: {
@@ -78,8 +105,52 @@ const nextConfig: NextConfig = {
     },
   },
   async redirects() {
-    return []; // populated in FE-22
+    // Legacy URL mappings join these in FE-22.
+    return REDIRECTS;
+  },
+  async rewrites() {
+    // Where src/proxy.ts sends a request it has marked: the routing-miss and
+    // the preview session handler. Here, not in the proxy, because a proxy
+    // rewrite behind nginx left the server (src/lib/routing/internal-rewrites.ts).
+    return { beforeFiles: INTERNAL_REWRITES, afterFiles: [], fallback: [] };
+  },
+  async headers() {
+    return [
+      {
+        // Every Live Preview page — the eight `…-preview` sections the admin
+        // panel opens (docs/api-contracts.md §6.1) and the pages under them.
+        // The pages' own metadata says `noindex` too; this covers whatever
+        // reads the header rather than the HTML, and covers a page the moment
+        // it exists. The root layout only marks non-production origins, so
+        // without both a preview on the real host would be indexable.
+        source: '/:area(newsroom|investors)/:section([a-z-]+-preview)/:rest*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+    ];
   },
 };
 
-export default nextConfig;
+/**
+ * Says, in every build's output, whether the build is indexable. `NEXT_PUBLIC_SITE_URL` is
+ * compiled in, and every origin but `PRODUCTION_URL` gets `noindex` from the root layout, so a
+ * build for the wrong host would otherwise ship a site hidden from search engines with nothing
+ * reporting it. A warning, not a failure: preview builds are meant to be `noindex`. An unset or
+ * malformed value prints nothing here, because src/lib/config/env.ts fails the build on it.
+ *
+ * `next build` loads this file more than once, in its own process and in workers that inherit its
+ * environment, so the environment carries the fact that the banner has been printed.
+ */
+const INDEXING_ANNOUNCED = 'SAEL_BUILD_INDEXING_ANNOUNCED';
+
+function announceIndexing(): void {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env[INDEXING_ANNOUNCED] === '1') return;
+  if (siteUrl === undefined || !URL.canParse(siteUrl)) return;
+  process.env[INDEXING_ANNOUNCED] = '1';
+  console.warn(`\n${indexingBanner(siteUrl)}\n`);
+}
+
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_PRODUCTION_BUILD) announceIndexing();
+  return nextConfig;
+}

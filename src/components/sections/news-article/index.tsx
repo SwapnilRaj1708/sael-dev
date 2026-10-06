@@ -17,6 +17,8 @@ export interface NewsArticleBodyProps {
    * cannot render the raw field. `sanitizeBio`'s bargain with `<BioDisclosure>`.
    */
   html: string;
+  /** Bypass the image optimiser — on a preview page, always. See `<NewsCard unoptimized>`. */
+  unoptimizedImages?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export function NewsArticleBody({
   publishedOnLabel,
   imageUrl,
   html,
+  unoptimizedImages = false,
 }: NewsArticleBodyProps) {
   return (
     <div className="flex flex-col gap-flow">
@@ -65,7 +68,14 @@ export function NewsArticleBody({
 
       {imageUrl !== null && (
         <div className="relative aspect-video w-full overflow-hidden bg-surface-deep">
-          <Image src={imageUrl} alt="" fill sizes={SIZES_ARTICLE_LEAD} className="object-cover" />
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            sizes={SIZES_ARTICLE_LEAD}
+            unoptimized={unoptimizedImages}
+            className="object-cover"
+          />
         </div>
       )}
 

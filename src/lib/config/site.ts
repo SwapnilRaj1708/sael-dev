@@ -1,18 +1,13 @@
 import { env } from '@/lib/config/env';
+import { isProductionOrigin, PRODUCTION_URL } from '@/lib/config/production-origin';
+
+export { PRODUCTION_URL };
 
 /**
  * Marker for copy the client has not supplied yet. Grep for it before launch.
  * Never replace one of these with a plausible-looking value — see /CLAUDE.md §3.
  */
 export const TODO_CONTENT = '{{TODO: content}}';
-
-/**
- * The one origin that may be indexed. Anything else — a staging box, a preview
- * VM, localhost — must serve `noindex`, because a staging copy indexed under
- * the client's brand is a launch-day incident.
- * docs/accessibility-and-seo.md §4.
- */
-export const PRODUCTION_URL = 'https://www.sael.co';
 
 /**
  * Declared explicitly rather than inferred from the literal.
@@ -57,17 +52,15 @@ export const siteConfig: SiteConfig = {
   //   x: TODO_CONTENT,
   // },
   social: {
-    facebook: 'www.facebook.com/saelindustries',
-    instagram: 'www.instagram.com/saelindustries',
-    linkedin: 'www.linkedin.com/company/saelindustries',
-    x: 'www.x.com/saelindustries',
+    facebook: 'https://www.facebook.com/SAELIndustriesLimited/',
+    instagram: 'https://www.instagram.com/sael_india/',
+    linkedin: 'https://www.linkedin.com/company/saelindustries',
+    x: 'https://x.com/SAEL_India',
   },
 };
 
 /**
- * Whether this deployment is the real public site. Compared on origin, so a
- * trailing slash or a path in the env var cannot accidentally let a staging
- * host through.
+ * Whether this deployment is the real public site, which is what decides `noindex`. The build
+ * prints the same decision (next.config.ts), so it is never made silently.
  */
-export const isPublicSite: boolean =
-  new URL(siteConfig.url).origin === new URL(PRODUCTION_URL).origin;
+export const isPublicSite: boolean = isProductionOrigin(siteConfig.url);

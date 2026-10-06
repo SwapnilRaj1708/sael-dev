@@ -18,31 +18,35 @@ import { articleDescription } from '@/lib/utils/article-description';
  */
 
 /**
- * One section's items, or `[]` if the repository failed. Logged, not
- * swallowed: nothing else would record that the backend is down, and the
- * listing renders its empty state either way. /CLAUDE.md §6.
+ * One section's items. **A failure throws, in every environment**, never an
+ * empty list.
+ *
+ * An empty list would be cached as the page for the whole ISR window, a
+ * section with nothing published, until the next regeneration happened to
+ * succeed. A throw is not cached: during a regeneration Next keeps serving
+ * the last good page and tries again on a later request, and during the
+ * build it fails the build rather than shipping an empty Newsroom. A page
+ * with no good version yet — the first render after a deploy whose build
+ * succeeded but whose backend is now down — goes to the error boundary with a
+ * 500. The error's message, which Next logs, names the endpoint, the status
+ * and the backend's `code` and `correlationId`.
  *
  * `limit` is a hint to the repository, which may return more, so the list is
  * cut here too.
  */
 export async function loadNewsItems(category: NewsCategory, limit?: number): Promise<NewsItem[]> {
-  try {
-    const items = await getContentRepository().getNewsItems({ category, limit });
-    return limit === undefined ? items : items.slice(0, limit);
-  } catch (error) {
-    console.error(`[newsroom] getNewsItems(${category}) failed; rendering the empty state.`, error);
-    return [];
-  }
+  const items = await getContentRepository().getNewsItems({ category, limit });
+  return limit === undefined ? items : items.slice(0, limit);
 }
 
 /**
- * Every article's slug in a section, for `generateStaticParams`.
+ * Every article's slug in a section, for `generateStaticParams` — the pages
+ * built ahead of the first visitor.
  *
- * **A failure builds no article pages rather than failing the build** — the
- * listings' bargain, logged loudly for the same reason. With
- * `dynamicParams = false` those URLs then 404 until the next build; the
- * alternative, generating them on demand, would be a runtime page cache,
- * which /CLAUDE.md §7 rules out on this host.
+ * **Not the list of pages that exist.** The routes set `dynamicParams =
+ * true`, so an article published after the build renders on its first
+ * request and is cached like the rest. A failure here fails the build, as
+ * {@link loadNewsItems} does for the listings.
  */
 export async function loadArticleSlugs(category: NewsArticleCategory): Promise<{ slug: string }[]> {
   const items = await loadNewsItems(category);
@@ -63,16 +67,23 @@ export function loadNewsArticle(
 }
 
 /**
- * An article page's metadata — the legacy page's own: its `<title>` is the
- * headline alone, with no " - SAEL", its description the legacy derivation
- * from the body, `og:type` `article` with the card image, and the canonical
- * its legacy URL. Unique per article because each of those is.
+ * An article page's metadata. **What the maker wrote in the panel wins**:
+ * `seoTitle`, `seoDescription` and the share image are used as given
+ * wherever they are set, and nothing is derived over them.
+ *
+ * Where one is blank, the fallback is the legacy page's own: the `<title>` is
+ * the headline alone, with no " - SAEL"; the description is the article's
+ * summary (docs/api-contracts.md §3.2), and failing that the legacy
+ * derivation from the body — the legacy articles carry neither SEO fields
+ * nor a summary, so their search snippets do not change at cutover; the
+ * share image is the card's. `og:type` is `article`, and the canonical is the
+ * legacy URL.
  */
 export function articleMetadata(article: NewsArticle): Metadata {
   return buildMetadata({
-    title: article.title,
-    description: articleDescription(article.body),
+    title: article.seoTitle ?? article.title,
+    description: article.seoDescription ?? article.summary ?? articleDescription(article.body),
     path: newsArticlePath(article.category, article.slug),
-    article: { image: article.imageUrl, publishedTime: article.publishedAt },
+    article: { image: article.ogImageUrl ?? article.imageUrl, publishedTime: article.publishedAt },
   });
 }

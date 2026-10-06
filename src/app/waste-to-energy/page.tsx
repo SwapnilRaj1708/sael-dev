@@ -64,8 +64,11 @@ const benefitItems: ValueGridItem[] = wasteToEnergyBenefits.items.map((item, ind
 /**
  * Agri Waste-to-Energy — the Solar Energy template, all five sections.
  *
- * Built to the client's reference screenshot for layout and to the live
- * https://www.sael.co/waste-to-energy/ for every word. Hero, overview beside
+ * Built to SAEL's reference screenshot for layout and to
+ * https://www.sael.co/waste-to-energy/ for every word, on SAEL's instruction
+ * of 2026-09-18 for the four business pages. That instruction still stands for
+ * them; it is not the general rule (/CLAUDE.md §2 rule 8). The page's name is
+ * the exception: SAEL renamed it on 2026-10-01, and theirs stands. Hero, overview beside
  * a masked photograph, the projects map with its eleven plant pins and
  * portfolio figure, the four technology entries beside a masked photograph,
  * and six benefit cards — six, because that is what the live page has; the
@@ -75,17 +78,19 @@ const benefitItems: ValueGridItem[] = wasteToEnergyBenefits.items.map((item, ind
  */
 export default function WasteToEnergyPage() {
   return (
-    <div className="-mt-header lg:mt-0">
-      <PageHero {...wasteToEnergyHero} />
-      <ProseSplit {...wasteToEnergyOverview} />
-      <ProjectsMap {...wasteToEnergyProjects} sites={wasteToEnergySites} />
+    <div className="-mt-header business-ramp-agri lg:mt-0">
+      <PageHero titleGradient="agri" {...wasteToEnergyHero} />
+      <ProseSplit titleGradient="agri" {...wasteToEnergyOverview} />
+      <ProjectsMap titleGradient="agri" {...wasteToEnergyProjects} sites={wasteToEnergySites} />
       <CapabilitySplit
+        titleGradient="agri"
         eyebrow={wasteToEnergyTechnology.eyebrow}
         title={wasteToEnergyTechnology.title}
         items={technologyItems}
         media={wasteToEnergyTechnology.media}
       />
       <ValueGrid
+        titleGradient="agri"
         eyebrow={wasteToEnergyBenefits.eyebrow}
         title={wasteToEnergyBenefits.title}
         items={benefitItems}

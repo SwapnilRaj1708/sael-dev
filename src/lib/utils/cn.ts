@@ -14,6 +14,7 @@ const FONT_SIZES = [
   'h3',
   'stat',
   'stat-large',
+  'business-figure',
   'milestone',
   'sdg-num',
   'goal-title',
@@ -38,6 +39,7 @@ const FONT_SIZES = [
   'tile-note',
   'tile-marker',
   'footprint-title',
+  'story-title',
 ] as const;
 
 /**

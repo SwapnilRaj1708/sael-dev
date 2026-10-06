@@ -198,6 +198,20 @@
   /* The date over a news card. Paper's equivalent of --color-on-dark-muted. */
   --color-meta-paper: #6b6b73;
 
+  /* A form's two outcomes on the black ground — ui/form-field.tsx,
+   * ui/form-status.tsx, ui/form-error-summary.tsx. The site had no form until
+   * Contact Us (2026-10-01), so it had no word for either.
+   *
+   * Named for their meaning rather than reused as `brand-red-bright` and a
+   * figure green: a field error is not the brand, and the two would drift
+   * apart the day the brand's red is retuned. Both are tuned for the ground
+   * they sit on, as --color-brand-red-bright is: error 6.1:1 and success
+   * 8.7:1 on --color-surface-black, so either carries body-size text. Neither
+   * is ever the only signal — every error and every status also has an icon
+   * and words. */
+  --color-error-on-dark: var(--color-brand-red-bright);
+  --color-success-on-dark: #3fbf99;
+
   /* The unfilled part of a hero progress segment. */
   --color-hero-track: rgb(255 255 255 / 0.16);
 
@@ -227,6 +241,38 @@
   --color-sdg-12: #bf8b2e;
   --color-sdg-13: #3f7e44;
   --color-sdg-15: #56c02b;
+
+  /* The bright ramps' stops as flat colours — --gradient-eyebrow-bright's
+   * three, and --gradient-heading-bright's first. Our Core Beliefs (FE-14)
+   * gives each belief one of them as its accent, on its check marks and on
+   * the glow inside its card, so the four cards read as one set drawn from
+   * the heading's own light rather than as four new colours. The design's
+   * values, `Our Core Beliefs.dc.html`, 2026-10-06. Flat because a check mark
+   * is a stroke and a glow is a single colour faded out; neither can take a
+   * ramp. Keep in step with the two gradients they are read from. */
+  --color-ramp-violet: #8f83e0;
+  --color-ramp-rose: #d95a95;
+  --color-ramp-coral: #ff6a6e;
+  --color-ramp-indigo: #7d6fd4;
+
+  /* The ESG wheel — Our Key ESG Metrics' hero (FE-13), `ESG Animated
+   * Banner.dc.html` restyled for the black ground in `Our Key ESG Metrics
+   * v2.dc.html`. The three segment colours are the banner's own and the
+   * design keeps them unchanged on dark ("segment colours unchanged"), so
+   * they are named for the pillar they mark, not for the brand. Each label
+   * on a segment is set in the deep shade of that segment's hue, which is
+   * what carries it: white on the yellow segment would not read. */
+  --color-esg-social: #ff7f86;
+  --color-esg-governance: #ffd966;
+  --color-esg-environment: #6fd6a3;
+  --color-esg-social-ink: #5a0f1b;
+  --color-esg-governance-ink: #4a3600;
+  --color-esg-environment-ink: #0f3d25;
+  /* The ring inside the segments, and the disc at the centre. */
+  --color-esg-track: #262934;
+  --color-esg-core: #101218;
+  /* The dotted orbit that turns round the outside. */
+  --color-esg-orbit: rgb(255 255 255 / 0.32);
 
   /* ---------------------------------------------------------------------
    * Typography — docs/design-guidelines.md §2
@@ -272,6 +318,15 @@
   --text-stat-large--line-height: 0.9;
   --text-stat-large--letter-spacing: -0.04em;
   --text-stat-large--font-weight: 700;
+
+  /* 29 → 61. The portfolio figure on a business page's projects section —
+   * --text-stat-large at 80%, at the client's request of 2026-10-06, to match
+   * the homepage ledger's reduction. The homepage presence figures keep the
+   * full size. */
+  --text-business-figure: clamp(1.8rem, 1.3538rem + 2.0513vw, 3.8rem);
+  --text-business-figure--line-height: 0.9;
+  --text-business-figure--letter-spacing: -0.04em;
+  --text-business-figure--font-weight: 700;
 
   /* 16 → 22 */
   --text-h3: clamp(1rem, 0.9135rem + 0.3846vw, 1.375rem);
@@ -463,11 +518,12 @@
   --text-ledger-title--letter-spacing: -0.01em;
   --text-ledger-title--font-weight: 700;
 
-  /* 36 → 72. The capacity figure on a ledger row, which in the dark design is
+  /* 29 → 58. The capacity figure on a ledger row, which in the dark design is
    * the largest thing on the page after the hero headline — it is why the row
    * exists. --text-tile-figure (20 → 26) was sized for a figure sat beside a
-   * title on a small card; this one owns its line. */
-  --text-ledger-figure: clamp(2.25rem, 1.7308rem + 2.3077vw, 4.5rem);
+   * title on a small card; this one owns its line. 20% smaller than the
+   * original 36 → 72, at the client's request of 2026-10-06. */
+  --text-ledger-figure: clamp(1.8rem, 1.3846rem + 1.8462vw, 3.6rem);
   --text-ledger-figure--line-height: 0.9;
   --text-ledger-figure--letter-spacing: -0.04em;
   --text-ledger-figure--font-weight: 700;
@@ -494,6 +550,16 @@
   --text-card-title--line-height: 1.42;
   --text-card-title--letter-spacing: -0.01em;
   --text-card-title--font-weight: 400;
+
+  /* 23 → 28. A story's heading on Story of Our Influence below `lg`, where
+   * it shares a row with a 120px photograph and --text-display (30 →) would
+   * take three words a line. From `lg` the story is two columns and the
+   * heading is --text-display like every other section's. The design's 23 at
+   * 390 (`Story of Our Influence.dc.html`), carried up to the `lg` hinge. */
+  --text-story-title: clamp(1.4375rem, 1.2681rem + 0.753vw, 1.75rem);
+  --text-story-title--line-height: 1.18;
+  --text-story-title--letter-spacing: -0.02em;
+  --text-story-title--font-weight: 400;
 
   /* Tracking, where a role needs a value its size token does not carry.
    *
@@ -677,6 +743,43 @@
   --spacing-play-mark: clamp(2.75rem, 2.4615rem + 1.2821vw, 4rem); /* 44 → 64 */
 
   /* ------------------------------------------------------------------
+   * The Sustainability pages — FE-12, FE-13, FE-14, built to the client's
+   * Claude Design project `6afc516d-…` (2026-10-06).
+   * ---------------------------------------------------------------- */
+
+  /* The column gap of a split whose halves are both large — a story's
+   * photograph and its copy, the ESG wheel and its title. Wider than
+   * --spacing-ledger-col-gap (24 → 72): the designs set 96 and 88 at 1440,
+   * where the ledger's gap is 57. Consumed from `lg`, where the split goes
+   * side by side; 64 at that hinge, 96 from 1440. */
+  --spacing-split-wide: clamp(4rem, 7.6923vw - 0.9231rem, 6rem); /* 64 → 96 */
+
+  /* A story's photograph below `lg`, beside its eyebrow and heading. */
+  --spacing-story-thumb: 7.5rem; /* 120 */
+
+  /* A belief card's cut-out below `lg`: the box it is fitted into, how far
+   * that box rises out of the card's top edge, and the padding that clears
+   * the rest of it inside the card; the section's top padding carries the
+   * rise. From `lg` the cut-out is a column of the
+   * card instead and --spacing-belief-media is that column's floor. */
+  --spacing-belief-cutout: 18.75rem; /* 300 */
+  --spacing-belief-rise: 6rem; /* 96 */
+  --spacing-belief-card-top: 13.75rem; /* 220 */
+  --spacing-belief-media: 26.25rem; /* 420 */
+
+  /* A stakeholder box on the tree from `lg`, tall enough for a two-line name. */
+  --spacing-stakeholder-box: 6.5rem; /* 104 */
+
+  /* The ESG wheel. 300 on a phone, 420 at 1440. */
+  --spacing-esg-wheel: clamp(18.75rem, 16.25rem + 11.1111vw, 26.25rem); /* 300 → 420 */
+
+  /* The three soft glows that drift behind it, one per pillar, at the
+   * design's two sizes each (390 and 1440). */
+  --spacing-esg-glow-environment: clamp(13.75rem, 10.8333rem + 12.963vw, 22.5rem); /* 220 → 360 */
+  --spacing-esg-glow-governance: clamp(11.25rem, 8.75rem + 11.1111vw, 18.75rem); /* 180 → 300 */
+  --spacing-esg-glow-social: clamp(10rem, 7.9167rem + 9.2593vw, 16.25rem); /* 160 → 260 */
+
+  /* ------------------------------------------------------------------
    * `SAEL Home v2` measurements.
    * ---------------------------------------------------------------- */
 
@@ -723,7 +826,8 @@
    * need to be: the mark is a real column beside the copy rather than an
    * absolutely-positioned overlay, so it takes its own space and the copy
    * wraps against it without any reserve being declared. */
-  --spacing-ledger-icon: clamp(4.3125rem, 7.5vw, 8.25rem); /* 69 → 132 */
+  /* 20% under the original 69 → 132, client 2026-10-06. */
+  --spacing-ledger-icon: clamp(3.45rem, 6vw, 6.6rem); /* 55 → 106 */
   --spacing-ledger-col-gap: clamp(1.5rem, 0.8077rem + 3.0769vw, 4.5rem); /* 24 → 72 */
 
   /* A solutions card, which in v2 is one of four on a rail rather than a
@@ -771,7 +875,14 @@
    *
    * The card's min-height is a floor, not a fixed height, so a mark that
    * outgrows a card simply makes it taller rather than overflowing. */
-  --spacing-goal-icon: clamp(3.75rem, 2.7981rem + 4.2308vw, 7.875rem); /* 60 → 126 */
+  /* Room under a gradient-clipped heading for its descenders. The ramp is a
+   * background, so it paints only inside the box; at a tight line height a
+   * "g" or "y" hangs below the last line box and is cut off. Added as
+   * padding and given back as a negative margin, so layout does not move. */
+  --spacing-glyph-overhang: 0.2em;
+
+  /* 20% under the original 60 → 126, client 2026-10-06. */
+  --spacing-goal-icon: clamp(3rem, 2.2385rem + 3.3846vw, 6.3rem); /* 48 → 101 */
 
   /* The business icon's rendered height, and the short gradient rules that
    * flank a centred section eyebrow. */
@@ -815,8 +926,9 @@
    * Radius and elevation — docs/design-guidelines.md §3
    * ------------------------------------------------------------------ */
 
-  /* The dotted India map's own viewBox — `src/assets/images/dotted-map.svg`,
-   * supplied by the client on 2026-08-21. Kept beside the site coordinates it
+  /* The pin space for the dotted India map, fitted to `dotted-map.svg`
+   * (2026-08-21). The current `map.svg` and its four business recolourings
+   * (2026-10-06) share that framing to within 0.7%. Kept beside the site coordinates it
    * describes, in sections/presence-map/dots.ts. */
   --aspect-map-india: 311.33 / 337.45;
 
@@ -834,6 +946,18 @@
   /* 5:4 in `SAEL Home v2`, where the card is narrower and taller than the
    * 16:10 the earlier design drew. */
   --aspect-news-thumb: 5 / 4;
+
+  /* The office map on Contact Us — ui/map-embed.tsx — the same box before and
+   * after it is loaded, so pressing "show" swaps the preview for the map
+   * without the page moving. Ratios, not the legacy embed's 100% × 450px: a
+   * fixed height is a sliver on a phone and a letterbox at 1920. 4:3 on a
+   * phone, 16:9 from `md`, and 21:9 from `lg`, where the map sits in the
+   * form's column (`<ContactRow>`) and is ~340px tall at 1440 — the scale of
+   * the rows around it, not a band of its own (the client's ask of
+   * 2026-10-06). */
+  --aspect-map-embed: 4 / 3;
+  --aspect-map-embed-md: 16 / 9;
+  --aspect-map-embed-lg: 21 / 9;
 
   /* "Our Endeavour" — the artwork box, and the frame the three layers below
    * are measured in. Still `girl.png`'s ratio: that file was the assembled
@@ -1119,6 +1243,122 @@
   --business-overview-media-w: 44rem; /* 704 */
   --business-execution-media-w: 34rem; /* 544 */
 
+  /* ---------------------------------------------------------------------
+   * The Sustainability pages — FE-12, FE-13, FE-14.
+   * ------------------------------------------------------------------ */
+
+  /* Story of Our Influence's photograph shape — the client-supplied `1.svg`,
+   * exported by the design as `story-mask.svg`. The path verbatim, filled
+   * white, under the file's own viewBox (whose origin is not 0 0: the path
+   * was drawn on a larger artboard and the viewBox crops to it). Boxes
+   * carrying it take --aspect-story-shape, so --mask-fill stretches nothing.
+   * Consumed by sections/story-split. */
+  --mask-story-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='142.84 104.12 352 483.43' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='m486.19 143.39l-124.48 0.01c-2.21 0-4.34-0.85-5.94-2.36l-37.32-34.56c-1.6-1.52-3.73-2.36-5.930-2.36h-160.3c-4.77 0-8.65 3.87-8.65 8.65l-0.73 397.3c0 4.78 3.88 8.65 8.65 8.65h189.07c2.21 0 4.33 0.84 5.93 2.36l67.73 64.11c1.6 1.52 3.73 2.36 5.93 2.36h66.02c4.78 0 8.65-3.87 8.65-8.65l0.02-426.86c0-4.78-3.87-8.65-8.65-8.65z'/%3E%3C/svg%3E");
+  --aspect-story-shape: 352 / 483.43;
+
+  /* A story's photograph from `lg`: as tall as the screen allows once the
+   * section's own padding is off it, between a floor that keeps the shape
+   * legible on a short laptop and the design's 640 at a 900px-tall screen.
+   * Its width follows from --aspect-story-shape. Each story is a screen of
+   * its own (they snap), so the height is the dimension that has to fit. */
+  --story-media-h: clamp(22.5rem, calc(var(--spacing-viewport) - 12rem), 40rem); /* 360 → 640 */
+
+  /* Our Core Beliefs' hero collage shape — the client-supplied `8.svg`,
+   * exported as `core-beliefs-mask.svg`: a rounded panel with one corner
+   * eased. Unlike every other mask here it is **stretched to each image's
+   * box** rather than given its own ratio, which is the design's
+   * instruction: the three columns are whatever shape the hero makes them,
+   * and the panel is drawn to fit. `preserveAspectRatio='none'` is what lets
+   * it. Consumed by sections/page-hero/collage-backdrop. */
+  --mask-belief-collage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='173 140 222.19 228.26' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='m364.93 140h-161.67c-16.71 0-30.26 13.55-30.26 30.26v9.72 119.38 37.84c0 16.71 13.55 30.26 30.26 30.26h39.73 82.48 40.16c16.33 0 29.56-13.23 29.56-29.55v-42.1-115.83-9.72c0-16.71-13.55-30.26-30.26-30.26z'/%3E%3C/svg%3E");
+
+  /* How much of the hero the collage takes below `lg`, where the copy stands
+   * under it rather than over it — the design's 420 of a 740 frame. From
+   * `lg` it runs to the hero's foot and the scrim carries the copy. */
+  --collage-h-m: 57%;
+
+  /* The collage's scrim: clear over the top third, then down to the page's
+   * own black at the foot so the hero runs into the first card without an
+   * edge. Not --gradient-page-hero-scrim, which stops at 0.88 and leaves a
+   * seam against the ground. Below `lg` the solid part starts higher, under
+   * the copy that stands beneath the shorter collage. */
+  --gradient-collage-scrim: linear-gradient(
+    180deg,
+    rgb(8 9 12 / 0) 0%,
+    rgb(8 9 12 / 0.1) 30%,
+    rgb(8 9 12 / 0.82) 70%,
+    var(--color-surface-black) 100%
+  );
+  --gradient-collage-scrim-m: linear-gradient(
+    180deg,
+    rgb(8 9 12 / 0) 0%,
+    rgb(8 9 12 / 0.1) 30%,
+    rgb(8 9 12 / 0.85) 58%,
+    var(--color-surface-black) 70%
+  );
+
+  /* The glow inside a belief card, in the card's accent. `currentColor`, so
+   * one token serves all four accents: the layer that paints it takes the
+   * accent as its text colour and the gradient picks it up there, where a
+   * `var()` here would have been resolved once, on :root, before any card
+   * had set one. It pools behind the cut-out — under it below `lg`, behind
+   * the end or start column from `lg` — so the figure stands in its own
+   * light. The design's positions, strengths and reach. */
+  --gradient-belief-glow-top: radial-gradient(
+    circle at 50% 18%,
+    color-mix(in srgb, currentColor 18%, transparent),
+    transparent 60%
+  );
+  --gradient-belief-glow-end: radial-gradient(
+    circle at 78% 75%,
+    color-mix(in srgb, currentColor 16%, transparent),
+    transparent 55%
+  );
+  --gradient-belief-glow-start: radial-gradient(
+    circle at 22% 75%,
+    color-mix(in srgb, currentColor 16%, transparent),
+    transparent 55%
+  );
+
+  /* The ESG hero's floor from `lg`, under the masthead — the design's 640
+   * less its 84px bar. Below `lg` the hero is as tall as its stack. */
+  --esg-hero-min-h: 35rem; /* 560 */
+  /* The title block beside the wheel. */
+  --esg-hero-copy-w: 40rem; /* 640 */
+
+  /* The three glows behind the wheel, each its pillar's colour at a whisper,
+   * and the fade at the hero's foot into the section under it. */
+  --gradient-esg-glow-environment: radial-gradient(
+    circle,
+    rgb(111 214 163 / 0.16),
+    rgb(111 214 163 / 0) 70%
+  );
+  --gradient-esg-glow-governance: radial-gradient(
+    circle,
+    rgb(255 217 102 / 0.14),
+    rgb(255 217 102 / 0) 70%
+  );
+  --gradient-esg-glow-social: radial-gradient(
+    circle,
+    rgb(255 127 134 / 0.16),
+    rgb(255 127 134 / 0) 70%
+  );
+  --gradient-esg-hero-foot: linear-gradient(
+    180deg,
+    rgb(8 9 12 / 0) 0%,
+    var(--color-surface-black) 100%
+  );
+
+  /* The SDG icon grid's cap from `lg`: five icons of ~190px and their gaps.
+   * Uncapped they would be 224px at 1440 and 300px at 1920, and the section
+   * — heading, two rows and the UN notice — would no longer fit the one
+   * screen it snaps to. */
+  --sdg-grid-w: 65rem; /* 1040 */
+
+  /* Reporting Framework's two columns from `lg` — heading and copy side by
+   * side, the design's 5 : 7. */
+  --prose-beside-cols: minmax(0, 5fr) minmax(0, 7fr);
+
   /* A cutout split — "Our Ambition" from `md` up: a shaped paper panel
    * (`bg-for-cutout.svg`, drawn at 700 × 405) with the copy on the shelf under
    * the notch cut from its top-left corner, and a cut-out portrait standing
@@ -1213,20 +1453,6 @@
   --team-dialog-w: min(45rem, calc(100% - var(--spacing-flow))); /* 720 cap */
   --team-dialog-max-h: calc(100dvh - var(--spacing-flow) * 2);
   --team-dialog-portrait-w: 6rem; /* 96 */
-  /* The dialog's portrait is the card's photograph zoomed to a passport crop —
-   * head and shoulders, the client's ask of 2026-09-17 — rather than a second
-   * asset. All seventeen portraits share one studio framing, head in the upper
-   * third and shoulders mid-frame, so one zoom fits every face: 1.5× anchored
-   * a little below the top edge keeps each head whole with air above it and
-   * runs the shoulders off the bottom. Checked against every photograph, not
-   * assumed; 1.6× clipped three heads. The card's own crop is unchanged.
-   *
-   * This is the **default**. `TeamMember.portraitZoom` overrides it per person
-   * — the dialog sets this same property inline from the data — so the client
-   * can tune a photograph that sits differently in its frame without touching
-   * the rest. */
-  --scale-team-passport: 1.5;
-  --team-passport-origin: 50% 14%;
 
   /* The investor page template — `sections/sub-page/`, built with Offer
    * Documents. From `lg` the area's own page list takes a column to the left
@@ -1270,6 +1496,15 @@
    * shares a row with something; an article is nothing but running text,
    * and 68ch at --text-body is the classic 60–75 character line. */
   --measure-article: 68ch;
+
+  /* A legacy document page's text column — the legal pages. sael.co sets
+   * them in Bootstrap's `col-lg-9 m-auto` inside a `.container`: full width
+   * on a phone, three-quarters of the content width from `lg`, centred, and
+   * at most 9/12 of the 1300px container less the column's 12px padding
+   * each side — 975 − 24 = 951px. The client asked for that width logic
+   * kept (2026-10-06). The 3/4 is a Tailwind fraction in the component; this
+   * is the cap. */
+  --measure-legacy-doc: 59.4375rem; /* 951 */
 
   /* The video dialog. As wide as the consent dialog's arithmetic allows,
    * capped at 1152 — and capped again by the screen's *height*, so a 16:9
@@ -1496,6 +1731,11 @@
    * rather than relying on the scrim alone. */
   --shadow-hero-text: 0 2px 26px rgb(0 0 0 / 0.5);
 
+  /* The gradient business-page hero titles. Stronger than --shadow-hero-text
+   * at the client's request (2026-10-06): a coloured ramp over photography
+   * needs more lift than white does. Applied as a drop-shadow filter. */
+  --shadow-business-hero-title: 0 2px 10px rgb(0 0 0 / 0.8);
+
   /* The About SAEL artwork's own ratio — 605 x 412, which is the box the
    * client's approved composite is drawn in and the frame every figure below
    * is measured against.
@@ -1627,6 +1867,32 @@
   --gradient-ledger-cell: linear-gradient(90deg, #605ac3 0%, #a23f9c 52%, #df4196 100%);
   --gradient-ledger-module: linear-gradient(90deg, #2369ae 0%, #0f8578 52%, #30be35 100%);
   --gradient-ledger-agri: linear-gradient(90deg, #26763d 0%, #4c883e 52%, #f3eb31 100%);
+
+  /* The hover glow on an outlined card, re-coloured to each business's ledger
+   * ramp for its own page — the same corner-pool layout as --gradient-bg-glow,
+   * with the ramp's three stops in place of the site's coral, lavender and
+   * rose. Client, 2026-10-06. Applied by the `business-ramp-*` utilities in
+   * globals.css. */
+  --gradient-bg-glow-solar:
+    radial-gradient(circle farthest-side at 0 100%, #e0272c, transparent),
+    radial-gradient(circle farthest-side at 100% 0, #f9e217, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #e0272c, transparent),
+    radial-gradient(circle farthest-side at 0 0, #a631b2, var(--color-surface-black));
+  --gradient-bg-glow-cell:
+    radial-gradient(circle farthest-side at 0 100%, #a23f9c, transparent),
+    radial-gradient(circle farthest-side at 100% 0, #df4196, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #a23f9c, transparent),
+    radial-gradient(circle farthest-side at 0 0, #605ac3, var(--color-surface-black));
+  --gradient-bg-glow-module:
+    radial-gradient(circle farthest-side at 0 100%, #0f8578, transparent),
+    radial-gradient(circle farthest-side at 100% 0, #30be35, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #0f8578, transparent),
+    radial-gradient(circle farthest-side at 0 0, #2369ae, var(--color-surface-black));
+  --gradient-bg-glow-agri:
+    radial-gradient(circle farthest-side at 0 100%, #4c883e, transparent),
+    radial-gradient(circle farthest-side at 100% 0, #f3eb31, transparent),
+    radial-gradient(circle farthest-side at 100% 100%, #4c883e, transparent),
+    radial-gradient(circle farthest-side at 0 0, #26763d, var(--color-surface-black));
 
   /* Section labels, clipped to their letterforms. `bright` is the on-dark
    * ramp; `deep` is the same travel darkened to carry on paper. Both are the
@@ -1929,12 +2195,14 @@
    * Three fixed layers, and the order between them is the whole point: the
    * drawer covers the bar it was opened from, and the skip link clears both
    * because a keyboard user who cannot see where focus went has no way back.
+   * Below them, the sticky strip of a Live Preview page's draft banner.
    * Written as a scale rather than three numbers at three call sites, which
    * is how the third one ends up underneath the first.
    *
    * Consumed with `z-(--z-header)` — Tailwind v4 has no z-index namespace, so
    * these cannot be @theme tokens.
    * ------------------------------------------------------------------ */
+  --z-preview-banner: 90; /* under the bar, so its menus open over the strip */
   --z-header: 100;
   --z-drawer: 110;
   --z-skip-link: 120;

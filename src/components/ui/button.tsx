@@ -73,6 +73,19 @@ const button = cva(
          * contrast against the surface, so this variant brings its own. */
         onDark:
           'rounded-none border border-white/40 text-white hover:bg-white/10 focus-visible:outline-white',
+        /**
+         * A pill outlined in the bright ramp, white label, on the black
+         * ground — Our Core Beliefs' ESG Report link (FE-14). The one round
+         * button in the set, because the design draws it round: it sits
+         * under four 40px-radius cards and a square button there reads as
+         * from another page. The border is `gradient-outline`, which is
+         * what lets a ramp follow the radius. Brings its own focus ring, as
+         * `onDark` does.
+         */
+        pill: [
+          'rounded-pill gradient-outline text-white',
+          'hover:brightness-(--brightness-cta-hover) focus-visible:outline-white',
+        ],
       },
       size: {
         sm: 'text-cta px-4 py-2 lg:px-5 lg:py-2.5',

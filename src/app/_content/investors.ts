@@ -1,15 +1,18 @@
 import type { SubPageNavProps } from '@/components/sections/sub-page';
+import type { ConsentCopy } from '@/components/ui/consent-actions';
 import type { DocumentFilterCopy } from '@/components/ui/document-filter';
 import { TODO_CONTENT } from '@/lib/config/site';
-import type { InvestorDocumentCategory, InvestorListing } from '@/lib/content';
 
 /**
  * What every investor area's content file shares: the page record, the side
  * list, and the functional copy the investor templates need.
  *
- * Offer Documents set the shape (`offer-documents.ts`); Corporate
- * Governance, Financials & Reports, Notifications and Investor Contact
- * follow it through these helpers rather than each restating them.
+ * **The tiles are not here.** Which pages an area has, their names and
+ * their order come from the backend (`documents-live`), so a tile a maker
+ * adds in the panel appears without a release. What stays here is what the
+ * backend does not serve: each area's own index page, the pages that are
+ * not tiles (Board of Directors, Board Committees, Investor Contact), and
+ * the words for states and controls.
  */
 
 /**
@@ -24,6 +27,7 @@ export interface PageMeta {
   description: string;
 }
 
+/** A page that is not a tile — static content, at its legacy URL. */
 export interface InvestorPage {
   /** The last segment of the legacy URL. */
   slug: string;
@@ -35,8 +39,6 @@ export interface InvestorPage {
    */
   name: string;
   meta: PageMeta;
-  /** Where its documents live in the repository; `null` if it has none. */
-  listing: InvestorListing | null;
 }
 
 /**
@@ -49,35 +51,25 @@ export function investorPage(
   slug: string,
   name: string,
   title: string,
-  listing: InvestorListing | null,
 ): InvestorPage {
   return {
     slug,
     path: `${areaPath}${slug}/`,
     name,
     meta: { title, description: TODO_CONTENT },
-    listing,
   };
 }
 
-/** A listing addressed by its category alone — a category that is one page. */
-export function listingOf(
-  category: InvestorDocumentCategory,
-  section: string | null = null,
-): InvestorListing {
-  return { category, section };
-}
-
-/** An area's side list: its heading over its pages, this one marked current. */
+/** An area's side list: its heading over its pages, the one at `currentPath` marked current. */
 export function areaNav(
   label: string,
-  pages: readonly InvestorPage[],
-  current: InvestorPage,
+  pages: readonly { name: string; path: string }[],
+  currentPath: string,
 ): SubPageNavProps {
   return {
     label,
     items: pages.map(({ name, path }) => ({ name, href: path })),
-    currentHref: current.path,
+    currentHref: currentPath,
   };
 }
 
@@ -91,17 +83,41 @@ export function areaNav(
 /** The accessible name of the row of links to a page's headings. */
 export const jumpLinksLabel = 'On this page';
 
-/** A listing that failed to load or holds nothing. Our Team's wording. */
-export const investorDocumentsEmpty = {
-  title: 'Documents are unavailable',
-  description: 'We could not load these documents just now. Please try again shortly.',
+/**
+ * A tile page with nothing published on it yet — a real state, and not a
+ * failure: a failure does not render this, because the loaders throw and
+ * the last good page is served instead.
+ */
+export const investorDocumentsNone = {
+  title: 'No documents have been published here yet',
 } as const;
 
-/** A board or committee table that failed to load. Our Team's wording. */
-export const governanceEmpty = {
-  title: 'This information is unavailable',
-  description: 'We could not load it just now. Please try again shortly.',
+/**
+ * A published document whose file cannot be opened — a hosted file the
+ * backend never promoted to public storage. Shown in place of the link, so
+ * the document is still on the page.
+ */
+export const documentUnavailable = {
+  label: 'File not available online at present',
 } as const;
+
+/**
+ * The consent gates' own words, for any tile the backend gates. Heading and
+ * labels verbatim from both legacy dialogs; the notice itself is the tile's
+ * `gate.disclaimerHtml`, maintained in the admin panel.
+ */
+export const consentCopy: ConsentCopy = {
+  heading: 'Disclaimer',
+  confirmLabel: 'I Confirm',
+  declineLabel: 'I Do Not Confirm',
+  // Functional copy: the legacy × has no accessible name at all.
+  closeLabel: 'Close',
+  // Functional copy: the legacy site has no failure state to transcribe.
+  errorMessage: 'This could not be opened just now. Please refresh the page and try again.',
+};
+
+/** The legacy `<video>`'s fallback text, verbatim. */
+export const videoFallback = 'Your browser does not support the video tag.';
 
 /** The company filter on Standalone Financials of Material Subsidiary Companies. */
 export const companyFilterCopy: DocumentFilterCopy = {

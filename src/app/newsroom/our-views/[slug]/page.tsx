@@ -10,11 +10,14 @@ interface PageProps {
 }
 
 /**
- * Every article is built at build time, and a slug that is not one is a 404
- * rather than a render on demand: on-demand pages would be a runtime cache,
- * which /CLAUDE.md §7 rules out. No `revalidate`, for the same reason.
+ * **`true`, and it must stay `true`.** A slug not built at build time renders
+ * on its first request: an article published after the deploy is served at
+ * once rather than 404ing until the next build, however successful the
+ * publish reported itself. The page is then cached as ISR (/CLAUDE.md §7),
+ * refreshed by the backend's webhook. A slug that is not an article still
+ * 404s — the repository answers `null` for it.
  */
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams(): Promise<{ slug: string }[]> {
   return loadArticleSlugs(CATEGORY);

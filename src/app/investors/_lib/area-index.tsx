@@ -1,31 +1,31 @@
-import {
-  Building2,
-  CalendarCheck,
-  ChartColumn,
-  FileChartColumn,
-  FileCheckCorner,
-  FilePenLine,
-  FilePlusCorner,
-  Files,
-  FileText,
-  FileVideoCamera,
-  FolderDown,
-  GraduationCap,
-  HandCoins,
-  HandHeart,
-  Layers,
-  Leaf,
-  Network,
-  Presentation,
-  ScrollText,
-  UserRoundCog,
-  Users,
-  type LucideIcon,
-} from 'lucide-react';
+import type { ComponentType } from 'react';
 import { governanceIndex } from '@/app/_content/corporate-governance';
 import { financialsIndex } from '@/app/_content/financials-and-reports';
 import { offerDocumentsIndex } from '@/app/_content/offer-documents';
 import { LinkGrid } from '@/components/sections/link-grid';
+import {
+  AddendumMark,
+  AnnualReturnMark,
+  AvEnglishMark,
+  AvHindiMark,
+  BoardCommitteesMark,
+  BoardOfDirectorsMark,
+  CodesPoliciesMark,
+  ConsolidatedMark,
+  CorrigendumMark,
+  CsrMark,
+  DownloadsMark,
+  DrhpMark,
+  FamiliarizationMark,
+  GeneralMeetingMark,
+  GroupCompaniesMark,
+  IndustryReportMark,
+  OtherDocumentsMark,
+  OutstandingDuesMark,
+  StandaloneMark,
+  SubsidiaryMark,
+  SustainabilityReportsMark,
+} from '@/components/sections/link-grid/investor-marks';
 import { SubPage } from '@/components/sections/sub-page';
 import type { InvestorSection } from '@/lib/content';
 
@@ -36,19 +36,20 @@ import type { InvestorSection } from '@/lib/content';
  * reviewer approves is laid out by the markup that will publish it.
  */
 
+type MarkComponent = ComponentType<{ className?: string }>;
+
 type IndexedSection = Exclude<InvestorSection, 'notifications'>;
 
 interface AreaIndexChrome {
   title: string;
   /**
    * The tiles' marks, by slug, and the one a tile a maker adds takes until a
-   * mark is chosen for it here. The legacy indexes draw stock Flaticon icons
-   * of unknown licence, which are not carried over; these are lucide's, which
-   * the project ships under ISC, chosen to say what the legacy ones said.
-   * Decorative — the title names the tile.
+   * mark is chosen for it here. The supplied animated icons (2026-10-08), one
+   * per tile; the fallback is the "other documents" mark. Decorative — the
+   * title names the tile.
    */
-  marks: Readonly<Record<string, LucideIcon>>;
-  fallbackMark: LucideIcon;
+  marks: Readonly<Record<string, MarkComponent>>;
+  fallbackMark: MarkComponent;
   /**
    * Whether a short last row is centred rather than left under a full one —
    * Financials' five tiles, 3 + 2 on a desktop, rather than four over a lone
@@ -58,54 +59,46 @@ interface AreaIndexChrome {
 }
 
 const CHROME: Record<IndexedSection, AreaIndexChrome> = {
-  // A checked document for the DRHP, a correction, an addition, a chart, a
-  // video (the same one for both languages, as on the legacy page), money in
-  // hand, a building.
   'offer-documents': {
     title: offerDocumentsIndex.title,
     marks: {
-      drhp: FileCheckCorner,
-      'corrigendum-to-drhp': FilePenLine,
-      'addendum-to-drhp': FilePlusCorner,
-      'industry-report': FileChartColumn,
-      'drhp-audio-visuals-english': FileVideoCamera,
-      'drhp-audio-visuals-hindi': FileVideoCamera,
-      'outstanding-dues-to-material-creditors': HandCoins,
-      'information-with-respect-to-group-companies': Building2,
+      drhp: DrhpMark,
+      'corrigendum-to-drhp': CorrigendumMark,
+      'addendum-to-drhp': AddendumMark,
+      'industry-report': IndustryReportMark,
+      'drhp-audio-visuals-english': AvEnglishMark,
+      'drhp-audio-visuals-hindi': AvHindiMark,
+      'outstanding-dues-to-material-creditors': OutstandingDuesMark,
+      'information-with-respect-to-group-companies': GroupCompaniesMark,
     },
-    fallbackMark: FileText,
+    fallbackMark: OtherDocumentsMark,
     balance: false,
   },
-  // The board, a committee, a code, a leaf for sustainability, a hand for
-  // CSR, a meeting, learning for the directors' familiarization, and a stack
-  // of documents.
   'corporate-governance': {
     title: governanceIndex.title,
     marks: {
-      'board-of-directors': Users,
-      'board-committees': UserRoundCog,
-      'codes-and-policies': ScrollText,
-      'sustainability-reports': Leaf,
-      csr: HandHeart,
-      'general-meeting': Presentation,
-      'familiarization-programme': GraduationCap,
-      'other-documents': Files,
+      'board-of-directors': BoardOfDirectorsMark,
+      'board-committees': BoardCommitteesMark,
+      'codes-and-policies': CodesPoliciesMark,
+      'sustainability-reports': SustainabilityReportsMark,
+      csr: CsrMark,
+      'general-meeting': GeneralMeetingMark,
+      'familiarization-programme': FamiliarizationMark,
+      'other-documents': OtherDocumentsMark,
     },
-    fallbackMark: Files,
+    fallbackMark: OtherDocumentsMark,
     balance: false,
   },
-  // A dated return, layered (consolidated) accounts, one company's accounts,
-  // a group of companies, and downloads.
   'financials-and-reports': {
     title: financialsIndex.title,
     marks: {
-      'annual-return': CalendarCheck,
-      'consolidated-financials-of-the-company': Layers,
-      'standalone-financials-of-the-company': ChartColumn,
-      'standalone-financials-of-material-subsidiary-companies': Network,
-      'investor-downloads': FolderDown,
+      'annual-return': AnnualReturnMark,
+      'consolidated-financials-of-the-company': ConsolidatedMark,
+      'standalone-financials-of-the-company': StandaloneMark,
+      'standalone-financials-of-material-subsidiary-companies': SubsidiaryMark,
+      'investor-downloads': DownloadsMark,
     },
-    fallbackMark: Layers,
+    fallbackMark: OtherDocumentsMark,
     balance: true,
   },
 };
@@ -138,7 +131,7 @@ export function AreaIndex({ section, pages }: AreaIndexProps) {
           return {
             name: page.name,
             href: page.path,
-            mark: <Mark className="size-icon-mark" aria-hidden="true" focusable="false" />,
+            mark: <Mark className="size-investor-mark" />,
           };
         })}
       />

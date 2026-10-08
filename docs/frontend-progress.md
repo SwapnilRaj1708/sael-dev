@@ -33,6 +33,32 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
 
+### The supplied icon set — as built, 2026-10-08
+
+SAEL supplied 71 icons (`src/assets/icons/<name>/`, each in `animated/` and `static/`, in
+white, coloured no-tile and coloured-tile variants). **Not a tracker item, done on the user's
+instruction**; FE-05 stays In Progress. Icons 1–71, numbered by their filenames, replace the
+marks drawn in code and the lucide stand-ins:
+
+| Icons | Page | Variant | Where |
+|---|---|---|---|
+| 1–3, 4–11 | About Us | white | Strategic Pillars (`pillar-marks.tsx`); Guiding Principles (`_content/about-us.ts`, replacing the CDN's `principle-icon-1…8`) |
+| 12–18 | Solar Energy | white | `solar-marks.tsx` |
+| 19–28, 29–31, 32–35 | Waste to Energy, Module, Solar Cell | white | `business-marks.tsx` |
+| 36–39 | Our Core Beliefs | white | in the badge, 36 → 40px; the badge's diamond frame is removed |
+| 40–47 | Career | white | `career-marks.tsx` |
+| 48–50 | Contact Us | coloured no-tile | `<ContactDetails>`, 40px |
+| 51–71 | Investors indexes | coloured no-tile | `link-grid/investor-marks.tsx`, by tile slug; `--spacing-investor-mark` (48 → 58, 20% over `--spacing-icon-mark`) |
+
+Each icon in use is a `next/image` file, not SVGR. Each used `-animated.svg` was edited to loop
+(3.5s: the 1.5s draw, then a 2s hold). See `asset-inventory.md` §3. The mark components keep
+their exported names, so the pages' call sites did not change. A tile added in the admin panel
+with no icon of its own takes the "other documents" mark.
+
+**Verified** on a production build: the investor mark measured 48px at 360 and 58px at 1920.
+`typecheck`, `lint`, `verify:guardrails` and `build` are clean. **Not yet reviewed at every
+width**; the larger Contact Us icon and the investor tiles are the places to look first.
+
 ### Client changes of 2026-10-07, and FE-15 — as built
 
 One round of client feedback on the homepage map, the business pages and Our Key ESG
@@ -65,9 +91,9 @@ and none was added. The prose keeps "3.625 GW".
   and gone at the foot (`--mask-ripple-screen`). The copy is `pointer-events: none`, so
   the grid lights under it. `--spacing-esg-wheel` is capped at 42% of the screen's height.
 - **SDGs**: the icon grid is centred, and the label and heading stay left like every other
-  section's (they were centred for a day, until the client's correction of 2026-10-08). The
-  UN disclaimer and its two links are removed, with everything else under the icons. The
-  ten goals are `_content/sdg-goals.ts` now, shared with FE-15.
+  section's (the client's call, 2026-10-08). The UN disclaimer and its two links are
+  removed, with everything else under the icons. The ten goals are `_content/sdg-goals.ts`
+  now, shared with FE-15.
 - **Reporting Framework + Stakeholder's Map** are one section, `<ReportingStakeholders>`,
   composing `<ProseSplitLayout>` and the new `<StakeholderMapLayout>`. Our Core Beliefs'
   ESG Report pill sits under the "Reporting Framework" heading. With `copyBeside`, a

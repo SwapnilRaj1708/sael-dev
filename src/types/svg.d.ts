@@ -1,4 +1,21 @@
 /**
+ * The animated icon set is nested (`icons/<name>/animated/*-animated.svg`),
+ * which the SVGR rule in next.config.ts does not reach — its glob matches only
+ * direct children of `icons/`. These are therefore **files**, like the brand
+ * artwork: each carries its own gradient id and SMIL animation, so they must
+ * not be inlined.
+ *
+ * **Declared before the `icons/*.svg` pattern on purpose.** Both patterns have
+ * the same prefix, and TypeScript breaks that tie in declaration order.
+ */
+declare module '@/assets/icons/*-animated.svg' {
+  import type { StaticImageData } from 'next/image';
+
+  const asset: StaticImageData;
+  export default asset;
+}
+
+/**
  * SVGs under `src/assets/icons/` are React components, via SVGR — see the
  * `turbopack.rules` entry in next.config.ts.
  *

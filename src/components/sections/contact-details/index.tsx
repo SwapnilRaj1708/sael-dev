@@ -1,4 +1,8 @@
-import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import Image from 'next/image';
+import addressIcon from '@/assets/icons/address/animated/48a-contact-address-pin-notile-animated.svg';
+import emailIcon from '@/assets/icons/email/animated/50b-contact-email-send-notile-animated.svg';
+import phoneIcon from '@/assets/icons/phone/animated/49a-contact-phone-waves-notile-animated.svg';
 import { cn } from '@/lib/utils/cn';
 
 export interface ContactDetail {
@@ -22,7 +26,8 @@ export interface ContactDetailsProps {
   className?: string;
 }
 
-const ICON = { address: MapPin, tel: Phone, email: Mail } as const;
+/** The supplied animated icons (48-50, 2026-10-08), coloured, on a 3.5s loop. */
+const ICON = { address: addressIcon, tel: phoneIcon, email: emailIcon } as const;
 
 /** `tel:` takes digits and a leading `+` only — the footer's rule, so the two agree. */
 function telHref(value: string): string {
@@ -65,13 +70,7 @@ export function ContactDetails({ items, mapLink, newTabNote, className }: Contac
 
           return (
             <div key={item.kind} className="flex gap-stack border-b border-hairline-dark py-stack">
-              <span className="flex h-lh shrink-0 items-center text-body-sm">
-                <Icon
-                  className="size-5 text-brand-red-bright"
-                  aria-hidden="true"
-                  focusable="false"
-                />
-              </span>
+              <Image src={Icon} alt="" aria-hidden className="size-10 shrink-0 object-contain" />
 
               <div className="flex min-w-0 flex-col">
                 <dt className="text-body-sm font-bold text-white">{item.label}</dt>

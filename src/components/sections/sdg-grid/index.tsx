@@ -55,9 +55,9 @@ export interface SdgGridProps {
  * two rows of icons — fits one screen on a page that snaps. The grid is
  * centred in the row (the client's call of 2026-10-07); the label and
  * heading stay at the row's start, in line with every other section's on
- * the page (2026-10-08; for one day they were centred too).
+ * the page (2026-10-08).
  *
- * **Nothing under the icons**, at the client's request of the same day. The
+ * **Nothing under the icons**, at the client's request of 2026-10-07. The
  * UN's disclaimer and its two links, which the icon guidelines ask for on
  * the same page and which sat here until then, were removed with the rest.
  *

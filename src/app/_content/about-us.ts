@@ -1,4 +1,12 @@
 import type { StaticImageData } from 'next/image';
+import customerIcon from '@/assets/icons/customer-centric/animated/4a-customer-target-white-animated.svg';
+import entrepreneurialIcon from '@/assets/icons/entrepreneurial/animated/5a-entrepreneurial-idea-white-animated.svg';
+import teamworkIcon from '@/assets/icons/teamwork/animated/6c-teamwork-network-white-animated.svg';
+import trustIcon from '@/assets/icons/trust-and-respect/animated/7a-trust-handshake-check-white-animated.svg';
+import integrityIcon from '@/assets/icons/integrity/animated/8a-integrity-handshake-white-animated.svg';
+import ownerIcon from '@/assets/icons/owner-mind-set/animated/9a-owner-mind-white-animated.svg';
+import outcomeIcon from '@/assets/icons/outcome-focused/animated/10a-outcome-delegation-white-animated.svg';
+import learningIcon from '@/assets/icons/continuous-learning/animated/11a-learning-brain-circuit-white-animated.svg';
 import type { CutoutSplitProps } from '@/components/sections/cutout-split';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { ProseSplitProps } from '@/components/sections/prose-split';
@@ -19,7 +27,7 @@ import { cdnImage } from '@/lib/assets/cdn';
  *
  * ## The artwork
  *
- * The fourteen assets live in Azure Blob Storage under
+ * The page's photographs and panels live in Azure Blob Storage under
  * `<container>/web-assets/media/about-us/` and are described by
  * `cdnImage(path, width, height)` — see `src/lib/assets/cdn.ts` for why that
  * helper exists and what it returns.
@@ -61,16 +69,12 @@ export interface PrincipleCopy extends Omit<ValueGridItem, 'mark'> {
 /**
  * Describe one asset in the About Us folder of the blob container.
  *
- * The prefix is written once here rather than fourteen times below, and
+ * The prefix is written once here rather than at every call below, and
  * nowhere is a hostname written at all — `cdnImage()` composes it from
  * `AZURE_BLOB_BASE_URL` at render time. docs/asset-inventory.md §8.
  */
 const aboutAsset = (file: string, width: number, height: number): StaticImageData | null =>
   cdnImage(`web-assets/media/about-us/${file}`, width, height);
-
-/** The eight guiding-principle icons are all 128 square. */
-const principleIcon = (n: number): StaticImageData | null =>
-  aboutAsset(`principle-icon-${String(n)}.webp`, 128, 128);
 
 export const aboutMeta = {
   title: 'About Us | SAEL',
@@ -165,20 +169,9 @@ export const strategicPillars: {
 };
 
 /**
- * The eight principles, in the design's own order, paired with
- * `principle-icon-1` … `-8` **positionally**.
- *
- * The filenames are bare ordinals, so nothing in them says which principle an
- * icon belongs to. The pairing was therefore **checked against the artwork**
- * rather than assumed: a lightbulb for Entrepreneurial, stacked hands for
- * Teamwork, a handshake under a tick for Trust and Respect, a brain for Owner
- * Mind-Set and a wired brain for Continuous Learning all land on the design's
- * own order, and the remaining three are consistent with it. Positional it is.
- *
- * The two that are least self-evident are 5 and 7 — a plain handshake for
- * Integrity and a figure ringed by arrows for Outcome Focused. Both read
- * correctly, but they are the pair to look at first if anyone ever reports an
- * icon looking wrong.
+ * The eight principles, in the design's own order, each with its animated icon
+ * (2026-10-08, icons 4–11 of the supplied set). They replaced the CDN's
+ * `principle-icon-1` … `-8` WebPs, which were paired positionally.
  */
 export const guidingPrinciples: {
   eyebrow: string;
@@ -191,42 +184,42 @@ export const guidingPrinciples: {
     {
       name: 'Customer-Centric',
       body: 'Foster a positive internal and external customer experience at every stage of the customer journey to build customer loyalty and satisfaction. Always consider the outcomes our decisions will have on the customer.',
-      icon: principleIcon(1),
+      icon: customerIcon,
     },
     {
       name: 'Entrepreneurial',
       body: 'Have an optimistic interpretation of adverse events and see problems as potential opportunities; highly resilient, resourceful, and solutions-oriented even within highly uncertain, resource constrained environments.',
-      icon: principleIcon(2),
+      icon: entrepreneurialIcon,
     },
     {
       name: 'Teamwork',
       body: 'Value diverse teams of people. Encourage and help each other through collaboration. Inspire the exchange of ideas to come up with creative ways of doing things.',
-      icon: principleIcon(3),
+      icon: teamworkIcon,
     },
     {
       name: 'Trust and Respect',
       body: 'Extend trust and create a feeling of belonging, listen to different perspectives by being respectful and professional.',
-      icon: principleIcon(4),
+      icon: trustIcon,
     },
     {
       name: 'Integrity',
       body: 'Always honest, we do the right thing and adhere to moral and ethical principles for self and team.',
-      icon: principleIcon(5),
+      icon: integrityIcon,
     },
     {
       name: 'Owner Mind-Set',
       body: 'Demonstrate ownership, taking smart risks, while remaining aligned to organizational pillars. Encourage individuals to take responsibility to hold themselves and others accountable.',
-      icon: principleIcon(6),
+      icon: ownerIcon,
     },
     {
       name: 'Outcome Focused',
       body: 'Have passion to exceed ambitious goals and safely deliver high quality business results. Strive to delegate for outcomes rather than by task.',
-      icon: principleIcon(7),
+      icon: outcomeIcon,
     },
     {
       name: 'Continuous Learning',
       body: 'Inquisitive and open-minded, actively seeks new and varied experiences, and ideas. Is passionate about continual learning for self and team.',
-      icon: principleIcon(8),
+      icon: learningIcon,
     },
   ],
 };

@@ -42,7 +42,9 @@ src/assets/
 │   ├── sections/
 │   ├── news/       placeholder only — production news images come from Azure Blob
 │   └── decorative/
-└── icons/          SVGs imported as React components
+└── icons/          SVGs imported as React components (direct children only)
+    └── <name>/     the supplied icon set, 2026-10-08: animated/ and static/,
+                    each in white, coloured no-tile and coloured-tile variants
 public/
 └── images/         only assets referenced by URL string (OG image, favicon set)
 ```
@@ -53,6 +55,7 @@ Rules:
 - Assets imported by `next/image` live in `src/assets/`, are content-hashed at build, and get automatic width/height. **Prefer this.**
 - `public/` is only for assets referenced by a literal URL string that Next cannot process: favicons, `og-image.png`, `robots.txt`.
 - Icons that need to inherit `currentColor` become inline React components (via SVGR). Icons that are fixed-colour brand artwork stay as files.
+- **The supplied icon set (`icons/<name>/animated|static/`) is files, not components.** SVGR's glob in `next.config.ts` matches only direct children of `icons/`, and these are fixed-colour, each declares `id="g"` for its gradient, and the animated ones run SMIL, so inlining two on one page would collide. They go to `next/image`, typed by the `*-animated.svg` declaration in `src/types/svg.d.ts`. Every `*-animated.svg` in use has been edited to loop: the original 1.5s draw, a 2s hold, `repeatCount="indefinite"` (3.5s in all, keyframes rescaled by 3/7). A fresh copy from the client does not loop until it gets the same edit.
 - Photographic content is **never PNG**. PNG is for transparency and flat graphics only.
 - Every raster asset is committed at a single sensible master size; `next/image` derives the rest. Do not commit `@2x` variants.
 
@@ -230,6 +233,8 @@ pngquant --quality=65-85 --strip engineer.png -o field-engineer.png
 # SVG
 svgo -f src/assets/icons --multipass
 ```
+
+That `svgo` line covers only the top level of `icons/`, and it should stay that way: do not point it at the supplied icon set's subfolders. Its default preset rewrites path data and drops ids, and the animated files depend on both, through `<animate attributeName="d">` keyframes and the `url(#g)` gradient.
 
 `next.config.ts` sets `formats: ['image/avif', 'image/webp']`, so AVIF/WebP derivatives are generated at request time. Commit the JPEG/PNG masters only.
 
@@ -530,7 +535,9 @@ Items the client must supply before the relevant tracker item can complete:
       `principle-icon-1` … `-8`. They were committed at `src/assets/images/about-us/` and
       imported until the container was populated; **the local copies were deleted on
       2026-09-17** and all fourteen are now described by `cdnImage()` — see
-      `src/lib/assets/cdn.ts` and the folder note in `src/app/_content/about-us.ts`
+      `src/lib/assets/cdn.ts` and the folder note in `src/app/_content/about-us.ts`.
+      Since 2026-10-08 the eight principle icons are no longer used (the supplied
+      animated icons replaced them); the blobs remain in the container
 - [ ] **Rename `about-us-hero.JPG` on the CDN to `about-us-hero.jpg`.** Azure Blob names
       are case-sensitive and this is the only file in the folder that is not lowercase,
       so the call site has to spell the extension in upper case. It blocked the CDN swap

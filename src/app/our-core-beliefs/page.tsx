@@ -1,5 +1,9 @@
-import { Bird, Landmark, Leaf, Users } from 'lucide-react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
+import biodiversityIcon from '@/assets/icons/our-biodiversity-commitment/animated/39b-biodiversity-butterfly-white-animated.svg';
+import governanceIcon from '@/assets/icons/sustainability-governance/animated/38a-governance-pillars-white-animated.svg';
+import stewardshipIcon from '@/assets/icons/environmental-stewardship/animated/36b-stewardship-hand-leaf-white-animated.svg';
+import socialIcon from '@/assets/icons/our-social-impact/animated/37b-social-community-heart-white-animated.svg';
 import { EsgReportLink } from '@/app/_lib/esg-report-link';
 import { BeliefStack, type Belief } from '@/components/sections/belief-stack';
 import { PageHero } from '@/components/sections/page-hero';
@@ -25,15 +29,18 @@ export const metadata: Metadata = buildMetadata({
  * `_content/our-core-beliefs.ts` because an icon is a React node and the
  * content file is data — the division every page draws.
  *
- * lucide's leaf, users, landmark and bird, which are the design's own
- * stand-ins and are this site's icon set. Decorative: the badge they sit
- * in is `aria-hidden`, and the heading beside it names the belief.
+ * The supplied animated icons (36-39, 2026-10-08), which replaced lucide's
+ * leaf, users, landmark and bird. Fixed-colour white files that animate
+ * themselves on a 3.5s loop, sized to sit in the badge. Decorative: the badge
+ * they sit in is `aria-hidden`, and the heading beside it names the belief.
  */
+const BELIEF_ICON_CLASS = 'size-9 object-contain lg:size-10';
+
 const BELIEF_ICONS = [
-  <Leaf key="leaf" />,
-  <Users key="users" />,
-  <Landmark key="landmark" />,
-  <Bird key="bird" />,
+  <Image key="stewardship" src={stewardshipIcon} alt="" className={BELIEF_ICON_CLASS} />,
+  <Image key="social" src={socialIcon} alt="" className={BELIEF_ICON_CLASS} />,
+  <Image key="governance" src={governanceIcon} alt="" className={BELIEF_ICON_CLASS} />,
+  <Image key="biodiversity" src={biodiversityIcon} alt="" className={BELIEF_ICON_CLASS} />,
 ];
 
 const beliefItems: Belief[] = beliefs.map((belief, index) => ({

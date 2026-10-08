@@ -153,7 +153,6 @@ export function BeliefSection({
             {/* The badge. The square is the frame and the icon stands upright
                 in it; both are decoration, the heading names the belief. */}
             <span aria-hidden="true" className="relative block size-14 shrink-0 lg:size-16">
-              <span className="absolute inset-2 rotate-45 border border-outline-dark lg:inset-2.5" />
               <span className="absolute inset-0 flex items-center justify-center text-white [&_svg]:size-6 lg:[&_svg]:size-7">
                 {icon}
               </span>

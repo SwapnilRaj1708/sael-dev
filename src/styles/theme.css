@@ -876,6 +876,8 @@
   /* The business icon's rendered height, and the short gradient rules that
    * flank a centred section eyebrow. */
   --spacing-icon-mark: clamp(2.5rem, 2.3558rem + 0.641vw, 3rem); /* 40 → 48 */
+  /* The investor index tiles' mark: --spacing-icon-mark, 20% larger. */
+  --spacing-investor-mark: clamp(3rem, 2.827rem + 0.769vw, 3.6rem); /* 48 → 58 */
   --spacing-rule-w: 2.75rem; /* 44 */
   /* The accent rule that fills across the top of a ledger row or a news card
    * on hover. Thinner than --spacing-rule-h, which is a static label rule. */

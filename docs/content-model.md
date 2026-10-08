@@ -348,26 +348,20 @@ src/lib/content/api/
 
 ## 6. Forms — the write path
 
-Forms do **not** call Spring Boot from the browser.
+The contact form calls the backend **from the browser**, at relative URLs on the site's own origin. nginx routes `/app/v1/` to Spring Boot.
 
 ```
-<ContactForm> ──POST──▶ /api/forms/contact ──▶ Spring Boot
-   'use client'            Next route handler
+<ContactForm> ──GET──▶  /app/v1/contact-form/options ──▶ Spring Boot
+   'use client' ──POST─▶ /app/v1/contact-enquiry      ──▶ Spring Boot
 ```
 
-Why: keeps `API_BASE_URL` and any credential server-side, avoids CORS configuration on the backend, and gives one place to normalise error shapes.
+Why: the backend rate-limits submissions per client IP. Through a Next route handler every visitor would share the server's one IP. No credential is involved. `/CLAUDE.md` §6 and `api-contracts.md` §8 have the contract.
 
-The route handler:
+- `src/lib/forms/contact-enquiry.ts` is the contract: it loads the options, builds the payload under the backend's field names, and reduces every response to sent (a 2xx with a receipt only), field errors, rate-limited or unavailable.
+- `src/lib/forms/contact.ts` is the browser's own validation, aligned with the backend's bounds. The subjects and the message limit come from the options.
+- While `CONTENT_SOURCE=mock`, the options and the submission are stand-ins (`contact-enquiry-mock.ts`) and nothing is sent.
 
-1. Parses the body with the **same Zod schema** the client form uses (`src/lib/forms/schemas.ts` — one definition, imported by both).
-2. Returns `400` with `{ ok: false, fieldErrors }` on validation failure.
-3. Forwards to the configured backend endpoint.
-4. Normalises every outcome to `{ ok: true } | { ok: false, message: string, fieldErrors?: Record<string, string> }`.
-5. Never leaks the backend's error body to the client.
-
-While `CONTENT_SOURCE=mock`, the handler logs the payload and returns `{ ok: true }` after a short delay, so the full success/error UI is buildable today.
-
-Forms in scope: **Contact Us** and **Investor Contact**. Both post to `/api/forms/[form]`. Careers has no form: it became a page on 2026-09-22, and its two "Explore" CTAs link out to the Oracle recruiting portal, which is where an application is made.
+There is one form: **Contact Us**. There is no separate investor contact form (`api-contracts.md` §8.2). Careers has no form: it became a page on 2026-09-22, and its two "Explore" CTAs link out to the Oracle recruiting portal, which is where an application is made.
 
 ---
 

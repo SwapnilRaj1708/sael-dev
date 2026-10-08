@@ -31,13 +31,17 @@ import { SIZES_BUSINESS_OVERVIEW_MEDIA } from '@/lib/utils/image-sizes';
  *
  * ## Where the screenshot and the live page disagree
  *
- * - **The portfolio figure.** The screenshot draws only the caption "Module
- *   Manufacturing Portfolio"; the live page draws two counters over it,
- *   landing on **3625 MW + 5000 MW (proposed)**. SAEL's 2026-09-18
- *   instruction takes this page's copy from the live page, so the figure is
- *   carried. The homepage ledger shows SAEL's reviewed `3.6 GWp + 5 GW*`
- *   instead. That disagreement is with SAEL, in the backend's
- *   `docs/client/static-content-sign-off.md` §4, and is not reconciled here.
+ * - **The portfolio figure is the homepage ledger's**, `3.6 GWp + 5 GW*`,
+ *   since the client's request of 2026-10-07 that every business page's
+ *   Projects figure match the Business Portfolio row. The ledger's footnote
+ *   ("Operational · *Upcoming") is not carried: the client asked for the
+ *   figure alone (2026-10-08). The
+ *   screenshot draws only the caption "Module Manufacturing Portfolio"; the
+ *   live page draws two counters over it, landing on 3625 MW + 5000 MW
+ *   (proposed), which this page carried until then. The disagreement the
+ *   backend's `docs/client/static-content-sign-off.md` §4 recorded is
+ *   settled in the ledger's favour. The paragraphs keep "3.625 GW", the live
+ *   page's own wording, which the rounded figure agrees with.
  * - **"Product Downloads."** The live page lists three product-sheet PDFs
  *   between the map and the prowess cards; the screenshot has no such block.
  *   Left out at first, because the PDFs live under the legacy site's
@@ -163,8 +167,9 @@ export const moduleProjects: Omit<ProjectsMapProps, 'sites'> = {
   body: [
     "SAEL distinguishes itself as one of the select Indian renewable energy firms equipped with in-house solar manufacturing and assembly infrastructure. Currently, we are developing a robust ecosystem for Solar PV manufacturing, featuring operational solar module assembly lines with a combined capacity of 3.625 GW per year in Rajasthan and Punjab and an upcoming 5 GW facility in Uttar Pradesh, India. We are manufacturing the latest Bi-facial N-Type TOPCon modules, with the industry's leading efficiency.",
   ],
-  // The live page's two counters and their static tail, as they land.
-  figure: { value: '3625 MW + 5000 MW (proposed)', label: 'Module Manufacturing Portfolio' },
+  // The homepage ledger's figure, verbatim. See the note at the top of this
+  // file.
+  figure: { value: '3.6 GWp + 5 GW*', label: 'Module Manufacturing Portfolio' },
   map: { image: dottedMap },
   mapLabel: 'Map of SAEL module manufacturing sites across India',
   business: 'module-assembly',

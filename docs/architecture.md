@@ -73,8 +73,7 @@ sael-web/
     │   │       ├── standalone-financials-of-the-company/page.tsx
     │   │       ├── standalone-financials-of-material-subsidiary-companies/page.tsx
     │   │       └── investor-downloads/page.tsx
-    │   └── api/
-    │       └── forms/[form]/route.ts # BFF proxy to Spring Boot
+    │   └── api/                     # revalidate/, preview/, health/ — no form route (api-contracts.md §8)
     ├── components/
     │   ├── ui/                      # generic, reusable, zero business knowledge
     │   │   ├── button.tsx
@@ -206,7 +205,7 @@ Deployment target is unknown and may be multi-instance. That rules out ISR (whic
 | Fully static (About, 4 Business, 3 Sustainability, SDG, 3 Legal) | **SSG** at build | Default. No `fetch`, no dynamic APIs. |
 | Homepage | **SSG shell + cached server fetch** | The only dynamic part is the 3 latest news items. `fetch(..., { next: { revalidate: 300 } })` |
 | Newsroom, Investor documents, Notifications, Our Team, ESG metrics | **Dynamic SSR with a 5-minute data cache** | `fetch(..., { next: { revalidate: 300, tags: ['news'] } })` |
-| Forms | **Route handlers**, `dynamic = 'force-dynamic'` | `src/app/api/forms/[form]/route.ts` |
+| Contact form | **Browser → backend**, same origin | `POST /app/v1/contact-enquiry` from `src/components/forms/contact-form.tsx`; no Next route (`api-contracts.md` §8) |
 | Career | **SSG** | Static page since 2026-09-22 (it was a `permanentRedirect()` handler). No form: the two "Explore" CTAs link out to `CAREER_REDIRECT_URL`, where applications are made |
 
 Notes:
@@ -274,7 +273,7 @@ Browser ──▶ Next.js server ──▶ Spring Boot gateway ──▶ MySQL
 ```
 
 - **Reads** happen in Server Components via `getContentRepository()`. The browser never sees `API_BASE_URL`.
-- **Writes** (forms) go browser → Next route handler → Spring Boot. The route handler is a thin, validating proxy: parse with Zod, forward, normalise the response to `{ ok: true } | { ok: false, message, fieldErrors? }`.
+- **The one write**, the contact form, goes from the browser straight to the backend at the relative `/app/v1/contact-enquiry`, which nginx routes to Spring Boot on the same host. Not through Next: the backend rate-limits per client IP, and through a Next proxy every visitor would share the server's. `/CLAUDE.md` §6, `api-contracts.md` §8.
 - **PDFs and large media** are linked directly to their Azure Blob URL. Next.js does not proxy or re-host them.
 - **Failure is a first-class state.** A backend timeout renders an `<EmptyState>` with a human message, never a 500. The rest of the page must still render.
 

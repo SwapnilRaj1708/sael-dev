@@ -17,6 +17,11 @@ export interface RippleHeroProps {
    * hero size that is a screen of headline on a phone.
    */
   titleSize?: 'hero' | 'article';
+  /**
+   * One line under the title, centred with it — the SDG page's "Our
+   * Commitment to The UN SDGs", its live page's subheading (2026-10-07).
+   */
+  intro?: string;
 }
 
 /**
@@ -56,7 +61,7 @@ export interface RippleHeroProps {
  *
  * A Server Component; `<BackgroundRipple>` is the client leaf.
  */
-export function RippleHero({ title, breadcrumb, titleSize = 'hero' }: RippleHeroProps) {
+export function RippleHero({ title, breadcrumb, titleSize = 'hero', intro }: RippleHeroProps) {
   return (
     <Section background="black-dots" spacing="none" fullBleed>
       <div className="relative flex min-h-(--ripple-hero-h) w-full items-center overflow-hidden lg:min-h-(--ripple-hero-h-lg)">
@@ -88,6 +93,10 @@ export function RippleHero({ title, breadcrumb, titleSize = 'hero' }: RippleHero
           >
             {title}
           </h1>
+
+          {intro !== undefined && (
+            <p className="max-w-(--measure) text-body text-pretty text-body-on-dark">{intro}</p>
+          )}
         </Container>
       </div>
     </Section>

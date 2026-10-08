@@ -1,6 +1,6 @@
 import type { StaticImageData } from 'next/image';
 import type { StorySplitProps } from '@/components/sections/story-split';
-import { legacyOrCdnImage } from '@/lib/assets/cdn';
+import { cdnImage } from '@/lib/assets/cdn';
 import { TODO_CONTENT } from '@/lib/config/site';
 
 /**
@@ -25,25 +25,22 @@ import { TODO_CONTENT } from '@/lib/config/site';
  *
  * ## The photographs
  *
- * The live page's own three files, which are not in the blob container yet:
- * while `LEGACY_ASSET_BASE_URL` is set they are read from the legacy site,
- * and once it is unset from `web-assets/media/story-of-our-influence/`,
- * where they should be uploaded with their names unchanged. Dimensions are
- * read from the legacy files. See `legacyOrCdnImage()`.
+ * The live page's own three files, in the blob container under
+ * `web-assets/media/story-of-our-influence/` since 2026-10-08, renamed for
+ * the story each illustrates (`women-farmer.jpg` is `community.jpg`,
+ * `Great_Indian_Bustard.webp` is `biodiversity.webp`, `in-4.webp` is
+ * `public-health.webp`). Until then they were read from the legacy site.
+ * Dimensions are read from the blobs themselves, and match the legacy
+ * files'. See `cdnImage()`.
  *
  * The alt text is written from the photographs. **The third is not what the
  * design's handoff guessed from its file name** ("a family in their
- * village"): `in-4.webp` is a power plant, and it is described as one.
+ * village"): it is a power plant, and it is described as one.
  */
 
 /** Describe one of the page's photographs. See the note above. */
 const storyImage = (file: string, width: number, height: number): StaticImageData | null =>
-  legacyOrCdnImage(
-    `web-assets/media/story-of-our-influence/${file}`,
-    `/img/site/${file}`,
-    width,
-    height,
-  );
+  cdnImage(`web-assets/media/story-of-our-influence/${file}`, width, height);
 
 export const storyMeta = {
   /** The live page's own `<title>`, verbatim. */
@@ -70,9 +67,9 @@ export const stories: readonly Omit<StorySplitProps, 'snap'>[] = [
     title: 'Empowering Local Communities through Employment and Economic Growth',
     body: "In the heart of rural Punjab, Rajasthan, and Haryana, where the shadow of agricultural waste looms large, SAEL's presence has become a beacon of hope. Being instrumental in transforming lives, SAEL began purchasing agricultural waste from local farmers. Not only did this initiative provide them with a steady income, but it also offered a lifeline to the fragile ecosystems surrounding the villages. With biodiversity rapidly declining due to climate change and habitat destruction, SAEL's commitment to waste management not only empowers the community but also serves as a vital lifeline for countless species that call these fields home.",
     media: {
-      image: storyImage('women-farmer.jpg', 1024, 848),
+      image: storyImage('community.jpg', 1024, 848),
       alt: 'Two women harvesting wheat by hand in a sunlit field',
-      pending: 'story-of-our-influence/women-farmer',
+      pending: 'story-of-our-influence/community',
     },
     side: 'start',
   },
@@ -82,9 +79,9 @@ export const stories: readonly Omit<StorySplitProps, 'snap'>[] = [
     title: 'Protecting Biodiversity and Ecosystems through Waste Management',
     body: 'At SAEL, we value and seek to protect the ecosystems that we work in. We strive to be good environmental stewards and take pride in our efforts to help these ecosystems thrive, while maintaining high standards of service for our customers. At our power generation and manufacturing facilities, we collaborate with biologists to actively monitor and protect local and migratory species, ensuring strict adherence to environmental permits and deploying adaptive mitigation strategies to maintain high environmental standards. We adhere to IFC Performance Standards, notably "PS 6 - Biodiversity Conservation," conducting thorough Environmental and Social Screening to preemptively avoid selecting lands with biodiversity sensitivities. If identified, we actively seek alternative locations for our projects.',
     media: {
-      image: storyImage('Great_Indian_Bustard.webp', 500, 375),
+      image: storyImage('biodiversity.webp', 500, 375),
       alt: 'A Great Indian Bustard standing in dry grassland',
-      pending: 'story-of-our-influence/great-indian-bustard',
+      pending: 'story-of-our-influence/biodiversity',
     },
     side: 'end',
   },
@@ -94,9 +91,9 @@ export const stories: readonly Omit<StorySplitProps, 'snap'>[] = [
     title: 'Improving Public Health and Mitigating Air Pollution',
     body: "In the villages of Haryana, where the air once hung heavy with the acrid scent of burning waste, the Kumar family's story is one of resilience and renewal. Amidst the looming threat of respiratory ailments and compromised health, SAEL's Waste-to-Energy Plants emerged as beacons of clean air and hope. Today, as the Kumar family breathes in the crisp, pollution-free air, they bear witness to the transformative power of SAEL's commitment to environmental stewardship. In an era defined by climate crisis and ecological upheaval, SAEL's efforts not only safeguard public health but also serve as a bulwark against the tide of biodiversity loss, ensuring that future generations inherit a world teeming with life and possibility.",
     media: {
-      image: storyImage('in-4.webp', 700, 586),
+      image: storyImage('public-health.webp', 700, 586),
       alt: 'A power plant with blue buildings and a tall chimney under a clear sky',
-      pending: 'story-of-our-influence/in-4',
+      pending: 'story-of-our-influence/public-health',
     },
     side: 'start',
   },

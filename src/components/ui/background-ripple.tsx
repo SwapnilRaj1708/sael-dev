@@ -11,6 +11,14 @@ export interface BackgroundRippleProps {
   rows?: number;
   /** Enough columns to cover the widest screen; the grid is centred and clipped. */
   cols?: number;
+  /**
+   * How the grid fades out. `band`, the default, is the investor mastheads':
+   * from the top centre, gone by the band's foot. `screen` is for a hero a
+   * whole screen tall: solid across the top half, fading from the middle
+   * down and gone at the foot (Our Key ESG Metrics, 2026-10-07). Both are
+   * masks in theme.css.
+   */
+  fade?: 'band' | 'screen';
   className?: string;
 }
 
@@ -56,7 +64,12 @@ interface Origin {
  * nothing but ripple. Under reduced motion the wave does not run; the hover
  * still lights a cell, without the fade (animations.css).
  */
-export function BackgroundRipple({ rows = 14, cols = 48, className }: BackgroundRippleProps) {
+export function BackgroundRipple({
+  rows = 14,
+  cols = 48,
+  fade = 'band',
+  className,
+}: BackgroundRippleProps) {
   const field = useRef<HTMLDivElement>(null);
   const [origin, setOrigin] = useState<Origin | null>(null);
   // Remounting the grid is what restarts every cell's animation from the top,
@@ -86,7 +99,7 @@ export function BackgroundRipple({ rows = 14, cols = 48, className }: Background
       aria-hidden="true"
       className={cn('ripple-band absolute inset-0 overflow-hidden', className)}
     >
-      <div className="ripple-mask">
+      <div className={cn('ripple-mask', fade === 'screen' && 'ripple-mask-screen')}>
         <div
           key={wave}
           ref={field}

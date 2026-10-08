@@ -848,16 +848,18 @@ duplicate or, with CAPTCHA on, a spent token.
   address**. It sees the IP of whoever opened the connection. Proxied through the Next server,
   every visitor would share the server's IP, and the site's sixth enquiry in any hour would be
   refused.
+- **The form calls relative URLs, on the page's own origin.** nginx serves the site and the
+  backend on one host and routes `/app/v1/` to the backend (`deploy/nginx.conf.sample`), so
+  the request is same-origin. No API origin is compiled into the site, and no CORS is involved.
+- **`next dev`** forwards `/app/v1/` to `API_BASE_URL` through a development-only rewrite in
+  `next.config.ts`, which a production build does not contain.
 - CORS is answered **only for these two endpoints**, and only for the exact origins in the
-  backend's `sael.intake.cors.allowed-origins` (`https://www.sael.co` and `https://sael.co` are
-  two separate origins). Only `Content-Type` may be sent. No credentials are involved.
-  `Retry-After` and `X-Correlation-Id` are exposed. **An unlisted origin is refused with `403`,
-  preflight included**, and nothing on the backend shows it. Every origin the form is served
-  from, including staging, preview deployments and `http://localhost:3000` for local
-  development, must be given to the backend team. The local backend has none configured by
-  default.
-- The browser needs the backend's public base URL, so the form's API origin is a
-  `NEXT_PUBLIC_*` value baked in at build.
+  backend's `sael.intake.cors.allowed-origins`. The same-origin form does not need it, and with
+  the list empty the backend registers no CORS handling at all. **If the list is ever set, it
+  must include every origin the form is served from**, because a browser sends `Origin` on a
+  same-origin POST too, and an unlisted origin is refused with `403` with nothing on the
+  backend showing it. That includes `http://localhost:3000` for a development backend reached
+  through the rewrite.
 
 ---
 

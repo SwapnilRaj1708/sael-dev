@@ -1,18 +1,9 @@
-import goal03 from '@/assets/images/sdg/goal-03.png';
-import goal05 from '@/assets/images/sdg/goal-05.png';
-import goal07 from '@/assets/images/sdg/goal-07.png';
-import goal08 from '@/assets/images/sdg/goal-08.png';
-import goal09 from '@/assets/images/sdg/goal-09.png';
-import goal10 from '@/assets/images/sdg/goal-10.png';
-import goal11 from '@/assets/images/sdg/goal-11.png';
-import goal12 from '@/assets/images/sdg/goal-12.png';
-import goal13 from '@/assets/images/sdg/goal-13.png';
-import goal15 from '@/assets/images/sdg/goal-15.png';
 import type { EsgHeroProps } from '@/components/sections/esg-hero';
 import type { ProseSplitProps } from '@/components/sections/prose-split';
 import type { SdgGridProps } from '@/components/sections/sdg-grid';
 import type { StakeholderMapProps } from '@/components/sections/stakeholder-map';
 import { TODO_CONTENT } from '@/lib/config/site';
+import { SDG_GOALS, sdgHref } from './sdg-goals';
 
 /**
  * Our Key ESG Metrics' static content (FE-13).
@@ -27,21 +18,21 @@ import { TODO_CONTENT } from '@/lib/config/site';
  * page has none, and neither does the design. The only numbers are the SDG
  * numbers, which are the live page's.
  *
- * **One addition, and it is not SAEL's to write:** the UN's disclaimer and
- * two links under the SDG icons. The UN's guidelines for using the icons
- * ask for them on the same page; the live page does not carry them.
+ * The UN's disclaimer and two links, which the UN's guidelines for using the
+ * icons ask for on the same page, sat under the SDG icons until 2026-10-07,
+ * when the client asked for everything under the icons removed.
+ *
+ * **The ESG Report button under "Reporting Framework"** is Our Core Beliefs'
+ * own link (`esgReport` in `our-core-beliefs.ts`), added at the client's
+ * request of 2026-10-07. It opens the Sustainability Reports page under
+ * Corporate Governance.
  *
  * ## The SDG icons
  *
- * The UN's official colour icons, downloaded from un.org on 2026-10-06
- * ("17 SDG Icons (WEB)", `E-Goal-NN-1024x1024.png`) and committed under
- * `src/assets/images/sdg/` — not the live page's copies, which are not
- * confirmed to be current (goal 10's icon was redrawn in 2018), and not
- * hotlinked. See `<SdgGrid>` for what the guidelines allow on top of them,
- * which is nothing.
- *
- * Each links to its goal's section on the SDG page (`#sdg-N`), the live
- * page's own links, written with the trailing slash the route carries.
+ * The ten goals, their names and the UN's icons are `SDG_GOALS`
+ * (`sdg-goals.ts`), shared with the SDG page. Each links to its goal's block
+ * on that page (`#sdg-N`), the live page's own links, written with the
+ * trailing slash the route carries.
  */
 
 export const esgMetricsMeta = {
@@ -61,49 +52,11 @@ export const esgMetricsHero: Omit<EsgHeroProps, 'snap'> = {
     'SAEL dutifully focuses on ESG (Environmental, Social, and Governance) metrics, prioritizing sustainability.',
 };
 
-/** A goal's section on the SDG page. */
-const sdgHref = (n: number): string => `/sustainable-development-goals/#sdg-${String(n)}`;
-
 export const sdgCommitments: Omit<SdgGridProps, 'snap'> = {
   eyebrow: 'Sustainable Development Goals',
   title: 'Our Commitment to The UN SDGs',
   // The live page's ten, in numeric order, named as it names them.
-  goals: [
-    { number: 3, title: 'Good Health & Well-Being', href: sdgHref(3), icon: goal03 },
-    { number: 5, title: 'Gender Equality', href: sdgHref(5), icon: goal05 },
-    { number: 7, title: 'Affordable & Clean Energy', href: sdgHref(7), icon: goal07 },
-    { number: 8, title: 'Decent Work & Economic Growth', href: sdgHref(8), icon: goal08 },
-    {
-      number: 9,
-      title: 'Industry, Innovation, & Infrastructure',
-      href: sdgHref(9),
-      icon: goal09,
-    },
-    { number: 10, title: 'Reduced Inequality', href: sdgHref(10), icon: goal10 },
-    { number: 11, title: 'Sustainable Cities & Communities', href: sdgHref(11), icon: goal11 },
-    {
-      number: 12,
-      title: 'Responsible Consumption & Production',
-      href: sdgHref(12),
-      icon: goal12,
-    },
-    { number: 13, title: 'Climate Action', href: sdgHref(13), icon: goal13 },
-    { number: 15, title: 'Life On Land', href: sdgHref(15), icon: goal15 },
-  ],
-  // The UN's wording, verbatim, and its two links. See the note above.
-  notice: {
-    text: 'The content of this publication has not been approved by the United Nations and does not reflect the views of the United Nations or its officials or Member States.',
-    links: [
-      {
-        label: 'UN Sustainable Development Goals',
-        href: 'https://www.un.org/sustainabledevelopment',
-      },
-      {
-        label: 'SDG logo & icon usage guidelines (PDF)',
-        href: 'https://www.un.org/sustainabledevelopment/wp-content/uploads/2023/09/E_SDG_Guidelines_Sep20238.pdf',
-      },
-    ],
-  },
+  goals: SDG_GOALS.map((goal) => ({ ...goal, href: sdgHref(goal.number) })),
 };
 
 export const reportingFramework: Omit<ProseSplitProps, 'snap'> = {

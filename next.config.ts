@@ -52,6 +52,32 @@ function localStoragePatterns(): RemotePattern[] {
   ];
 }
 
+/**
+ * `next dev` only: `/app/v1/` on the dev server, sent on to `API_BASE_URL`.
+ *
+ * The contact form calls the backend from the browser at relative
+ * `/app/v1/…` URLs (docs/api-contracts.md §8). In production nginx routes
+ * those to the backend on the same host, ahead of Next, so this rewrite does
+ * not exist there: it is gated on `NODE_ENV` like `localStoragePatterns()`,
+ * and nothing is added to the build's routes. Here the browser is on :3000
+ * and the backend somewhere else, so the dev server forwards the call.
+ *
+ * **The slash.** With `trailingSlash: true` Next first answers
+ * `/app/v1/contact-enquiry` with a 308 to `/app/v1/contact-enquiry/` — which
+ * keeps the method and the body — and the source must match that form. The
+ * backend does not route a trailing slash, so the destination drops it.
+ *
+ * Every visitor through the dev server reaches the backend from one address,
+ * so they share its per-IP limit. A development backend with
+ * `SAEL_INTAKE_CORS_ALLOWED_ORIGINS` set must list `http://localhost:3000`,
+ * because the browser's `Origin` is passed through.
+ */
+function devBackendRewrites() {
+  const base = process.env.API_BASE_URL;
+  if (!isDevServer || base === undefined || base === '') return [];
+  return [{ source: '/app/v1/:path*/', destination: `${base.replace(/\/+$/, '')}/app/v1/:path*` }];
+}
+
 const nextConfig: NextConfig = {
   // `next dev` only — the LAN address a phone on the same network uses to
   // reach the dev server, which Next otherwise refuses as a cross-origin
@@ -112,7 +138,7 @@ const nextConfig: NextConfig = {
     // Where src/proxy.ts sends a request it has marked: the routing-miss and
     // the preview session handler. Here, not in the proxy, because a proxy
     // rewrite behind nginx left the server (src/lib/routing/internal-rewrites.ts).
-    return { beforeFiles: INTERNAL_REWRITES, afterFiles: [], fallback: [] };
+    return { beforeFiles: INTERNAL_REWRITES, afterFiles: devBackendRewrites(), fallback: [] };
   },
   async headers() {
     return [

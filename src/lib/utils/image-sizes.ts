@@ -118,11 +118,6 @@ export const SIZES_GOAL_ICON = '101px';
 export const SIZES_MAP = '(min-width: 64rem) 38rem, 92vw';
 
 /**
- * A business mark beside a figure in a map callout — `size-4`, 16px.
- */
-export const SIZES_MAP_LEGEND_ICON = '16px';
-
-/**
  * A business mark on a ledger row — `--spacing-ledger-icon` wide, 55 → 106px.
  */
 export const SIZES_BUSINESS_ICON = '106px';
@@ -208,3 +203,9 @@ export const SIZES_BELIEF_CUTOUT = '(min-width: 64rem) 33vw, 88vw';
  * (65rem), so never more than ~190px. Two across the content width below `md`.
  */
 export const SIZES_SDG_TILE = '(min-width: 64rem) 12rem, (min-width: 48rem) 17vw, 45vw';
+
+/**
+ * An SDG icon on the SDG page — sections/sdg-detail, `--spacing-sdg-detail-icon`:
+ * 80px on a phone, ~130px at 1024, 160px from 1440.
+ */
+export const SIZES_SDG_DETAIL_ICON = '(min-width: 64rem) 10rem, 8rem';

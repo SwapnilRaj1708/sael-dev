@@ -2,10 +2,9 @@ import type { StaticImageData } from 'next/image';
 import type { Belief } from '@/components/sections/belief-stack';
 import type { PageHeroProps } from '@/components/sections/page-hero';
 import type { CollageImage } from '@/components/sections/page-hero/collage-backdrop';
-import { legacyOrCdnImage } from '@/lib/assets/cdn';
+import { cdnImage } from '@/lib/assets/cdn';
 import { TODO_CONTENT } from '@/lib/config/site';
-import { legacyOrBlobUrl } from '@/lib/utils/blob-url';
-import { formatFileSize } from '@/lib/utils/format-file-size';
+import { GOVERNANCE_PATH } from './corporate-governance';
 
 /**
  * Our Core Beliefs' static content (FE-14).
@@ -21,11 +20,14 @@ import { formatFileSize } from '@/lib/utils/format-file-size';
  *
  * ## The artwork
  *
- * The live page's own files, not yet in the blob container: read from the
- * legacy site while `LEGACY_ASSET_BASE_URL` is set, and from
- * `web-assets/media/our-core-beliefs/` once it is unset, which is where they
- * should be uploaded with their names unchanged. Dimensions are the legacy
- * files'. See `legacyOrCdnImage()`.
+ * The live page's own files, in the blob container under
+ * `web-assets/media/our-core-beliefs/` since 2026-10-08, renamed for where
+ * each is drawn: `new-our-core-beliefs-hero-1/2/3.webp` for the collage,
+ * and each belief's id for its cut-out (`obf-1.webp` is
+ * `environmental-stewardship.webp`, `farmers-group.webp` is
+ * `our-social-impact.webp`, and so on). Until then they were read from the
+ * legacy site. Dimensions are read from the blobs themselves, and match the
+ * legacy files'. See `cdnImage()`.
  *
  * **The three hero photographs are 600px wide**, and the collage draws each
  * at about 480 × 740 at 1440, so they are upscaled. Higher-resolution files
@@ -41,7 +43,7 @@ import { formatFileSize } from '@/lib/utils/format-file-size';
 
 /** Describe one of the page's images. See the note above. */
 const beliefsImage = (file: string, width: number, height: number): StaticImageData | null =>
-  legacyOrCdnImage(`web-assets/media/our-core-beliefs/${file}`, `/img/site/${file}`, width, height);
+  cdnImage(`web-assets/media/our-core-beliefs/${file}`, width, height);
 
 export const coreBeliefsMeta = {
   /** The live page's own `<title>`, verbatim. */
@@ -71,17 +73,17 @@ export const coreBeliefsHero: Omit<PageHeroProps, 'backdrop' | 'snap'> = {
 /** The hero collage, left to right. */
 export const coreBeliefsCollage: readonly CollageImage[] = [
   {
-    image: beliefsImage('new-our-core-beliefs-1.webp', 600, 545),
+    image: beliefsImage('new-our-core-beliefs-hero-1.webp', 600, 545),
     alt: 'Two pairs of hands holding a seedling in soil above a meadow of wildflowers',
     pending: 'our-core-beliefs/hero-1',
   },
   {
-    image: beliefsImage('new-our-core-beliefs-2.webp', 600, 513),
+    image: beliefsImage('new-our-core-beliefs-hero-2.webp', 600, 513),
     alt: 'A group of people sitting in a circle, holding hands',
     pending: 'our-core-beliefs/hero-2',
   },
   {
-    image: beliefsImage('new-birds-our-core-beliefs-3.webp', 600, 1040),
+    image: beliefsImage('new-our-core-beliefs-hero-3.webp', 600, 1040),
     alt: 'Two green bee-eaters perched on a thorny branch',
     pending: 'our-core-beliefs/hero-3',
   },
@@ -109,9 +111,9 @@ export const beliefs: readonly BeliefCopy[] = [
       'Climate Resilience & Policy Advocacy',
     ],
     cutout: {
-      image: beliefsImage('obf-1.webp', 700, 719),
+      image: beliefsImage('environmental-stewardship.webp', 700, 719),
       alt: 'Cupped hands holding a seedling in a mound of soil',
-      pending: 'our-core-beliefs/obf-1',
+      pending: 'our-core-beliefs/environmental-stewardship',
     },
     accent: 'violet',
     side: 'end',
@@ -127,9 +129,9 @@ export const beliefs: readonly BeliefCopy[] = [
       'Social Impact Assessment Initiatives',
     ],
     cutout: {
-      image: beliefsImage('farmers-group.webp', 664, 538),
+      image: beliefsImage('our-social-impact.webp', 664, 538),
       alt: 'A group of smiling farmers in white turbans and kurtas',
-      pending: 'our-core-beliefs/farmers-group',
+      pending: 'our-core-beliefs/our-social-impact',
     },
     accent: 'rose',
     side: 'start',
@@ -145,9 +147,9 @@ export const beliefs: readonly BeliefCopy[] = [
       'Supply Chain Management',
     ],
     cutout: {
-      image: beliefsImage('sustainability-governance-banner.webp', 700, 757),
+      image: beliefsImage('sustainability-governance.webp', 700, 757),
       alt: 'A light bulb with a tree growing inside it',
-      pending: 'our-core-beliefs/sustainability-governance-banner',
+      pending: 'our-core-beliefs/sustainability-governance',
     },
     accent: 'coral',
     side: 'end',
@@ -162,42 +164,28 @@ export const beliefs: readonly BeliefCopy[] = [
       'Active member of IBBI',
     ],
     cutout: {
-      image: beliefsImage('our-biodiversity-commitment-bird.webp', 952, 758),
+      image: beliefsImage('our-biodiversity-commitment.webp', 952, 758),
       alt: 'A black-winged kite perched on a budding branch',
-      pending: 'our-core-beliefs/our-biodiversity-commitment-bird',
+      pending: 'our-core-beliefs/our-biodiversity-commitment',
     },
     accent: 'indigo',
     side: 'start',
   },
 ];
 
-/** The report's size on the legacy site and in the inventory, in bytes. */
-const ESG_REPORT_BYTES = 8_143_097;
-
 /**
  * The ESG Report link after the last belief — a button, not the floating tab
  * the live page uses, on the design's reasoning: a tab would be a new fixed
- * element, and over the content on a phone.
+ * element, and over the content on a phone. Our Key ESG Metrics carries the
+ * same link under its "Reporting Framework" heading.
  *
- * **Not the design's URL.** The design links `/report/sael-esg-report-cy-2023.pdf`,
- * which is the live page's own link and **answers 404 on the legacy site**
- * (checked 2026-10-06). The same file — 8,143,097 bytes — is live at the
- * investor documents path, and that is where the content repository's
- * fixture and docs/asset-inventory.md §8 place it in the container, so it
- * is linked from there: the legacy copy while `LEGACY_ASSET_BASE_URL` is set,
- * the blob otherwise. `null` if neither can be composed, and the page then
- * draws no link.
- *
- * It is the CY 2023 report because that is what the live page offers. The
- * Corporate Governance page also lists a later one (CY 2024); which this
- * should be is SAEL's call.
+ * **It opens the Sustainability Reports page**, the Corporate Governance
+ * tile that lists every report SAEL has published, in the same tab — the
+ * client's request of 2026-10-08. Until then it opened the CY 2023 report's
+ * PDF directly, in a new tab, which left choosing between CY 2023 and the
+ * later CY 2024 open; the page lists both, so the question goes away.
  */
 export const esgReport = {
   label: 'ESG Report',
-  href: legacyOrBlobUrl(
-    'web-assets/documents/investors/corporate-governance/sustainability-reports/sael-esg-report-cy-2023.pdf',
-    '/documents/investors/corporate-governance/sustainability-reports/sael-esg-report-cy-2023.pdf',
-  ),
-  /** Read with the label, so the link says what it opens before it is followed. */
-  description: `PDF, ${formatFileSize(ESG_REPORT_BYTES)}, opens in a new tab`,
+  href: `${GOVERNANCE_PATH}sustainability-reports/`,
 } as const;

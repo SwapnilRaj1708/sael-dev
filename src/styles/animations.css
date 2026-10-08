@@ -760,6 +760,11 @@
     mask-image: var(--mask-ripple);
   }
 
+  /* A screen-tall hero's fade — `fade="screen"`. */
+  .ripple-mask-screen {
+    mask-image: var(--mask-ripple-screen);
+  }
+
   .ripple-field {
     display: grid;
     flex: none;
@@ -939,8 +944,8 @@
  * fade up on their arcs, and then the wheel idles — the dotted orbit turning
  * slowly and each segment swelling in turn, two seconds apart, so the three
  * pillars are named one at a time for as long as the hero is on screen. The
- * title block rises in a beat behind the wheel, and three soft glows drift
- * behind both.
+ * title block rises in a beat behind the wheel. The three soft glows that
+ * drifted behind both gave way to the ripple grid on 2026-10-07.
  *
  * Every figure below is the design's. `288` and `654.5` are the segment's
  * dash and the rest of the ring's circumference (2π × 150 = 942.5), so each
@@ -1015,16 +1020,6 @@
   }
 }
 
-@keyframes esgDrift {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(1.125rem, -1.375rem);
-  }
-}
-
 @layer components {
   /* Still states — unconditional. */
   .anim-esg-segment {
@@ -1034,8 +1029,7 @@
 
   .anim-esg-orbit,
   .anim-esg-core,
-  .anim-esg-rise,
-  .anim-esg-glow {
+  .anim-esg-rise {
     transform: none;
   }
 
@@ -1097,18 +1091,6 @@
 
     .anim-esg-rise-2 {
       animation-delay: 1.2s;
-    }
-
-    .anim-esg-glow {
-      animation: esgDrift 9s ease-in-out infinite;
-    }
-
-    .anim-esg-glow-2 {
-      animation: esgDrift 11s ease-in-out 1s infinite reverse;
-    }
-
-    .anim-esg-glow-3 {
-      animation: esgDrift 13s ease-in-out 2s infinite;
     }
   }
 }

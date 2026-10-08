@@ -20,6 +20,7 @@ import { MapBeacon } from '@/components/sections/presence-map/map-beacon';
 import { SocialCommunity } from '@/components/sections/social-community';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
+import { env } from '@/lib/config/env';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
@@ -48,8 +49,9 @@ export const metadata: Metadata = buildMetadata({
  * on the split's own 1 : 2 columns, each under a hairline like the details'
  * rows, spaced by one gap. Nothing below the hero is a panel of its own.
  *
- * The form posts to `/api/forms/contact/`, never to the backend
- * (`app/api/forms/[form]/route.ts`).
+ * The form posts from the browser straight to the backend's
+ * `/app/v1/contact-enquiry` on this origin (docs/api-contracts.md §8), and
+ * with `CONTENT_SOURCE=mock` to a stand-in that sends nothing.
  *
  * `overflow-x-clip`: the social tiles' `<GlowFrame>` halos reach past their
  * cards, and on a phone past the screen's edge. `clip`, not `hidden`, so the
@@ -69,7 +71,13 @@ export default function ContactUsPage() {
             <ContactSplit
               details={<ContactDetails {...contactDetails} />}
               formHeading={contactFormHeading}
-              form={<ContactForm copy={contactFormCopy} labelledBy={contactFormHeading.id} />}
+              form={
+                <ContactForm
+                  copy={contactFormCopy}
+                  labelledBy={contactFormHeading.id}
+                  source={env.CONTENT_SOURCE}
+                />
+              }
             />
           </Reveal>
 

@@ -5,7 +5,7 @@ import { Eyebrow } from '@/components/ui/eyebrow';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
-import { PresenceMapFigure, type PresenceSite, type SiteMetric } from './map-figure';
+import { PresenceMapFigure, type PresenceSite } from './map-figure';
 
 export type { PresenceSite, PresenceSiteFigure, SiteFigurePartner, SiteMetric } from './map-figure';
 
@@ -30,8 +30,6 @@ export interface PresenceMapProps {
   map: { image: StaticImageData | null };
   /** The project sites. */
   sites: PresenceSite[];
-  /** Each business's mark, drawn beside its figures in the callouts. */
-  marks: Record<SiteMetric, StaticImageData | null>;
   snap?: boolean;
 }
 
@@ -86,7 +84,6 @@ export function PresenceMap({
   secondaryStat,
   map,
   sites,
-  marks,
   snap = false,
 }: PresenceMapProps) {
   return (
@@ -111,7 +108,6 @@ export function PresenceMap({
             order={2}
             map={map}
             sites={sites}
-            marks={marks}
             label="Map of SAEL project sites across India"
           />
 

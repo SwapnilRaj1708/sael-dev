@@ -17,6 +17,7 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 
 | ID | Item | Feature doc | Owner | Completed |
 |---|---|---|---|---|
+| FE-15 | Sustainable Development Goals | `features/15-sustainable-development-goals.md` | Swapnil Raj | 2026-10-07 |
 | FE-12 | Story of Our Influence | `features/12-story-of-our-influence.md` | Swapnil Raj | 2026-10-06 |
 | FE-13 | Our Key ESG Metrics | `features/13-our-key-esg-metrics.md` | Swapnil Raj | 2026-10-06 |
 | FE-14 | Our Core Beliefs | `features/14-our-core-beliefs.md` | Swapnil Raj | 2026-10-06 |
@@ -31,6 +32,75 @@ Legend: `Reads` = the supporting docs to load for that item (beyond `/CLAUDE.md`
 | FE-03 | App shell — header, mobile nav, footer, layout | `features/03-app-shell-header-footer.md` | Swapnil Raj | 2026-08-04 |
 | FE-02 | Design system foundation (tokens, fonts, primitives) | `features/02-design-system-foundation.md` | Swapnil Raj | 2026-08-04 |
 | FE-01 | Initial project setup | `features/01-initial-project-setup.md` | Swapnil Raj | 2026-08-04 |
+
+### Client changes of 2026-10-07, and FE-15 — as built
+
+One round of client feedback on the homepage map, the business pages and Our Key ESG
+Metrics, which also asked for the SDG page. **FE-15 was worked ahead of FE-05 on the
+user's instruction**, the trade FE-07, FE-09 → FE-11 and FE-12 → FE-14 made; FE-05 stays
+In Progress.
+
+**Homepage map callouts.** Back to figure left, legend name right, in the business's
+`-deep` accent: the Business Portfolio marks of 2026-10-06 are gone (`marks` →
+`legend` again), and the 2026-10-06 figures stay. A paired figure names its partner,
+"+ Battery Storage" (the client's wording) or "+ Solar Cell Manufacturing". **From `lg`,
+where the map sits beside its copy, every row is one line**, and the callout is uncapped.
+From `sm` to `lg` the partner wraps under the name. Below `sm` each name drops under its
+figure, and the callout is capped at `--map-tip-w-narrow` (184px) so Uttar Pradesh's
+stays on a 360px screen. The business pages' maps, legend off, now say "+ Battery Storage"
+too, where they showed two bare solar figures for one state.
+
+**Business pages' Projects figures** are the homepage ledger's: Solar Energy
+**8.3 GWp** (was 8299.5 MWp), Module Manufacturing **3.6 GWp + 5 GW\*** (was
+3625 MW + 5000 MW (proposed)). `ProjectsMapFigure` gained the ledger's superscript `*`.
+The ledger's footnote, "Operational · \*Upcoming", was carried under the module figure
+for a day and removed at the client's request on 2026-10-08, so the `*` there is
+unexplained. Waste to Energy (164.9 MW) already matched. Solar Cell has no figure block,
+and none was added. The prose keeps "3.625 GW".
+
+**Our Key ESG Metrics.**
+
+- **Hero**: wheel over copy, centred at every width. The design's three glows are replaced by
+  `<BackgroundRipple fade="screen">`, the investor masthead grid, solid across the top half
+  and gone at the foot (`--mask-ripple-screen`). The copy is `pointer-events: none`, so
+  the grid lights under it. `--spacing-esg-wheel` is capped at 42% of the screen's height.
+- **SDGs**: the icon grid is centred, and the label and heading stay left like every other
+  section's (they were centred for a day, until the client's correction of 2026-10-08). The
+  UN disclaimer and its two links are removed, with everything else under the icons. The
+  ten goals are `_content/sdg-goals.ts` now, shared with FE-15.
+- **Reporting Framework + Stakeholder's Map** are one section, `<ReportingStakeholders>`,
+  composing `<ProseSplitLayout>` and the new `<StakeholderMapLayout>`. Our Core Beliefs'
+  ESG Report pill sits under the "Reporting Framework" heading. With `copyBeside`, a
+  `<ProseSplit>` action now goes in the heading's column. The pill is
+  `app/_lib/esg-report-link.tsx`, shared by both pages, and since 2026-10-08 it opens
+  `/investors/corporate-governance/sustainability-reports/` in the same tab rather than
+  the CY 2023 PDF in a new one.
+- **To share one screen**, the beside columns are halves (was 5 : 7, which wrapped the
+  heading below 1440), the tree's boxes are 80px (was 104) and its connectors 16/24/24px
+  (was 24/36/36), and the section's padding is `--spacing-flow`. It fits one screen from
+  1280 × 800 up, and is 25px over at 1366 × 768. On a phone it is taller than the screen,
+  as the SDG grid is.
+
+**FE-15, `/sustainable-development-goals/`.** No design exists, so it is built from
+existing pieces: `<RippleHero>` (new optional `intro`) with the live page's "UN SDGs" and
+its subheading, then `<SdgDetailList>` (`sections/sdg-detail/`). That list renders the live
+page's five-column table as one block per goal, `id="sdg-N"` on each. In each block the
+UN icon sits beside "SDG N" and the goal's name, and the four cells form a `<dl>` under the
+table's own column headings. The copy is the live page's, verbatim
+(`_content/sustainable-development-goals.ts`). **Departures from `features/15`**: no
+`<PageHero>` (no photograph), and no framing paragraph or figures (SAEL have written
+neither). There is no homepage marquee to link from; the links come from Our Key ESG
+Metrics.
+
+**Verified** on a production build (`next start`). All ten anchors land under the masthead
+on a cold load at 1440 and 360. No horizontal scroll on the homepage, Solar Energy or Module
+Manufacturing with any callout open at 1440, 1024, 768 or 360. The ESG sections were
+measured at 1024 × 768 through 1920 × 1080. `pnpm lint`, `typecheck`, `verify:guardrails`
+and `build` are clean, and both new routes are static (`○`).
+
+**For SAEL:** the UN's guidelines ask for their disclaimer beside the icons, and it is now
+on neither page. Also: the old Solar Energy and Module figures recorded in the backend's
+`docs/client/static-content-sign-off.md` §4 are superseded by this request.
 
 ### FE-12, FE-13, FE-14 — as built, 2026-10-06
 
@@ -68,12 +138,22 @@ read from the legacy site while `LEGACY_ASSET_BASE_URL` is set and from
 `web-assets/media/story-of-our-influence/` or `…/our-core-beliefs/` once it is unset.
 **Neither folder is uploaded yet.** Alt text was written from the images. The design's
 alt for `in-4.webp` ("a family in their village") was wrong: it is a power plant.
+*Since 2026-10-08:* both folders are uploaded, each file renamed for its section
+(`community.jpg`, `environmental-stewardship.webp`, `new-our-core-beliefs-hero-1.webp`
+and so on). Each file was checked against its legacy original: the dimensions match, and
+the cut-outs keep their alpha. Both pages read them through `cdnImage()`, and
+`legacyOrCdnImage()` is removed. The ten SDG icons were uploaded the same day to
+`web-assets/media/sdg/goal-NN.png`, byte-identical to the committed files, which are
+deleted. `_content/sdg-goals.ts` describes them with `cdnImage()`, and `<SdgGrid>` and
+`<SdgDetailList>` draw them through `<MediaFrame>`, which shows a placeholder when the
+container is unset.
 
 **Where the build departs from the design or the feature docs:**
 
 - **ESG Report link.** The design's `/report/sael-esg-report-cy-2023.pdf` answers **404**
   on sael.co. It links the same file (8,143,097 bytes) at its investor-documents path
   instead. A later CY 2024 report exists, and which one to link is SAEL's call.
+  *Settled 2026-10-08:* it links the Sustainability Reports page, which lists both.
 - **No metrics on Our Key ESG Metrics.** The live page reports none and the design adds
   none, so FE-13's `<EsgMetricsSection>` and `getEsgMetrics()` are not built. `EsgMetric`
   stays specified in `content-model.md`.
@@ -1120,7 +1200,6 @@ page has needed yet.
 
 | ID | Item | Feature doc | Reads |
 |---|---|---|---|
-| FE-15 | Sustainable Development Goals | `features/15-sustainable-development-goals.md` | `design-guidelines.md`, `accessibility-and-seo.md` |
 | FE-16 | Investors hub + Corporate Governance + Notifications | `features/16-investors-hub.md` | `content-model.md`, `api-contracts.md` |
 | FE-17 | Financials & Reports (5 nested document pages) | `features/17-financials-and-reports.md` | `content-model.md`, `api-contracts.md` |
 | FE-18 | Newsroom (listing + pagination) | `features/18-newsroom.md` | `content-model.md`, `api-contracts.md` |

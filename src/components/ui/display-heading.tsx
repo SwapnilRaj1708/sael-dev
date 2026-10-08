@@ -43,8 +43,9 @@ const displayHeading = cva('gradient-text text-display', {
 /**
  * A business's own mark ramp — the gradient its name takes on the homepage's
  * Business Portfolio ledger. The four business pages set every section
- * heading, and the hero title, in their business's ramp instead of the
- * ground's, at the client's request of 2026-10-06.
+ * heading in their business's ramp instead of the ground's, at the client's
+ * request of 2026-10-06. Their hero titles take a brightened copy of it,
+ * because they sit on video; see `<PageHero>`.
  */
 export type BusinessGradient = 'solar' | 'cell' | 'module' | 'agri';
 

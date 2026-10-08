@@ -118,17 +118,6 @@ const ENV_CASES = [
     shouldPass: true,
   },
   {
-    // Optional, but a typo must fail the build rather than send every
-    // enquiry to a URL that does not parse. docs/api-contracts.md §5.
-    name: 'env: malformed FORM_SUBMISSION_URL is rejected',
-    vars: {
-      NEXT_PUBLIC_SITE_URL: VALID_SITE_URL,
-      FORM_SUBMISSION_URL: 'forms.example.com/enquiries',
-    },
-    shouldPass: false,
-    expect: 'FORM_SUBMISSION_URL',
-  },
-  {
     name: 'env: unknown CONTENT_SOURCE is rejected',
     vars: { NEXT_PUBLIC_SITE_URL: VALID_SITE_URL, CONTENT_SOURCE: 'database' },
     shouldPass: false,

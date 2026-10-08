@@ -83,10 +83,15 @@ export interface ProseSplitProps {
   measure?: 'default' | 'narrow';
   /**
    * With neither `media` nor `aside`, set the copy *beside* the heading from
-   * `lg` — heading 5, copy 7 — instead of under it. Our Key ESG Metrics'
+   * `lg` — in halves — instead of under it. Our Key ESG Metrics'
    * Reporting Framework (FE-13): one paragraph under a short heading leaves
    * half the row empty, and the design fills it. Ignored when the section
    * has something in its second column already.
+   *
+   * An `action` then sits under the heading, in the heading's column, rather
+   * than under the copy — where the client asked for the ESG Report button
+   * on that section (2026-10-07). Stacked, that puts it between the heading
+   * and the copy.
    */
   copyBeside?: boolean;
   /**
@@ -198,6 +203,9 @@ export function ProseSplitLayout({
   const headingOrder = eyebrow === undefined ? 0 : 1;
   const actionOrder = body.length + headingOrder + 1;
   const asideOrder = action === undefined ? actionOrder : actionOrder + 1;
+  const hasAction = action !== undefined && action !== null;
+
+  const actionBlock = hasAction && <Reveal order={actionOrder}>{action}</Reveal>;
 
   const frame = media && (
     <MediaFrame
@@ -234,6 +242,9 @@ export function ProseSplitLayout({
               {title}
             </DisplayHeading>
           </Reveal>
+
+          {/* Beside, the action belongs to the heading's column. */}
+          {beside && actionBlock}
         </div>
 
         <div
@@ -252,11 +263,7 @@ export function ProseSplitLayout({
           ))}
         </div>
 
-        {action !== undefined && action !== null && (
-          <Reveal order={actionOrder} className={cn(beside && 'lg:col-start-2')}>
-            {action}
-          </Reveal>
-        )}
+        {!beside && actionBlock}
       </div>
 
       {media !== undefined ? (

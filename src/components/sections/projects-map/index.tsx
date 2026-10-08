@@ -12,7 +12,11 @@ import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
 
 export interface ProjectsMapFigure {
-  /** Pre-formatted, unit included — "8299.5 MWp". Every digit run counts up. */
+  /**
+   * Pre-formatted, unit included — "8.3 GWp". Every digit run counts up. A
+   * trailing `*` is set as a superscript marker, as the homepage ledger sets
+   * it.
+   */
   value: string;
   /** The caption under it — "Portfolio". */
   label: string;
@@ -123,14 +127,26 @@ export function ProjectsMap({
             {figure !== undefined && (
               <Reveal order={body.length + 2} className="mt-stack flex flex-col gap-tight">
                 <p className={cn('text-business-figure tabular-nums', FIGURE_CLASS[business])}>
-                  <CountUp value={figure.value} />
+                  {/* The marker is not part of the count, and sits raised at
+                      half size so it reads as a marker, not a digit — the
+                      ledger's own treatment. */}
+                  <CountUp value={figure.value.replace(/\*$/, '')} />
+                  {figure.value.endsWith('*') && (
+                    <span className="align-super text-ledger-figure-marker">*</span>
+                  )}
                 </p>
                 <p className="text-h3 text-white">{figure.label}</p>
               </Reveal>
             )}
           </div>
 
-          <PresenceMapFigure order={body.length + 3} map={map} sites={sites} label={mapLabel} />
+          <PresenceMapFigure
+            order={body.length + 3}
+            map={map}
+            sites={sites}
+            label={mapLabel}
+            legend={false}
+          />
         </div>
       </div>
     </Section>

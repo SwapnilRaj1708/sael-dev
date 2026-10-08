@@ -16,7 +16,6 @@ import {
   aboutSael,
   businessTiles,
   heroSlides,
-  presenceMarks,
   presenceSites,
   ourEndeavour,
   ourGoals,
@@ -92,7 +91,7 @@ export default async function HomePage() {
       <HeroCarousel slides={heroSlides} />
       <IntroSplit {...aboutSael} snap />
       <BusinessTiles eyebrow="Business Portfolio" tiles={businessTiles} snap />
-      <PresenceMap {...presenceSummary} sites={presenceSites} marks={presenceMarks} snap />
+      <PresenceMap {...presenceSummary} sites={presenceSites} snap />
       <EndeavourSplit {...ourEndeavour} snap />
       {/* Withdrawn 2026-10-01 at the client's request; expected back.
       <SolutionsCarousel {...solutions} snap /> */}

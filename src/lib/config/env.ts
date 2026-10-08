@@ -29,12 +29,6 @@ const envSchema = z
     LEGACY_ASSET_BASE_URL: optionalUrl,
     NEXT_PUBLIC_SITE_URL: z.url(),
     CAREER_REDIRECT_URL: optionalUrl,
-    // Where `/api/forms/[form]/` forwards a validated submission. Unset, the
-    // handler validates and acknowledges but forwards nothing. A whole URL
-    // rather than a path on API_BASE_URL, because where enquiries go — an
-    // inbox relay, a CRM, the Spring Boot service — is not decided yet.
-    // docs/api-contracts.md §5.
-    FORM_SUBMISSION_URL: optionalUrl,
     MOCK_LATENCY_MS: z.coerce.number().int().nonnegative().default(0),
     // The HMAC key the backend signs its revalidation webhook with
     // (docs/api-contracts.md §7.2); the backend holds the same value as
@@ -67,7 +61,6 @@ const parsed = envSchema.safeParse({
   LEGACY_ASSET_BASE_URL: process.env.LEGACY_ASSET_BASE_URL,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   CAREER_REDIRECT_URL: process.env.CAREER_REDIRECT_URL,
-  FORM_SUBMISSION_URL: process.env.FORM_SUBMISSION_URL,
   MOCK_LATENCY_MS: process.env.MOCK_LATENCY_MS,
   SAEL_REVALIDATE_SECRET: process.env.SAEL_REVALIDATE_SECRET,
 });

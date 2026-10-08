@@ -37,7 +37,7 @@ import { legacyOrBlobUrl } from '@/lib/utils/blob-url';
  *
  * **New strings, written for this build and awaiting the client's approval**
  * — the legacy page has no visible equivalent: every error and status message
- * in `contactFormCopy` below (from `errors` down), the button's "Sending…",
+ * in `contactFormCopy` below (from `errors` down, `formUnavailable` included), the button's "Sending…",
  * the honeypot's label, the map's control, note and title, "Get directions"
  * and "Open in Google Maps". Each is marked
  * `NEW` where it is defined. "opens in a new tab" is the site's existing note.
@@ -159,11 +159,13 @@ export const contactFormHeading = {
 };
 
 export const contactFormCopy: ContactFormCopy = {
+  // Keyed by the backend's field names (docs/api-contracts.md §8.2); the
+  // labels and placeholders are the legacy form's.
   fields: {
-    name: { label: 'Name', placeholder: 'Full Name' },
+    fullName: { label: 'Name', placeholder: 'Full Name' },
     email: { label: 'Email', placeholder: 'Email Address' },
-    contact: { label: 'Contact', placeholder: 'Contact Number' },
-    subject: { label: 'Subject', placeholder: 'Select Option' },
+    phone: { label: 'Contact', placeholder: 'Contact Number' },
+    subjectCode: { label: 'Subject', placeholder: 'Select Option' },
     message: { label: 'Message', placeholder: 'Your Message' },
   },
   requiredMarker: '*',
@@ -173,9 +175,9 @@ export const contactFormCopy: ContactFormCopy = {
   pending: 'Sending…',
   honeypotLabel: 'Leave this field empty',
   errors: {
-    name: {
+    fullName: {
       required: 'Enter your name',
-      'too-long': `Name must be ${String(CONTACT_LIMITS.name)} characters or fewer`,
+      'too-long': `Name must be ${String(CONTACT_LIMITS.fullName)} characters or fewer`,
       invalid: 'Enter your name',
     },
     email: {
@@ -183,18 +185,19 @@ export const contactFormCopy: ContactFormCopy = {
       'too-long': `Email address must be ${String(CONTACT_LIMITS.email)} characters or fewer`,
       invalid: 'Enter an email address in the correct format, like name@example.com',
     },
-    contact: {
+    phone: {
       required: 'Enter your contact number',
       invalid:
         'Enter a contact number of 7 to 15 digits. You can use +, spaces, brackets and hyphens',
     },
-    subject: {
+    subjectCode: {
       required: 'Select a subject',
       invalid: 'Select a subject from the list',
     },
     message: {
       required: 'Enter your message',
-      'too-long': `Message must be ${CONTACT_LIMITS.message.toLocaleString('en-IN')} characters or fewer`,
+      // `{max}` is the backend's `maxMessageLength`, from the form's options.
+      'too-long': 'Message must be {max} characters or fewer',
       invalid: 'Enter your message',
     },
   },
@@ -204,6 +207,9 @@ export const contactFormCopy: ContactFormCopy = {
   rateLimited:
     'Too many messages have been sent in a short time. Please wait a few minutes and try again.',
   unavailable: `Your message could not be sent. Please try again later, or email us at ${EMAIL}.`,
+  // In place of the form when it cannot be shown: its options did not load,
+  // or the backend has it switched off (docs/api-contracts.md §8.1).
+  formUnavailable: `The form is unavailable at the moment. Please email us at ${EMAIL}.`,
 };
 
 /**

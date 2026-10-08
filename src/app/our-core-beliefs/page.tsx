@@ -1,16 +1,15 @@
-import { ArrowUpRight, Bird, Landmark, Leaf, Users } from 'lucide-react';
+import { Bird, Landmark, Leaf, Users } from 'lucide-react';
 import type { Metadata } from 'next';
+import { EsgReportLink } from '@/app/_lib/esg-report-link';
 import { BeliefStack, type Belief } from '@/components/sections/belief-stack';
 import { PageHero } from '@/components/sections/page-hero';
 import { CollageBackdrop } from '@/components/sections/page-hero/collage-backdrop';
-import { Button } from '@/components/ui/button';
 import { buildMetadata } from '@/lib/seo/metadata';
 import {
   beliefs,
   coreBeliefsCollage,
   coreBeliefsHero,
   coreBeliefsMeta,
-  esgReport,
 } from '../_content/our-core-beliefs';
 
 export const metadata: Metadata = buildMetadata({
@@ -41,26 +40,6 @@ const beliefItems: Belief[] = beliefs.map((belief, index) => ({
   ...belief,
   icon: BELIEF_ICONS[index],
 }));
-
-/** The ESG Report link, or nothing if its URL cannot be composed. */
-function EsgReportLink() {
-  if (esgReport.href === null) return null;
-
-  return (
-    <Button
-      href={esgReport.href}
-      target="_blank"
-      variant="pill"
-      // The full width on a phone, where the pill is the easier target;
-      // its own width from `sm`.
-      className="w-full sm:w-fit"
-    >
-      {esgReport.label}
-      <span className="sr-only"> ({esgReport.description})</span>
-      <ArrowUpRight className="size-5 shrink-0" aria-hidden="true" focusable="false" />
-    </Button>
-  );
-}
 
 /**
  * Our Core Beliefs (FE-14) — a collage hero, the four beliefs as outlined

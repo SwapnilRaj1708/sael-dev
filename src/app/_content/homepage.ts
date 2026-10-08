@@ -2,7 +2,6 @@ import iconAgriWaste from '@/assets/images/business/icon-agri-waste.png';
 import iconCellManufacturing from '@/assets/images/business/icon-solar-cell.png';
 import iconModuleManufacturing from '@/assets/images/business/icon-solar-module.png';
 import iconSolarGeneration from '@/assets/images/business/icon-solar-energy.png';
-import type { StaticImageData } from 'next/image';
 import aboutCutout from '@/assets/images/aboutSael/sardar-kid-cropped.png';
 import aboutPhoto from '@/assets/images/aboutSael/burning-crop.png';
 import heroImageMobile1 from '@/assets/images/hero/hero-image-mobile-1.jpg';
@@ -31,7 +30,7 @@ import type { EndeavourSplitProps } from '@/components/sections/endeavour-split'
 import type { GoalsGridProps } from '@/components/sections/goals-grid';
 import type { HeroSlide } from '@/components/sections/hero-carousel';
 import type { IntroSplitProps } from '@/components/sections/intro-split';
-import type { PresenceSite, SiteMetric } from '@/components/sections/presence-map';
+import type { PresenceSite } from '@/components/sections/presence-map';
 import type { SolutionsCarouselProps } from '@/components/sections/solutions-carousel';
 import { TODO_CONTENT } from '@/lib/config/site';
 
@@ -279,13 +278,14 @@ export const businessTiles: BusinessTile[] = [
  * so each figure's business is read off the map, not derived. Two kinds of
  * row are new there: a figure carrying two icons joined by "+" (Uttar
  * Pradesh's module and cell capacity together) and a solar figure paired with
- * a battery (Maharashtra and Andhra Pradesh). Both are `plus` on the figure.
- * Within a state the figures keep the map's order.
+ * a battery (Maharashtra and Andhra Pradesh). Both are `plus` on the figure,
+ * and the callout names both, the battery as "Battery Storage" (the client's
+ * wording, 2026-10-07). Within a state the figures keep the map's order.
  *
  * It replaces the figures taken from `SAEL-Numbers and data.pdf` page 2 on
  * 2026-08-27, whose businesses had to be derived from page 1's totals because
  * that file's icons were illegible. The business pages' own maps
- * (`solar-energy.ts` and the rest) still carry those earlier figures.
+ * (`solar-energy.ts` and the rest) carry the same figures since 2026-10-06.
  *
  * Coordinates are points in the artwork's own 311.33 × 337.45 viewBox —
  * `src/assets/images/dotted-map.svg`, supplied by the client on 2026-08-21.
@@ -403,17 +403,6 @@ export const presenceSites: PresenceSite[] = [
     figures: [{ metric: 'solar-ipp', value: '1356 MW' }],
   },
 ];
-
-/**
- * The mark each business takes beside its figures in the map's callouts —
- * the Business Portfolio's own icons, at the client's request of 2026-10-06.
- */
-export const presenceMarks: Record<SiteMetric, StaticImageData | null> = {
-  'solar-ipp': iconSolarGeneration,
-  'solar-cell': iconCellManufacturing,
-  'module-assembly': iconModuleManufacturing,
-  'agri-waste': iconAgriWaste,
-};
 
 /**
  * The counts beside the map, exactly as the PDF sets them.

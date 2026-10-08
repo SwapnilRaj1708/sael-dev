@@ -1,3 +1,5 @@
+import { BackgroundRipple } from '@/components/ui/background-ripple';
+import { Container } from '@/components/ui/container';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
@@ -19,72 +21,78 @@ export interface EsgHeroProps {
 }
 
 /**
- * Our Key ESG Metrics' hero (FE-13) — the animated ESG wheel beside the
- * page's eyebrow, title and standfirst, over three soft glows in the wheel's
- * own colours.
+ * Our Key ESG Metrics' hero (FE-13) — the animated ESG wheel over the page's
+ * eyebrow, title and standfirst, all centred, on the investor mastheads'
+ * ripple grid.
  *
  * Built to `Our Key ESG Metrics v2.dc.html`, the client's pick of the two
  * hero treatments: the wheel from `ESG Animated Banner.dc.html`, restyled
- * for the black ground. It replaces the hex-mosaic split hero of the first
- * version, and is the only page hero on the site that is not a photograph.
+ * for the black ground. It is the only page hero on the site that is not a
+ * photograph.
  *
- * Side by side from `lg`, the wheel leading; stacked below it, the wheel
- * centred above the copy. Below `lg` the masthead overlays the page, so the
- * stack clears it with padding, as `<PageHero>` does.
+ * **Two changes at the client's request of 2026-10-07**, both departures
+ * from the design:
+ *
+ *  - **Centred at every width.** The design sets the wheel beside the copy
+ *    from `lg`; it is now stacked over it, centred, as it always was below
+ *    `lg`. The wheel shrinks with the screen's height (`--spacing-esg-wheel`)
+ *    so the stack fits the one screen the page snaps to.
+ *  - **`<BackgroundRipple>` behind it**, the grid that opens every investor
+ *    page, in place of the design's three drifting glows. This hero is a
+ *    screen tall where the investor band is a strip, so the grid takes its
+ *    `screen` fade: solid across the top half, fading from the middle, gone
+ *    at the foot.
+ *
+ * **The grid stays live under the copy**, as it does under the investor
+ * titles: the copy is `pointer-events: none`, so the pointer lights the
+ * cells behind the wheel and title and a click there ripples. Nothing in
+ * the copy is a control.
+ *
+ * Below `lg` the masthead overlays the page, so the stack clears it with
+ * padding, as `<PageHero>` does.
  *
  * **The motion runs on arrival, not on scroll.** It is the hero, so it is
  * on screen from the first paint and there is nothing to reveal — which is
- * why `<PageHero>` takes no `<Reveal>` either. Every part of it is CSS and
- * every part is skipped under reduced motion; see `anim-esg-*`.
+ * why `<PageHero>` takes no `<Reveal>` either. The wheel's motion is CSS and
+ * skipped under reduced motion (`anim-esg-*`); so is the grid's click wave.
  *
- * A Server Component. Nothing here needs the client.
+ * A Server Component; `<BackgroundRipple>` is the client leaf.
  */
 export function EsgHero({ title, eyebrow, intro, snap = false }: EsgHeroProps) {
   return (
     <Section
       background="black-dots"
       spacing="none"
+      fullBleed
       data-snap-section
-      className={cn('overflow-hidden', snap && 'flex min-h-viewport snap-start items-center')}
+      className={cn(
+        'flex items-center overflow-hidden',
+        snap ? 'min-h-viewport snap-start' : 'lg:min-h-(--esg-hero-min-h)',
+      )}
     >
-      {/* The three glows, drifting. Decorative throughout. */}
-      <span
-        aria-hidden="true"
-        className="anim-esg-glow pointer-events-none absolute -bottom-10 -left-24 size-esg-glow-environment rounded-pill bg-(image:--gradient-esg-glow-environment)"
-      />
-      <span
-        aria-hidden="true"
-        className="anim-esg-glow anim-esg-glow-2 pointer-events-none absolute -top-10 right-1/5 size-esg-glow-governance rounded-pill bg-(image:--gradient-esg-glow-governance)"
-      />
-      <span
-        aria-hidden="true"
-        className="anim-esg-glow anim-esg-glow-3 pointer-events-none absolute -right-10 bottom-5 size-esg-glow-social rounded-pill bg-(image:--gradient-esg-glow-social)"
-      />
-      {/* The foot fades to the ground, so the glows end before the next
-          section rather than at an edge. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-50 bg-(image:--gradient-esg-hero-foot)"
-      />
+      {/* Rows for the tallest screen at the smallest cell: 28 × 44px. */}
+      <BackgroundRipple rows={28} fade="screen" />
 
-      <div
+      <Container
         className={cn(
-          'relative flex flex-col items-center gap-flow pt-[calc(var(--spacing-header)+var(--spacing-flow))] pb-section-y lg:flex-row lg:gap-x-split-wide lg:py-section-y',
-          !snap && 'lg:min-h-(--esg-hero-min-h)',
+          'pointer-events-none relative z-10 flex flex-col items-center gap-flow text-center',
+          'pt-[calc(var(--spacing-header)+var(--spacing-flow))] pb-section-y lg:py-section-y-tight',
         )}
       >
         <div className="size-esg-wheel shrink-0">
           <EsgWheel />
         </div>
 
-        <div className="flex w-full max-w-(--esg-hero-copy-w) flex-col gap-stack lg:flex-1">
+        <div className="flex w-full max-w-(--esg-hero-copy-w) flex-col items-center gap-stack">
           {eyebrow !== undefined && (
             <div className="anim-esg-rise">
               <Eyebrow tone="bright">{eyebrow}</Eyebrow>
             </div>
           )}
 
-          <h1 className="anim-esg-rise anim-esg-rise-2 text-hero text-white">{title}</h1>
+          <h1 className="anim-esg-rise anim-esg-rise-2 text-hero text-balance text-white">
+            {title}
+          </h1>
 
           {intro !== undefined && (
             <p className="anim-esg-rise anim-esg-rise-2 text-body text-pretty text-body-on-dark">
@@ -92,7 +100,7 @@ export function EsgHero({ title, eyebrow, intro, snap = false }: EsgHeroProps) {
             </p>
           )}
         </div>
-      </div>
+      </Container>
     </Section>
   );
 }

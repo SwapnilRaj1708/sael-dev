@@ -100,6 +100,21 @@ const eslintConfig = defineConfig([
     rules: { 'no-restricted-properties': 'off' },
   },
   {
+    // Unit tests, run by Node's own runner (`pnpm test`). `test()` and `it()`
+    // return a promise the runner awaits itself.
+    files: ['src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            { from: 'package', package: 'node:test', name: ['test', 'it', 'describe', 'suite'] },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Build and release tooling runs in Node, outside the app's config layer.
     files: ['scripts/**/*.mjs', '*.mjs', '*.ts'],
     rules: { 'no-restricted-properties': 'off' },

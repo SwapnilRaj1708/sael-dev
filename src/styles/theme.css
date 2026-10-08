@@ -360,23 +360,6 @@
   --text-body--font-weight: 400;
 
   /* 15 → 17 */
-  /* 18 → 36. The copy on the "Our Ambition" panel, which is a display
-   * statement rather than running text: the client set it at 36 on the
-   * desktop design (2026-09-17) and asked for it to come down to 18 on the
-   * way to the tablet floor. Linear between 768 and 1920 wide. */
-  --text-cutout-copy: clamp(1.125rem, 0.375rem + 1.5625vw, 2.25rem);
-  --text-cutout-copy--line-height: 1.35;
-  --text-cutout-copy--font-weight: 400;
-
-  /* 16 → 24. The same copy on the mobile panel, below `md`. The client set
-   * it in three steps on 2026-09-17 — 16 to 400 wide, 20 to 460, 24 above —
-   * and this is that curve made continuous: 16 at 360, 24 from 460 up. The
-   * slope is steep on purpose; the panel gains width fast across that range
-   * and the copy has to keep pace with it. */
-  --text-cutout-copy-m: clamp(1rem, 8vw - 0.8rem, 1.5rem);
-  --text-cutout-copy-m--line-height: 1.4;
-  --text-cutout-copy-m--font-weight: 400;
-
   --text-body-sm: clamp(0.9375rem, 0.9087rem + 0.1282vw, 1.0625rem);
   --text-body-sm--line-height: 1.5;
   --text-body-sm--font-weight: 400;
@@ -767,17 +750,23 @@
   --spacing-belief-card-top: 13.75rem; /* 220 */
   --spacing-belief-media: 26.25rem; /* 420 */
 
-  /* A stakeholder box on the tree from `lg`, tall enough for a two-line name. */
-  --spacing-stakeholder-box: 6.5rem; /* 104 */
+  /* A stakeholder box on the tree from `lg`, tall enough for a three-line
+   * name at 1024. 104 until 2026-10-07, when the tree moved under the
+   * Reporting Framework and the two had to share one screen. */
+  --spacing-stakeholder-box: 5rem; /* 80 */
 
-  /* The ESG wheel. 300 on a phone, 420 at 1440. */
-  --spacing-esg-wheel: clamp(18.75rem, 16.25rem + 11.1111vw, 26.25rem); /* 300 → 420 */
+  /* A goal's UN icon on the SDG page (FE-15), 80 on a phone to 160 at 1440 —
+   * beside the goal's name at every width. sections/sdg-detail. */
+  --spacing-sdg-detail-icon: clamp(5rem, 3.3333rem + 7.4074vw, 10rem); /* 80 → 160 */
 
-  /* The three soft glows that drift behind it, one per pillar, at the
-   * design's two sizes each (390 and 1440). */
-  --spacing-esg-glow-environment: clamp(13.75rem, 10.8333rem + 12.963vw, 22.5rem); /* 220 → 360 */
-  --spacing-esg-glow-governance: clamp(11.25rem, 8.75rem + 11.1111vw, 18.75rem); /* 180 → 300 */
-  --spacing-esg-glow-social: clamp(10rem, 7.9167rem + 9.2593vw, 16.25rem); /* 160 → 260 */
+  /* The ESG wheel. 300 on a phone, 420 at 1440 — and never more than 42% of
+   * the screen's height, since the hero stacks it over its copy at every
+   * width (2026-10-07) and the two have to fit the one screen the page snaps
+   * to: 350px at 1440 × 900, 420 at 1920 × 1080. */
+  --spacing-esg-wheel: min(
+    clamp(18.75rem, 16.25rem + 11.1111vw, 26.25rem),
+    calc(var(--spacing-viewport) * 0.42)
+  ); /* 300 → 420 */
 
   /* ------------------------------------------------------------------
    * `SAEL Home v2` measurements.
@@ -1323,41 +1312,26 @@
   /* The ESG hero's floor from `lg`, under the masthead — the design's 640
    * less its 84px bar. Below `lg` the hero is as tall as its stack. */
   --esg-hero-min-h: 35rem; /* 560 */
-  /* The title block beside the wheel. */
+  /* The title block under the wheel. */
   --esg-hero-copy-w: 40rem; /* 640 */
-
-  /* The three glows behind the wheel, each its pillar's colour at a whisper,
-   * and the fade at the hero's foot into the section under it. */
-  --gradient-esg-glow-environment: radial-gradient(
-    circle,
-    rgb(111 214 163 / 0.16),
-    rgb(111 214 163 / 0) 70%
-  );
-  --gradient-esg-glow-governance: radial-gradient(
-    circle,
-    rgb(255 217 102 / 0.14),
-    rgb(255 217 102 / 0) 70%
-  );
-  --gradient-esg-glow-social: radial-gradient(
-    circle,
-    rgb(255 127 134 / 0.16),
-    rgb(255 127 134 / 0) 70%
-  );
-  --gradient-esg-hero-foot: linear-gradient(
-    180deg,
-    rgb(8 9 12 / 0) 0%,
-    var(--color-surface-black) 100%
-  );
 
   /* The SDG icon grid's cap from `lg`: five icons of ~190px and their gaps.
    * Uncapped they would be 224px at 1440 and 300px at 1920, and the section
-   * — heading, two rows and the UN notice — would no longer fit the one
-   * screen it snaps to. */
+   * — heading and two rows — would no longer fit the one screen it snaps
+   * to. */
   --sdg-grid-w: 65rem; /* 1040 */
 
+  /* The SDG page's goal blocks (FE-15): the icon's column and the rest, and
+   * from `lg` the facts in two columns, the issue and its description given
+   * twice the room of the pillar and focus area. */
+  --sdg-detail-cols: var(--spacing-sdg-detail-icon) minmax(0, 1fr);
+  --sdg-detail-facts-cols: minmax(0, 2fr) minmax(0, 1fr);
+
   /* Reporting Framework's two columns from `lg` — heading and copy side by
-   * side, the design's 5 : 7. */
-  --prose-beside-cols: minmax(0, 5fr) minmax(0, 7fr);
+   * side, in halves. The design's 5 : 7 broke "Reporting Framework" over two
+   * lines below 1440, which, once the section shared its screen with the
+   * Stakeholder's Map (2026-10-07), was a line it could not spare. */
+  --prose-beside-cols: minmax(0, 1fr) minmax(0, 1fr);
 
   /* A cutout split — "Our Ambition" from `md` up: a shaped paper panel
    * (`bg-for-cutout.svg`, drawn at 700 × 405) with the copy on the shelf under
@@ -1367,11 +1341,20 @@
    * the artwork. The fractions are read off the SVG path: the notch floor is
    * at 77.57 of 405, the shelf floor at 272.25 of 405.
    *
-   * The panel is the container's width less an inset on the right, which is
-   * what lets the portrait (34% of the panel) stand proud of the panel's edge
+   * The panel is the block's width less an inset on the right, which is
+   * what lets the portrait (34% of the block) stand proud of the panel's edge
    * rather than inside it; the inset and the portrait's offset are the
    * client's own values of 2026-09-17, the inset eased down for a narrow
-   * container so the panel keeps its room. */
+   * container so the panel keeps its room.
+   *
+   * From `lg` the block, panel and portrait together, is 80% of the
+   * container and centred in it. It filled the container until 2026-10-08,
+   * when the copy came down from a display size to body size and left the
+   * panel's shelf mostly empty; a fifth off the whole composition gives the
+   * smaller copy back its fill without redrawing anything. Not below `lg`:
+   * there the copy barely shrank (18px to 17), and at 768 a fifth off leaves
+   * a shelf about 140px tall for copy that needs about 210. */
+  --cutout-block-w: 80%;
   --cutout-panel-inset-r: clamp(2rem, 5vw, 6rem); /* 32 → 96 */
   --cutout-portrait-r: 1rem; /* 16 */
   --cutout-notch-h: 19.15%;
@@ -1388,8 +1371,14 @@
    * a panel a screen and a half tall, and the fractions are read off the
    * path: the notch floor at 26.16 of 322, the foot's top at 276.15 of 322.
    * The inset and the portrait are fractions of the *block*, the copy of
-   * the panel. */
-  --cutout-m-w: 28rem; /* 448 — the block's cap */
+   * the panel.
+   *
+   * The cap was 448 until 2026-10-08, and is 80% of that now, with the
+   * desktop block's same fifth off. A cap rather than a width on purpose: on
+   * a phone narrower than about 400 the block is the container's width, the
+   * body-size copy already fills the panel's body, and a fifth off would push
+   * it past the foot. So the panel shrinks only where there is room for it. */
+  --cutout-m-w: 22.4rem; /* 358 — the block's cap */
   --cutout-m-panel-inset-r: 18%; /* the room the portrait overhangs into */
   --cutout-m-portrait-w: 42%;
   --cutout-m-notch-h: 8.15%;
@@ -1661,8 +1650,15 @@
   /* A map callout's cap. It is `w-max` first, so a one-figure state stays as
    * narrow as its content; this only bites on the long legend names — "In-house
    * Module Assembly Capacity" would otherwise set a 300px-wide tooltip on a
-   * 500px map. Past this it wraps. */
+   * 500px map. Past this it wraps. Below `lg` only: from there a callout
+   * holds every figure on one line, uncapped (2026-10-07). */
   --map-tip-w: 15.5rem; /* 248 */
+  /* The same cap below `sm`, where each legend name sits under its figure
+   * rather than beside it (2026-10-07). Sized so the callout of the most
+   * central pin that opens rightwards, Uttar Pradesh at 40% across, still
+   * ends inside a 360px screen, and so "Solar Module Manufacturing" holds
+   * one line. */
+  --map-tip-w-narrow: 11.5rem; /* 184 */
   --map-rule-w: 9rem; /* 144 */
 
   /* A ledger row's running copy. Narrower than --measure by a long way, and
@@ -1733,8 +1729,17 @@
 
   /* The gradient business-page hero titles. Stronger than --shadow-hero-text
    * at the client's request (2026-10-06): a coloured ramp over photography
-   * needs more lift than white does. Applied as a drop-shadow filter. */
-  --shadow-business-hero-title: 0 2px 10px rgb(0 0 0 / 0.8);
+   * needs more lift than white does. Two layers since 2026-10-07, when the
+   * single soft one still let the titles sink into the video: a tight dark
+   * edge that holds the letterforms, and a wider falloff that lifts them.
+   *
+   * The whole `filter` value, not a shadow, because there are two:
+   * Tailwind's `drop-shadow-(--x)`, and a `--drop-shadow-*` theme key alike,
+   * wrap the variable in one `drop-shadow()`, which takes one shadow, so a
+   * list there is invalid and the browser drops the filter entirely. Applied
+   * as `filter-(--filter-business-hero-title)`. */
+  --filter-business-hero-title: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9))
+    drop-shadow(0 4px 16px rgb(0 0 0 / 0.6));
 
   /* The About SAEL artwork's own ratio — 605 x 412, which is the box the
    * client's approved composite is drawn in and the frame every figure below
@@ -1868,6 +1873,17 @@
   --gradient-ledger-module: linear-gradient(90deg, #2369ae 0%, #0f8578 52%, #30be35 100%);
   --gradient-ledger-agri: linear-gradient(90deg, #26763d 0%, #4c883e 52%, #f3eb31 100%);
 
+  /* The same four ramps raised for the business-page hero titles, which sit
+   * on moving video rather than on --color-surface-black: there the dark
+   * end of each ramp was lost against the footage. Same direction and the
+   * same 0 / 52 / 100 stops, each stop lifted toward the light; solar's and
+   * agri's yellow ends were already bright and are unchanged. Hero only
+   * (2026-10-07) — every other consumer keeps the ramps above. */
+  --gradient-ledger-solar-hero: linear-gradient(90deg, #c65ad2 0%, #f2565a 52%, #f9e217 100%);
+  --gradient-ledger-cell-hero: linear-gradient(90deg, #9590ec 0%, #cc6bc6 52%, #f26eb2 100%);
+  --gradient-ledger-module-hero: linear-gradient(90deg, #5ba8f0 0%, #2fc6b4 52%, #6ee07a 100%);
+  --gradient-ledger-agri-hero: linear-gradient(90deg, #4fb86a 0%, #86c565 52%, #f3eb31 100%);
+
   /* The hover glow on an outlined card, re-coloured to each business's ledger
    * ramp for its own page — the same corner-pool layout as --gradient-bg-glow,
    * with the ramp's three stops in place of the site's coral, lavender and
@@ -1967,6 +1983,23 @@
     rgb(6 7 10 / 0.4) 38%,
     rgb(6 7 10 / 0.14) 62%,
     rgb(6 7 10 / 0) 82%
+  );
+
+  /* A soft dark patch behind a business hero's title and standfirst, on top
+   * of the scrim above (2026-10-07). The scrim only darkens the foot of the
+   * band, and a bright frame of video behind the copy still swallowed the
+   * gradient title. Drawn on the copy's own wrapper, so it moves with the
+   * copy whatever the band's height, and fades to nothing well inside its box,
+   * so it has no edge.
+   *
+   * Lightened from 0.62 / 0.35 and cut to the copy's height the same day: at
+   * first strength, over the wrapper's full padded box, it read as a dark band
+   * across the foot of the video rather than as shade behind the words. */
+  --gradient-business-hero-patch: radial-gradient(
+    ellipse at center,
+    rgb(6 7 10 / 0.45) 0%,
+    rgb(6 7 10 / 0.2) 55%,
+    transparent 75%
   );
 
   /* Sat under the progress bar on every slide, so the track never lands on a
@@ -2069,6 +2102,12 @@
    * is sized to the band instead, so the fade lands on the screen at every
    * width, and reaches transparent exactly at the bottom edge. */
   --mask-ripple: radial-gradient(ellipse 75% 100% at top, black 25%, transparent 100%);
+  /* The same fade for a hero a whole screen tall — Our Key ESG Metrics, at
+   * the client's request of 2026-10-07: the grid solid across the top half
+   * of the screen, fading from the middle down, and gone at the foot. The
+   * ellipse is as wide as the screen, so the top corners are still solid
+   * at the 50% stop, where the band's 75% would fade them. */
+  --mask-ripple-screen: radial-gradient(ellipse 100% 100% at top, black 50%, transparent 100%);
   /* The band's height. First the top half of the screen, less the masthead
    * — the client's brief of 2026-09-29 — then, on 2026-09-30, cut down
    * because it pushed the page's content too far below the fold: by a

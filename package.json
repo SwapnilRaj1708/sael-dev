@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify:guardrails": "node scripts/verify-guardrails.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm verify:guardrails && pnpm build",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"src/**/*.test.ts\"",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm verify:guardrails && pnpm build",
     "package": "node scripts/package-release.mjs",
     "prepare": "husky"
   },

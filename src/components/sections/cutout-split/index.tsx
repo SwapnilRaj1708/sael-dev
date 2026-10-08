@@ -30,16 +30,19 @@ export interface CutoutSplitProps extends ProseSplitProps {
  * /CLAUDE.md §8 draws the same line for the vision timeline. Each carries
  * its own `--cutout-*` fractions, the mobile set prefixed `--cutout-m-`.
  *
- * **The panel is the container's width, less a right inset, and the section
- * is as tall as that makes it.** The inset (`--cutout-panel-inset-r`) is what
+ * **The panel is the block's width, less a right inset, and the section is
+ * as tall as that makes it.** The inset (`--cutout-panel-inset-r`) is what
  * lets the portrait, anchored bottom-right of the block, stand proud of the
  * panel's edge, with its head rising into the room the heading leaves above.
  * The client set the desktop composition by hand on 2026-09-17 and it is the
  * approved one; the earlier width caps and viewport-height budgets are gone.
+ * From `lg` the block is `--cutout-block-w` of the container, centred.
  *
- * **The copy is a display statement, not running text.** It is set in
- * `--text-cutout-copy`, which runs from 18px at the `md` floor to 36px at the
- * design width so it scales with the panel it sits on — the client's ask.
+ * **The copy is body copy**, `text-body` like every other paragraph on the
+ * page. Until 2026-10-08 it was a display statement in its own size, 18px to
+ * 36px on the wide panel; review asked for it to match the rest of the text,
+ * and the composition came down by a fifth with it so the smaller copy still
+ * fills the shelf. See `--cutout-block-w` and `--cutout-m-w`.
  *
  * **Everything on the panel is a fraction of the panel.** The notch, the
  * shelf and the portrait's stance are read off the SVG path and minted as
@@ -103,7 +106,7 @@ export function CutoutSplit({ panel, panelMobile, cutout, cutoutAlt, ...prose }:
             <div className="absolute top-(--cutout-m-notch-h) bottom-(--cutout-m-foot-b) left-(--cutout-m-copy-x) flex w-(--cutout-m-copy-w) flex-col gap-stack pt-stack">
               {body.map((paragraph, index) => (
                 <Reveal key={paragraph} order={index + 2}>
-                  <p className="text-cutout-copy-m text-pretty text-ink">{paragraph}</p>
+                  <p className="text-body text-balance text-ink">{paragraph}</p>
                 </Reveal>
               ))}
             </div>
@@ -130,15 +133,17 @@ export function CutoutSplit({ panel, panelMobile, cutout, cutoutAlt, ...prose }:
 
         {/* The panel is inset on the right so the portrait, anchored to the
             block's bottom-right, stands proud of the panel's edge; its head
-            rises into the room the heading leaves above. */}
-        <div className="relative w-full">
+            rises into the room the heading leaves above. From `lg` the block
+            is a fraction of the container, so the panel and the portrait
+            scale down together, and centred. */}
+        <div className="relative mx-auto w-full lg:w-(--cutout-block-w)">
           <div className="relative w-full pr-(--cutout-panel-inset-r)">
             <Image src={panel} alt="" aria-hidden unoptimized className="h-auto w-full" />
 
             <div className="absolute top-(--cutout-notch-h) bottom-(--cutout-shelf-b) left-(--cutout-copy-x) flex w-(--cutout-copy-w) max-w-(--measure) flex-col justify-center gap-stack">
               {body.map((paragraph, index) => (
                 <Reveal key={paragraph} order={index + 2}>
-                  <p className="text-cutout-copy text-pretty text-ink">{paragraph}</p>
+                  <p className="text-body text-balance text-ink">{paragraph}</p>
                 </Reveal>
               ))}
             </div>

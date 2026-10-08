@@ -1,38 +1,38 @@
 import { z } from 'zod';
+import type { ContactField, ContactFormOptions } from './contact-enquiry';
 import type { FieldErrorCode } from './contract';
 
 /**
- * The Contact Us form — `/contact-us/` — as one Zod schema that the browser
- * checks before sending and the route handler checks again on arrival. The
- * browser's check is for the visitor's sake; the handler's is the real one.
+ * The Contact Us form's checks in the browser, for the visitor's sake. The
+ * backend's are the real ones (`EnquirySubmissionValidation`); these are
+ * aligned with them, so the form does not send what the backend will refuse,
+ * nor refuse what it would accept — with one deliberate exception, the phone
+ * number's digit count (below).
  *
- * **The fields are the legacy form's, by name**: `name`, `email`, `contact`,
- * `subject`, `message`, all required, as https://www.sael.co/contact-us/
- * posts them. Their labels and placeholders are copy, and live in
- * `app/_content/contact-us.ts`.
+ * **The fields are the backend's**, by name: `fullName`, `email`, `phone`,
+ * `subjectCode`, `message`, all required (docs/api-contracts.md §8.2). Their
+ * labels and placeholders are copy, and live in `app/_content/contact-us.ts`.
  *
- * **The limits are new.** The legacy form has none; these are the handler's
- * defence against a request no person would send, sized well clear of
- * anything a person would.
+ * **Two rules come from the options**, because SAEL change them without a
+ * release: the subject must be one of today's codes, and the message must fit
+ * `maxMessageLength`. Until the options arrive, no subject can be chosen.
  */
 
-/** The legacy select's options, verbatim — the values it posts and the labels it shows. */
-export const CONTACT_SUBJECTS = ['Business Enquiry', 'Job Vacancy', 'Other'] as const;
-export type ContactSubject = (typeof CONTACT_SUBJECTS)[number];
-
+/** The backend's `@Size` bounds (`ContactEnquirySubmission`). The message's is in the options. */
 export const CONTACT_LIMITS = {
-  name: 100,
-  /** RFC 5321's ceiling for a whole address. */
-  email: 254,
-  /** Room for 15 digits — E.164's most — and their separators. */
-  contact: 25,
-  message: 3000,
+  fullName: 180,
+  email: 255,
+  phone: 32,
 } as const;
 
 /**
  * A phone number as people write one: an optional leading `+`, then 7 to 15
  * digits with spaces, hyphens and brackets anywhere between them —
  * `011 4491 0011`, `+91-11-4491-0011`, `(011) 44910011`.
+ *
+ * **Stricter than the backend**, which takes any run of digits, spaces and
+ * `+ ( ) -` up to 32 characters. The characters are the same; the digit count
+ * is this form's own check that what was typed could be a phone number.
  *
  * **The legacy field was `type="number"`**, which rejected a `+`, dropped a
  * leading zero and offered a spinner. The field is `type="tel"` now, and this
@@ -45,9 +45,23 @@ export const CONTACT_PHONE_PATTERN = String.raw`\+?[ \(\)\-]*(?:[0-9][ \(\)\-]*)
 
 const PHONE = new RegExp(`^(?:${CONTACT_PHONE_PATTERN})$`);
 
+/**
+ * The backend's `EMAIL_SHAPE`: something, an `@`, something with a dot in it.
+ * Anything stricter refuses real addresses.
+ */
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 const REQUIRED: FieldErrorCode = 'required';
 const INVALID: FieldErrorCode = 'invalid';
 const TOO_LONG: FieldErrorCode = 'too-long';
+
+/**
+ * A text's length as the backend measures the message (`codePointCount`):
+ * a surrogate pair is one character, so an emoji counts once, not twice.
+ */
+function codePointCount(text: string): number {
+  return text.length - (text.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g)?.length ?? 0);
+}
 
 /** Absent is `required`; present but not a string — a crafted request — is `invalid`. */
 function presence(issue: { input: unknown }): FieldErrorCode {
@@ -59,30 +73,34 @@ function text(max: number) {
   return z.string({ error: presence }).trim().min(1, REQUIRED).max(max, TOO_LONG);
 }
 
-export const contactFormSchema = z.object({
-  name: text(CONTACT_LIMITS.name),
-  email: text(CONTACT_LIMITS.email).pipe(z.email({ error: INVALID })),
-  contact: z
-    .string({ error: presence })
-    .trim()
-    .min(1, REQUIRED)
-    .max(CONTACT_LIMITS.contact, INVALID)
-    .regex(PHONE, INVALID),
-  // The placeholder option, "Select Option", posts an empty string.
-  subject: z.enum(CONTACT_SUBJECTS, {
-    error: (issue) => (issue.input === undefined || issue.input === '' ? REQUIRED : INVALID),
-  }),
-  message: text(CONTACT_LIMITS.message),
-});
+/** The schema for one set of options, or for none while they load. */
+export function contactFormSchema(
+  options: Pick<ContactFormOptions, 'subjects' | 'maxMessageLength'> | null,
+) {
+  const codes = options?.subjects.map((subject) => subject.code) ?? [];
+  const maxMessageLength = options?.maxMessageLength;
 
-export type ContactFormValues = z.infer<typeof contactFormSchema>;
-export type ContactField = keyof ContactFormValues;
-
-/** In the form's order — the order errors are listed and the first one focused. */
-export const CONTACT_FIELDS = [
-  'name',
-  'email',
-  'contact',
-  'subject',
-  'message',
-] as const satisfies readonly ContactField[];
+  return z.object({
+    fullName: text(CONTACT_LIMITS.fullName),
+    email: text(CONTACT_LIMITS.email).regex(EMAIL, INVALID),
+    phone: z
+      .string({ error: presence })
+      .trim()
+      .min(1, REQUIRED)
+      .max(CONTACT_LIMITS.phone, INVALID)
+      .regex(PHONE, INVALID),
+    // The placeholder option, "Select Option", posts an empty string.
+    subjectCode: z
+      .string({ error: presence })
+      .min(1, REQUIRED)
+      .refine((code) => codes.includes(code), INVALID),
+    message: z
+      .string({ error: presence })
+      .trim()
+      .min(1, REQUIRED)
+      .refine(
+        (message) => maxMessageLength === undefined || codePointCount(message) <= maxMessageLength,
+        TOO_LONG,
+      ),
+  } satisfies Record<ContactField, z.ZodType<string>>);
+}

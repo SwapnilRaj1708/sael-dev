@@ -1,8 +1,8 @@
-import { ArrowUpRight } from 'lucide-react';
-import Image, { type StaticImageData } from 'next/image';
+import type { StaticImageData } from 'next/image';
 import Link from 'next/link';
 import { DisplayHeading } from '@/components/ui/display-heading';
 import { Eyebrow } from '@/components/ui/eyebrow';
+import { MediaFrame } from '@/components/ui/media-frame';
 import { Reveal } from '@/components/ui/reveal';
 import { Section } from '@/components/ui/section';
 import { cn } from '@/lib/utils/cn';
@@ -15,20 +15,10 @@ export interface SdgGoal {
   title: string;
   /** Where the tile goes: the goal's own section on the SDG page. */
   href: string;
-  /** The UN's official colour icon for the goal, unaltered. */
-  icon: StaticImageData;
-}
-
-export interface SdgNoticeLink {
-  label: string;
-  /** Absolute; the notice links off the site. */
-  href: string;
-}
-
-export interface SdgNotice {
-  /** The UN's disclaimer, verbatim. */
-  text: string;
-  links: readonly SdgNoticeLink[];
+  /** The UN's official colour icon for the goal, unaltered. `null` until supplied. */
+  icon: StaticImageData | null;
+  /** The icon's asset name, for the placeholder while it is `null`. */
+  iconPending?: string;
 }
 
 export interface SdgGridProps {
@@ -36,8 +26,6 @@ export interface SdgGridProps {
   title: string;
   /** In numeric order. The grid does not sort them. */
   goals: readonly SdgGoal[];
-  /** The notice the UN's guidelines ask for beside the icons. */
-  notice?: SdgNotice;
   /**
    * Opt into the page's section snapping — a screen tall, content centred.
    * See `data-snap-sections` in globals.css.
@@ -61,21 +49,31 @@ export interface SdgGridProps {
  *    card around them and no `--radius-sdg` on them;
  *  - no filter, overlay, opacity, shadow or hover effect, so a tile answers
  *    the pointer with nothing and the keyboard with a focus ring only;
- *  - in numeric order, rows aligned left — five across from `md`, two below.
+ *  - in numeric order — five across from `md`, two below.
  *
- * From `lg` the grid stops at `--sdg-grid-w`, so the section — heading, two
- * rows of icons and the notice — fits one screen on a page that snaps.
+ * From `lg` the grid stops at `--sdg-grid-w`, so the section — heading and
+ * two rows of icons — fits one screen on a page that snaps. The grid is
+ * centred in the row (the client's call of 2026-10-07); the label and
+ * heading stay at the row's start, in line with every other section's on
+ * the page (2026-10-08; for one day they were centred too).
+ *
+ * **Nothing under the icons**, at the client's request of the same day. The
+ * UN's disclaimer and its two links, which the icon guidelines ask for on
+ * the same page and which sat here until then, were removed with the rest.
  *
  * Each tile links to its goal on the SDG page. The icon is `alt=""` inside
  * the link because the link itself is named — "SDG 7: Affordable & Clean
  * Energy" — and the picture would only say it again.
  *
- * The files are committed (`src/assets/images/sdg/`) rather than hotlinked
- * from un.org, which the guidelines' own download page asks of users.
+ * The files are SAEL's own copies, in the blob container (`web-assets/media/sdg/`),
+ * rather than hotlinked from un.org, which the guidelines' own download page
+ * asks of users. `<MediaFrame>` draws each, so an unconfigured container
+ * shows a placeholder in the tile rather than a broken image; it adds
+ * nothing over an icon that is there.
  *
  * A Server Component; only `<Reveal>` is client.
  */
-export function SdgGrid({ eyebrow, title, goals, notice, snap = false }: SdgGridProps) {
+export function SdgGrid({ eyebrow, title, goals, snap = false }: SdgGridProps) {
   const headingOrder = eyebrow === undefined ? 0 : 1;
 
   return (
@@ -101,7 +99,7 @@ export function SdgGrid({ eyebrow, title, goals, notice, snap = false }: SdgGrid
         </div>
 
         <Reveal order={headingOrder + 1}>
-          <ul className="grid grid-cols-2 gap-stack md:grid-cols-5 lg:max-w-(--sdg-grid-w)">
+          <ul className="mx-auto grid grid-cols-2 gap-stack md:grid-cols-5 lg:max-w-(--sdg-grid-w)">
             {goals.map((goal) => (
               <li key={goal.number}>
                 <Link
@@ -109,45 +107,19 @@ export function SdgGrid({ eyebrow, title, goals, notice, snap = false }: SdgGrid
                   aria-label={`SDG ${String(goal.number)}: ${goal.title}`}
                   className="relative block aspect-square outline-offset-4 focus-visible:outline-white"
                 >
-                  <Image
-                    src={goal.icon}
+                  <MediaFrame
+                    image={goal.icon}
                     alt=""
-                    fill
                     sizes={SIZES_SDG_TILE}
-                    className="object-contain"
+                    pending={goal.iconPending}
+                    className="absolute inset-0"
+                    imageClassName="object-contain"
                   />
                 </Link>
               </li>
             ))}
           </ul>
         </Reveal>
-
-        {notice !== undefined && (
-          <Reveal order={headingOrder + 2} className="flex max-w-(--measure) flex-col gap-tight">
-            <p className="text-body-sm text-pretty text-on-dark-soft">{notice.text}</p>
-
-            <ul className="flex flex-wrap gap-x-flow gap-y-tight">
-              {notice.links.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-body-sm text-white underline underline-offset-4 hover:text-body-on-dark focus-visible:outline-white"
-                  >
-                    {link.label}
-                    <span className="sr-only"> (opens in a new tab)</span>
-                    <ArrowUpRight
-                      aria-hidden="true"
-                      focusable="false"
-                      className="size-4 shrink-0"
-                    />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        )}
       </div>
     </Section>
   );

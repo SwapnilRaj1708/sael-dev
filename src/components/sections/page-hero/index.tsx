@@ -6,7 +6,7 @@ import { Eyebrow } from '@/components/ui/eyebrow';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { Section } from '@/components/ui/section';
 import { VideoFrame } from '@/components/ui/video-frame';
-import { BUSINESS_GRADIENT_CLASS, type BusinessGradient } from '@/components/ui/display-heading';
+import type { BusinessGradient } from '@/components/ui/display-heading';
 import { cn } from '@/lib/utils/cn';
 import type { BreadcrumbTrailItem } from '@/lib/seo/json-ld';
 import { SIZES_FULL_BLEED } from '@/lib/utils/image-sizes';
@@ -39,7 +39,10 @@ export interface PageHeroProps {
   titleMeasure?: 'hero' | 'none';
   /**
    * Sets the title in a business's mark ramp instead of white — the four
-   * business pages, at the client's request of 2026-10-06.
+   * business pages, at the client's request of 2026-10-06. Since 2026-10-07
+   * that title is also heavier, takes a brightened ramp and a two-layer
+   * shadow, and has a soft dark patch behind it and the standfirst, because
+   * the video behind it kept swallowing it. See `HERO_TITLE_GRADIENT_CLASS`.
    */
   titleGradient?: BusinessGradient;
   /** The banner photograph. `null` until the client supplies it. */
@@ -71,6 +74,18 @@ export interface PageHeroProps {
    */
   snap?: boolean;
 }
+
+/**
+ * A business's mark ramp raised for the hero, where it sits on video rather
+ * than on black. The headings further down the page, the homepage ledger and
+ * the eyebrows keep the original ramps (`BUSINESS_GRADIENT_CLASS`).
+ */
+const HERO_TITLE_GRADIENT_CLASS: Record<BusinessGradient, string> = {
+  solar: 'bg-(image:--gradient-ledger-solar-hero)',
+  cell: 'bg-(image:--gradient-ledger-cell-hero)',
+  module: 'bg-(image:--gradient-ledger-module-hero)',
+  agri: 'bg-(image:--gradient-ledger-agri-hero)',
+};
 
 /**
  * The standard inner-page hero — banner photograph, scrim, breadcrumb, `<h1>`.
@@ -183,7 +198,20 @@ export function PageHero({
           />
         )}
 
-        <Container className="relative z-10">
+        <Container
+          className={cn(
+            'relative z-10',
+            // A business title's dark patch, --gradient-business-hero-patch.
+            // On this wrapper so it moves with the copy; `-z-10` inside the
+            // stacking context `z-10` makes, so it is under the copy but over
+            // the video and the scrim. Vertically it is inset by the stack's
+            // own padding less one `flow`, so it spans the title and the
+            // standfirst plus `flow` above and below, not the masthead
+            // clearance and the foot padding as well.
+            titleGradient !== undefined &&
+              'before:pointer-events-none before:absolute before:inset-x-1/10 before:top-header before:bottom-[calc(var(--spacing-hero-pad-bottom)-var(--spacing-flow))] before:-z-10 before:bg-(image:--gradient-business-hero-patch)',
+          )}
+        >
           {/* The masthead is fixed and overlays this section, so the copy
               clears it here rather than the section offsetting itself — which
               would put a band of ground above a full-bleed photograph. */}
@@ -207,12 +235,18 @@ export function PageHero({
                   : [
                       // `w-fit`: the ramp spans the words, not the band.
                       'w-fit gradient-text',
-                      BUSINESS_GRADIENT_CLASS[titleGradient],
-                      // Lifts the ramp off the photograph (client, 2026-10-06).
+                      HERO_TITLE_GRADIENT_CLASS[titleGradient],
+                      // 900 as asked (2026-10-07). DIN ships 400 and 700 only
+                      // (lib/fonts.ts), so this renders the bold face, and
+                      // `font-synthesis-weight: none` stops the browser
+                      // faking anything heavier.
+                      'font-black',
+                      // Lifts the ramp off the video (client, 2026-10-06).
                       // A filter, not `text-shadow`: under `background-clip:
                       // text` a text shadow paints over the gradient and
                       // muddies it, where a drop-shadow sits behind the glyphs.
-                      'drop-shadow-(--shadow-business-hero-title)',
+                      // See the token for why it is not `drop-shadow-*`.
+                      'filter-(--filter-business-hero-title)',
                       // Without it the last line's descenders fall outside
                       // the painted box and are cropped. See the token.
                       '-mb-glyph-overhang pb-glyph-overhang',

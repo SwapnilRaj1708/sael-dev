@@ -35,15 +35,13 @@ import { tryBlobUrl } from '@/lib/utils/blob-url';
  *
  * ## The portfolio figure
  *
- * The live page animates it, and a scrape mid-count reads "0.5 MWp". Its
- * markup is `<span data-target="8299">0</span><span>.5</span> MWp`: the
- * counter lands on 8299 and the ".5" is static text after it, so the figure
- * a visitor sees once it settles is **8299.5 MWp**. That is what is carried
- * here, under SAEL's 2026-09-18 instruction for this page; the reference
- * screenshot reads "8299 MWp". The homepage ledger shows SAEL's reviewed
- * "8.3 GWp" instead. That disagreement is with SAEL, in the backend's
- * `docs/client/static-content-sign-off.md` §4, and is not reconciled here in
- * either direction.
+ * **The homepage ledger's, "8.3 GWp"**, since the client's request of
+ * 2026-10-07 that every business page's Projects figure match the Business
+ * Portfolio row on the homepage. Until then it was the live page's
+ * **8299.5 MWp**, carried under SAEL's 2026-09-18 instruction for this page
+ * (the live counter lands on 8299 and a static ".5" follows it). The
+ * disagreement the backend's `docs/client/static-content-sign-off.md` §4
+ * recorded between the two is settled in the ledger's favour.
  *
  * ## The artwork
  *
@@ -244,8 +242,8 @@ export const solarProjects: Omit<ProjectsMapProps, 'sites'> = {
     'SAEL has made significant strides in the solar energy sector, emphasizing rapid expansion and enhancing manufacturing capabilities while prioritizing sustainability goals.',
     "Today, the company is catering to the electricity needs of energy deficient India and has been successful in setting up large scale solar power projects across states like Rajasthan, Gujarat, Andhra Pradesh, Uttar Pradesh, Maharashtra, Punjab, Mizoram, and Karnataka contributing substantially to the national grid and supporting India's renewable energy targets.",
   ],
-  // See the note at the top of this file on why this is not "8299 MWp".
-  figure: { value: '8299.5 MWp', label: 'Portfolio' },
+  // The homepage ledger's figure. See the note at the top of this file.
+  figure: { value: '8.3 GWp', label: 'Portfolio' },
   map: { image: dottedMap },
   mapLabel: 'Map of SAEL solar project sites across India',
 };
